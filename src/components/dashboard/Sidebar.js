@@ -45,14 +45,14 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r bg-white">
+    <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:bg-white">
       <div className="border-b p-6">
-        <h1 className="text-xl text-black font-bold">Global CMS</h1>
+        <h1 className="text-xl font-bold text-black">Global CMS</h1>
 
         <p className="mt-1 text-sm text-gray-500">Admin Panel</p>
       </div>
 
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-2">
           {links.map((link) => {
             const Icon = link.icon;
@@ -64,7 +64,6 @@ export default function Sidebar() {
                   className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-black"
                 >
                   <Icon size={18} />
-
                   {link.label}
                 </Link>
               </li>

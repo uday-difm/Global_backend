@@ -1,3 +1,3 @@
 export default function pages() {
-  <h1>Page</h1>;
+  <h1>Pages</h1>;
 }
