@@ -124,3 +124,13 @@ model TwoFactor {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+
+model Media {
+  id        String   @id @default(cuid())
+  publicId  String
+  url       String
+  format    String?
+  size      Int?
+  createdAt DateTime @default(now())
+}
