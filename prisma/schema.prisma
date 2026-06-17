@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum GlobalRole {
+  SUPERADMIN
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum SiteRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+model Site {
+  id       String  @id @default(cuid())
+  name     String
+  domain   String? @unique
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users SiteUser[]
+
+  @@index([isActive])
+}
+
+model User {
+  id String @id @default(cuid())
+
+  email        String @unique
+  passwordHash String
+
+  globalRole GlobalRole @default(VIEWER)
+
+  isActive Boolean @default(true)
+
+  twoFAEnabled Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sites SiteUser[]
+
+  auditLogs    AuditLog[]
+  loginHistory LoginHistory[]
+  twoFactor    TwoFactor?
+
+  @@index([email])
+  @@index([isActive])
+}
+
+model SiteUser {
+  id String @id @default(cuid())
+
+  siteId String
+  userId String
+
+  role SiteRole @default(EDITOR)
+
+  createdAt DateTime @default(now())
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, userId])
+  @@index([siteId])
+  @@index([userId])
+}
+
+model AuditLog {
+  id String @id @default(cuid())
+
+  siteId String?
+  userId String
+
+  action String
+
+  meta Json?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([siteId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model LoginHistory {
+  id String @id @default(cuid())
+
+  userId String
+
+  ipAddress String?
+  userAgent String?
+
+  success Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model TwoFactor {
+  id String @id @default(cuid())
+
+  userId String @unique
+
+  secret String
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
