@@ -34,10 +34,21 @@ export async function POST(request) {
 
     const media = await prisma.media.create({
       data: {
+        fileName: file.name,
+        originalName: file.name,
+
         publicId: result.public_id,
+
         url: result.secure_url,
-        format: result.format,
+        secureUrl: result.secure_url,
+
+        mimeType: file.type,
+        extension: result.format,
+
         size: result.bytes,
+
+        width: result.width || null,
+        height: result.height || null,
       },
     });
     console.log(media);

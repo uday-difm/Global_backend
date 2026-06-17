@@ -10,14 +10,17 @@ enum GlobalRole {
   SUPERADMIN
   ADMIN
   EDITOR
+  AUTHOR
   VIEWER
 }
 
 enum SiteRole {
   ADMIN
   EDITOR
+  AUTHOR
   VIEWER
 }
+
 
 model Site {
   id       String  @id @default(cuid())
@@ -127,10 +130,47 @@ model TwoFactor {
 
 
 model Media {
-  id        String   @id @default(cuid())
-  publicId  String
-  url       String
-  format    String?
-  size      Int?
+  id           String   @id @default(cuid())
+
+  fileName     String
+  originalName String?
+
+  publicId     String
+  url          String
+  secureUrl    String?
+
+  mimeType     String?
+  extension    String?
+
+  size         Int?
+
+  width        Int?
+  height       Int?
+
+  altText      String?
+
+  isImage      Boolean @default(false)
+  isVideo      Boolean @default(false)
+  isDocument   Boolean @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  folderId     String?
+  folder       MediaFolder? @relation(fields: [folderId], references: [id])
+}
+
+model MediaFolder {
+  id        String  @id @default(cuid())
+
+  name      String
+
+  parentId  String?
+  parent    MediaFolder? @relation("FolderTree", fields: [parentId], references: [id])
+
+  children  MediaFolder[] @relation("FolderTree")
+
+  media     Media[]
+
   createdAt DateTime @default(now())
 }
