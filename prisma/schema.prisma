@@ -21,7 +21,6 @@ enum SiteRole {
   VIEWER
 }
 
-
 model Site {
   id       String  @id @default(cuid())
   name     String
@@ -32,6 +31,7 @@ model Site {
   updatedAt DateTime @updatedAt
 
   users SiteUser[]
+  pages Page[]
 
   @@index([isActive])
 }
@@ -128,49 +128,105 @@ model TwoFactor {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-
 model Media {
-  id           String   @id @default(cuid())
+  id String @id @default(cuid())
 
   fileName     String
   originalName String?
 
-  publicId     String
-  url          String
-  secureUrl    String?
+  publicId  String
+  url       String
+  secureUrl String?
 
-  mimeType     String?
-  extension    String?
+  mimeType  String?
+  extension String?
 
-  size         Int?
+  size Int?
 
-  width        Int?
-  height       Int?
+  width  Int?
+  height Int?
 
-  altText      String?
+  altText String?
 
-  isImage      Boolean @default(false)
-  isVideo      Boolean @default(false)
-  isDocument   Boolean @default(false)
+  isImage    Boolean @default(false)
+  isVideo    Boolean @default(false)
+  isDocument Boolean @default(false)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  folderId     String?
-  folder       MediaFolder? @relation(fields: [folderId], references: [id])
+  folderId String?
+  folder   MediaFolder? @relation(fields: [folderId], references: [id])
 }
 
 model MediaFolder {
-  id        String  @id @default(cuid())
+  id String @id @default(cuid())
 
-  name      String
+  name String
 
-  parentId  String?
-  parent    MediaFolder? @relation("FolderTree", fields: [parentId], references: [id])
+  parentId String?
+  parent   MediaFolder? @relation("FolderTree", fields: [parentId], references: [id])
 
-  children  MediaFolder[] @relation("FolderTree")
+  children MediaFolder[] @relation("FolderTree")
 
-  media     Media[]
+  media Media[]
 
   createdAt DateTime @default(now())
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+
+
+
+model Page {
+  id     String @id @default(cuid())
+  siteId String
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  title  String
+  slug   String // Unique per site, e.g., "home", "about-us"
+  status String @default("DRAFT") // DRAFT, PUBLISHED
+
+  // new fields
+  publishedAt DateTime?
+  publishedBy String? // user.id of publisher
+
+  seoTitle       String?
+  seoDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sections Section[]
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+}
+
+model Section {
+  id String @id @default(cuid())
+
+  pageId String
+  page   Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  name String?
+
+  type String
+
+  order Int @default(0)
+
+  isVisible Boolean @default(true)
+  isDeleted Boolean @default(false)
+
+  content Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageId])
+  @@index([pageId, order])
 }
