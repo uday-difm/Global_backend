@@ -1,8 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/providers/SessionProvider";
-import prisma from "@/lib/prisma"; // Fetches data from DB
-import Script from "next/script"; // Optimizes third-party scripts
+import prisma from "@/lib/prisma";
+import Script from "next/script";
+import ClientScripts from "@/components/utils/ClientScripts"; // Import the new component
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +21,6 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-  // Fetch the active site and its global settings
   const site = await prisma.site.findFirst({ where: { isActive: true } });
   const settings = site
     ? await prisma.globalSettings.findUnique({ where: { siteId: site.id } })
@@ -32,16 +32,11 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <head>
-        {/* This injects your custom code into the <head> tag */}
-        {scripts.head && (
-          <div dangerouslySetInnerHTML={{ __html: scripts.head }} />
-        )}
+        {/* The head scripts are now handled by the ClientScripts component below */}
       </head>
       <body>
-        {/* This injects your custom code at the start of the <body> tag */}
-        {scripts.body && (
-          <div dangerouslySetInnerHTML={{ __html: scripts.body }} />
-        )}
+        {/* The ClientScripts component will inject scripts here and in the head */}
+        <ClientScripts headScripts={scripts.head} bodyScripts={scripts.body} />
 
         {/* Google Tag Manager */}
         {analytics.googleTagManagerId && (
