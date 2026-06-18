@@ -6,18 +6,20 @@ import HeroEditorModal from "./HeroEditorModal";
 import TextBlockEditorModal from "./TextEditorModal";
 
 /*
-  Tailwind-styled Page Editor Client (updated)
-  - Shows validation error panel when server returns validation details
-  - Uses next/image with fill for thumbnails/hero preview
-  - Hooks into the section endpoints (create/list/update/delete/reorder)
+  PageEditorClient (updated with JSON-LD support)
+  - Props: pageId, siteId, pageTitle (passed from server wrapper)
+  - Features: list sections, add/edit/delete/hide/move sections, structured modals,
+    media picker, page-level JSON-LD editing and saving.
 */
 
 export default function PageEditorClient({ pageId, siteId, pageTitle }) {
+  // modal states
   const [showHeroModal, setShowHeroModal] = useState(false);
   const [heroSaving, setHeroSaving] = useState(false);
   const [showTextBlockModal, setShowTextBlockModal] = useState(false);
   const [textBlockSaving, setTextBlockSaving] = useState(false);
 
+  // main editor states
   const [sections, setSections] = useState([]);
   const [selected, setSelected] = useState(null);
   const [rawContent, setRawContent] = useState("{}");
@@ -28,7 +30,18 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [mediaLoading, setMediaLoading] = useState(false);
 
-  // validation UI state
+  // page-level state
+  const [pageData, setPageData] = useState(null);
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [status, setStatus] = useState("DRAFT");
+
+  // JSON-LD state: stringified JSON for editing
+  const [jsonLd, setJsonLd] = useState("");
+
+  // validation UI
   const [validationErrors, setValidationErrors] = useState([]);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
 
@@ -39,7 +52,6 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
   const formatDate = (iso) => (iso ? new Date(iso).toLocaleString() : "-");
 
-  // parse server validation response
   function parseValidationResponse(json) {
     if (!json) return [{ path: "", message: "Unknown validation error" }];
     if (Array.isArray(json.details)) {
@@ -55,104 +67,85 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
       { path: "", message: json.message || json.error || "Validation failed" },
     ];
   }
-  async function createTextBlock(content) {
-    if (!pageId) return flash("pageId missing");
-    setTextBlockSaving(true);
-    try {
-      const payload = { type: "TEXT_BLOCK", content };
-      const res = await fetch(`/api/admin/pages/${pageId}/sections`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        if (res.status === 400 && json.error === "Validation failed") {
-          const errs = parseValidationResponse(json);
-          setValidationErrors(errs);
-          setShowValidationErrors(true);
-          document
-            .getElementById("validation-errors")
-            ?.scrollIntoView({ behavior: "smooth" });
-          return;
-        }
-        flash(json.error || "Failed to create text block");
-        return;
-      }
-      setSections((s) => [...s, json.section]);
-      setShowTextBlockModal(false);
-      flash("Text block created");
-    } catch (err) {
-      console.error("createTextBlock error", err);
-      flash("Network error creating text block");
-    } finally {
-      setTextBlockSaving(false);
-    }
-  }
-  async function updateTextBlock(sectionId, content) {
-    if (!pageId) return flash("pageId missing");
-    setTextBlockSaving(true);
-    try {
-      const res = await fetch(
-        `/api/admin/pages/${pageId}/sections/${sectionId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content }),
-        },
-      );
-      const json = await res.json();
-      if (!res.ok) {
-        if (res.status === 400 && json.error === "Validation failed") {
-          const errs = parseValidationResponse(json);
-          setValidationErrors(errs);
-          setShowValidationErrors(true);
-          document
-            .getElementById("validation-errors")
-            ?.scrollIntoView({ behavior: "smooth" });
-          return;
-        }
-        flash(json.error || "Failed to update text block");
-        return;
-      }
-      setSections((list) =>
-        list.map((it) => (it.id === json.section.id ? json.section : it)),
-      );
-      setShowTextBlockModal(false);
-      flash("Text block updated");
-    } catch (err) {
-      console.error("updateTextBlock error", err);
-      flash("Network error updating text block");
-    } finally {
-      setTextBlockSaving(false);
-    }
-  }
 
-  async function fetchSections() {
+  // Fetch page meta and sections
+  async function fetchPageAndSections() {
     if (!pageId) return;
     setLoading(true);
+
     try {
-      const res = await fetch(`/api/admin/pages/${pageId}/sections`);
-      const json = await res.json();
-      if (!res.ok) {
-        flash(json.error || "Failed to load sections");
-        setSections([]);
-        return;
+      // fetch page metadata (if you have an endpoint, use it; otherwise we can reuse /api/admin/pages/:id or content API)
+      // Here we fetch using the content API to get page info + sections
+      const res = await fetch(
+        `/api/content?siteId=${encodeURIComponent(siteId)}&slug=${encodeURIComponent(slug || "/")}`,
+        {
+          cache: "no-store",
+        },
+      );
+      // Note: If you don't have page slug available yet, you might fetch page by id or a dedicated admin API
+      // For simplicity, we use admin GET by page id:
+      // const res = await fetch(`/api/admin/pages/${pageId}`);
+      // But keep the below as fallback if slug known.
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.page) {
+          const p = json.page;
+          setPageData(p);
+          setTitle(p.title || "");
+          setSlug(p.slug || "");
+          setSeoTitle(p.seoTitle || "");
+          setSeoDescription(p.seoDescription || "");
+          setStatus(p.status || "DRAFT");
+          // jsonLd might be object or null; stringify for editor
+          setJsonLd(p.jsonLd ? JSON.stringify(p.jsonLd, null, 2) : "");
+        }
+        if (Array.isArray(json.sections)) {
+          setSections(json.sections);
+        }
+      } else {
+        // fallback: try admin page API by id (if exists)
+        const alt = await fetch(`/api/admin/pages/${pageId}`);
+        if (alt.ok) {
+          const aj = await alt.json();
+          const p = aj.page;
+          setPageData(p);
+          setTitle(p.title || "");
+          setSlug(p.slug || "");
+          setSeoTitle(p.seoTitle || "");
+          setSeoDescription(p.seoDescription || "");
+          setStatus(p.status || "DRAFT");
+          setJsonLd(p.jsonLd ? JSON.stringify(p.jsonLd, null, 2) : "");
+          // sections must be loaded separately
+          const secRes = await fetch(`/api/admin/pages/${pageId}/sections`);
+          if (secRes.ok) {
+            const sJson = await secRes.json();
+            setSections(sJson.sections || []);
+          }
+        } else {
+          // As fallback, load sections by admin API only
+          const secRes = await fetch(`/api/admin/pages/${pageId}/sections`);
+          if (secRes.ok) {
+            const sJson = await secRes.json();
+            setSections(sJson.sections || []);
+          }
+        }
       }
-      setSections(Array.isArray(json.sections) ? json.sections : []);
     } catch (err) {
-      console.error(err);
-      flash("Network error loading sections");
-      setSections([]);
+      console.error("Failed to fetch page/sections:", err);
+      flash("Failed to load page data");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchSections();
+    // If slug is not set, we can try to get it from pageId via admin API. For now call fetchPageAndSections
+    fetchPageAndSections();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageId]);
 
+  // SECTION CRUD: add / update / delete / reorder (existing logic)
   async function addSection(type = "TEXT_BLOCK") {
     if (!pageId) return flash("pageId missing");
     setActionLoading(true);
@@ -195,40 +188,6 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
     setRawContent(JSON.stringify(sec.content ?? {}, null, 2));
     setValidationErrors([]);
     setShowValidationErrors(false);
-  }
-  async function createHero(content) {
-    if (!pageId) return flash("pageId missing");
-    setHeroSaving(true);
-    try {
-      const payload = { type: "HERO", content };
-      const res = await fetch(`/api/admin/pages/${pageId}/sections`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        if (res.status === 400 && json.error === "Validation failed") {
-          const errors = parseValidationResponse(json);
-          setValidationErrors(errors);
-          setShowValidationErrors(true);
-          document
-            .getElementById("validation-errors")
-            ?.scrollIntoView({ behavior: "smooth" });
-          return;
-        }
-        flash(json.error || "Failed to create hero");
-        return;
-      }
-      setSections((s) => [...s, json.section]);
-      setShowHeroModal(false);
-      flash("Hero section created");
-    } catch (err) {
-      console.error("createHero error", err);
-      flash("Network error creating hero");
-    } finally {
-      setHeroSaving(false);
-    }
   }
 
   async function saveSection() {
@@ -280,6 +239,163 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
     }
   }
 
+  async function createHero(content) {
+    if (!pageId) return flash("pageId missing");
+    setHeroSaving(true);
+    try {
+      const payload = { type: "HERO", content };
+      const res = await fetch(`/api/admin/pages/${pageId}/sections`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        if (res.status === 400 && json.error === "Validation failed") {
+          const errors = parseValidationResponse(json);
+          setValidationErrors(errors);
+          setShowValidationErrors(true);
+          document
+            .getElementById("validation-errors")
+            ?.scrollIntoView({ behavior: "smooth" });
+          return;
+        }
+        flash(json.error || "Failed to create hero");
+        return;
+      }
+      setSections((s) => [...s, json.section]);
+      setShowHeroModal(false);
+      flash("Hero section created");
+    } catch (err) {
+      console.error("createHero error", err);
+      flash("Network error creating hero");
+    } finally {
+      setHeroSaving(false);
+    }
+  }
+
+  async function reorderByIds(orderedIds) {
+    if (!pageId) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/admin/pages/${pageId}/sections/reorder`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        flash(json.error || "Failed to reorder");
+        return;
+      }
+      await fetchPageAndSections();
+      flash("Reordered");
+    } catch (err) {
+      console.error(err);
+      flash("Network error reordering");
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function deleteSection(sec) {
+    if (!confirm("Delete this section?")) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/admin/pages/${pageId}/sections/${sec.id}`, {
+        method: "DELETE",
+      });
+      const text = await res.text();
+      let json = null;
+      try {
+        json = text ? JSON.parse(text) : null;
+      } catch (e) {
+        json = { error: text };
+      }
+
+      if (!res.ok) {
+        alert(json?.error || `Failed to delete (status ${res.status})`);
+        setActionLoading(false);
+        return;
+      }
+      setSections((list) => list.filter((it) => it.id !== sec.id));
+      if (selected?.id === sec.id) {
+        setSelected(null);
+        setRawContent("{}");
+      }
+      flash("Deleted");
+    } catch (err) {
+      console.error("Failed to delete section:", err);
+      flash("Network error deleting");
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  // Page-level save (includes JSON-LD parsing and inclusion)
+  async function savePageSettings() {
+    if (!pageId) return flash("pageId missing");
+
+    // Validate JSON-LD content
+    let parsedJsonLd = null;
+    if (jsonLd && jsonLd.trim()) {
+      try {
+        parsedJsonLd = JSON.parse(jsonLd);
+      } catch (e) {
+        alert("Invalid JSON-LD. Please fix the JSON syntax.");
+        return;
+      }
+    }
+
+    const updateData = {
+      title: title || undefined,
+      slug: slug || undefined,
+      seoTitle: seoTitle || undefined,
+      seoDescription: seoDescription || undefined,
+      jsonLd: parsedJsonLd, // will be null or object
+    };
+
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/admin/pages/${pageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+      });
+      const text = await res.text();
+      let json = null;
+      try {
+        json = text ? JSON.parse(text) : null;
+      } catch (e) {
+        json = { error: text };
+      }
+
+      if (!res.ok) {
+        if (res.status === 400 && json?.error === "Validation failed") {
+          const errs = parseValidationResponse(json);
+          setValidationErrors(errs);
+          setShowValidationErrors(true);
+          document
+            .getElementById("validation-errors")
+            ?.scrollIntoView({ behavior: "smooth" });
+        } else {
+          alert(json?.error || `Failed to update page (status ${res.status})`);
+        }
+        setActionLoading(false);
+        return;
+      }
+
+      flash("Page settings saved");
+      // Refresh page-level data
+      fetchPageAndSections();
+    } catch (err) {
+      console.error("Failed to save page settings:", err);
+      flash("Network error saving page");
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   async function toggleVisibility(sec) {
     if (!pageId) return;
     setActionLoading(true);
@@ -320,7 +436,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
         flash(json.error || "Failed to move section");
         return;
       }
-      await fetchSections();
+      await fetchPageAndSections();
     } catch (err) {
       console.error(err);
       flash("Network error moving section");
@@ -329,93 +445,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
     }
   }
 
-  async function createHero(content) {
-    if (!pageId) return flash("pageId missing");
-    setHeroSaving(true);
-    try {
-      const payload = { type: "HERO", content };
-      const res = await fetch(`/api/admin/pages/${pageId}/sections`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        // surface validation details if present
-        if (res.status === 400 && json.error === "Validation failed") {
-          const errors = parseValidationResponse(json);
-          setValidationErrors(errors);
-          setShowValidationErrors(true);
-          document
-            .getElementById("validation-errors")
-            ?.scrollIntoView({ behavior: "smooth" });
-          return;
-        }
-        flash(json.error || "Failed to create hero");
-        return;
-      }
-      // success: add returned section and close modal
-      setSections((s) => [...s, json.section]);
-      setShowHeroModal(false);
-      flash("Hero section created");
-    } catch (err) {
-      console.error("createHero error", err);
-      flash("Network error creating hero");
-    } finally {
-      setHeroSaving(false);
-    }
-  }
-
-  async function reorderByIds(orderedIds) {
-    if (!pageId) return;
-    setActionLoading(true);
-    try {
-      const res = await fetch(`/api/admin/pages/${pageId}/sections/reorder`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderedIds }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        flash(json.error || "Failed to reorder");
-        return;
-      }
-      await fetchSections();
-      flash("Reordered");
-    } catch (err) {
-      console.error(err);
-      flash("Network error reordering");
-    } finally {
-      setActionLoading(false);
-    }
-  }
-
-  async function deleteSection(sec) {
-    if (!confirm("Delete this section?")) return;
-    setActionLoading(true);
-    try {
-      const res = await fetch(`/api/admin/pages/${pageId}/sections/${sec.id}`, {
-        method: "DELETE",
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        flash(json.error || "Failed to delete section");
-        return;
-      }
-      setSections((list) => list.filter((it) => it.id !== sec.id));
-      if (selected?.id === sec.id) {
-        setSelected(null);
-        setRawContent("{}");
-      }
-      flash("Deleted");
-    } catch (err) {
-      console.error(err);
-      flash("Network error deleting");
-    } finally {
-      setActionLoading(false);
-    }
-  }
-
+  // Media picker and attach
   async function openMediaPicker() {
     setShowMediaPicker(true);
     if (mediaList.length) return;
@@ -423,9 +453,8 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
     try {
       const res = await fetch(`/api/media`);
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to list media");
-      const list = Array.isArray(json) ? json : json.media ? json.media : [];
-      setMediaList(list);
+      if (!res.ok) throw new Error(json.error || "Failed to load media");
+      setMediaList(Array.isArray(json) ? json : json.media ? json.media : []);
     } catch (err) {
       console.error(err);
       flash("Failed to load media");
@@ -498,15 +527,6 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
       return "";
     }
   }
-  function editSectionOrOpenModal(s) {
-    if (s.type === "TEXT_BLOCK") {
-      // open structured editor modal with initial content
-      setSelected(s);
-      setShowTextBlockModal(true);
-    } else {
-      selectSection(s);
-    }
-  }
 
   return (
     <div className="p-6">
@@ -515,12 +535,11 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
         <div className="space-x-2">
           <button
             className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={() => setShowTextBlockModal(true)}
+            onClick={() => addSection("TEXT_BLOCK")}
             disabled={actionLoading}
           >
             Add Text Block
           </button>
-
           <button
             className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
             onClick={() => setShowHeroModal(true)}
@@ -528,10 +547,9 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
           >
             Add Hero
           </button>
-
           <button
             className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-            onClick={() => fetchSections()}
+            onClick={() => fetchPageAndSections()}
             disabled={loading}
           >
             Refresh
@@ -539,6 +557,10 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
           <button
             className="px-3 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700"
             onClick={() => {
+              if (!pageId || !siteId) {
+                flash("pageId or siteId missing for preview");
+                return;
+              }
               const url = `/preview?pageId=${encodeURIComponent(pageId)}&siteId=${encodeURIComponent(siteId)}`;
               window.open(url, "_blank");
             }}
@@ -555,28 +577,9 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
         <div className="col-span-1">
           <div className="bg-white shadow rounded p-4">
             <h2 className="font-medium mb-2">Sections ({sections.length})</h2>
-
             {loading ? (
               <div className="flex items-center justify-center py-10">
-                <svg
-                  className="animate-spin h-6 w-6 text-gray-600"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8z"
-                  ></path>
-                </svg>
+                Loading...
               </div>
             ) : sections.length === 0 ? (
               <div className="text-sm text-gray-500">No sections yet</div>
@@ -681,18 +684,16 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
               <h2 className="text-lg font-medium">
                 {selected
                   ? `${selected.type} (Order ${selected.order})`
-                  : "Select a section to edit"}
+                  : "Page Settings & Editor"}
               </h2>
               <div className="text-sm text-slate-500">
                 {selected && (
-                  <div>
-                    Created: {formatDate(selected.createdAt)} · Updated:{" "}
-                    {formatDate(selected.updatedAt)}
-                  </div>
+                  <div>Updated: {formatDate(selected.updatedAt)}</div>
                 )}
               </div>
             </div>
 
+            {/* Validation errors panel */}
             {showValidationErrors && validationErrors.length > 0 && (
               <div
                 id="validation-errors"
@@ -709,9 +710,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                   </div>
                   <button
                     className="text-xs text-red-500 underline"
-                    onClick={() => {
-                      setShowValidationErrors(false);
-                    }}
+                    onClick={() => setShowValidationErrors(false)}
                   >
                     Dismiss
                   </button>
@@ -730,6 +729,78 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
               </div>
             )}
 
+            {/* Page Settings */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-700">
+                Title
+              </label>
+              <input
+                className="mt-1 block w-full border rounded p-2"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-slate-700">
+                  Slug
+                </label>
+                <input
+                  className="mt-1 block w-full border rounded p-2"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                />
+              </div>
+
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-slate-700">
+                  SEO Title
+                </label>
+                <input
+                  className="mt-1 block w-full border rounded p-2"
+                  value={seoTitle}
+                  onChange={(e) => setSeoTitle(e.target.value)}
+                />
+              </div>
+
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-slate-700">
+                  SEO Description
+                </label>
+                <textarea
+                  className="mt-1 block w-full border rounded p-2"
+                  value={seoDescription}
+                  onChange={(e) => setSeoDescription(e.target.value)}
+                />
+              </div>
+
+              {/* JSON-LD editor */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  JSON-LD (structured data)
+                </label>
+                <textarea
+                  className="w-full h-40 border rounded p-2 font-mono text-sm"
+                  value={jsonLd}
+                  onChange={(e) => setJsonLd(e.target.value)}
+                  placeholder='{"@context":"https://schema.org","@type":"Article", ... }'
+                />
+                <div className="text-xs text-slate-500 mt-1">
+                  Paste valid JSON-LD here. Save to persist to the page.
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center gap-2">
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  onClick={savePageSettings}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? "Saving..." : "Save Page"}
+                </button>
+              </div>
+            </div>
+
+            {/* Section editor (raw JSON) */}
             {!selected ? (
               <div className="text-slate-500">
                 Choose a section from the left to view details and edit its
@@ -739,16 +810,12 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
               <>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Content (JSON)
+                    Section Content (JSON)
                   </label>
                   <textarea
                     className="w-full h-72 border rounded p-3 font-mono text-sm"
                     value={rawContent}
-                    onChange={(e) => {
-                      setRawContent(e.target.value);
-                      setValidationErrors([]);
-                      setShowValidationErrors(false);
-                    }}
+                    onChange={(e) => setRawContent(e.target.value)}
                   />
                 </div>
 
@@ -758,11 +825,11 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                     onClick={saveSection}
                     disabled={actionLoading}
                   >
-                    {actionLoading ? "Saving..." : "Save"}
+                    Save Section
                   </button>
                   <button
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    onClick={openMediaPicker}
+                    onClick={() => openMediaPicker()}
                     disabled={actionLoading}
                   >
                     Attach Media
@@ -790,6 +857,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
         </div>
       </div>
 
+      {/* Media picker modal */}
       {showMediaPicker && (
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
           <div
@@ -846,6 +914,8 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
           </div>
         </div>
       )}
+
+      {/* Hero modal */}
       {showHeroModal && (
         <HeroEditorModal
           onCancel={() => setShowHeroModal(false)}
@@ -853,6 +923,8 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
           saving={heroSaving}
         />
       )}
+
+      {/* TextBlock modal */}
       {showTextBlockModal && (
         <TextBlockEditorModal
           initial={
@@ -863,13 +935,9 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
             setSelected(null);
           }}
           onSave={(content) => {
-            if (selected && selected.type === "TEXT_BLOCK") {
-              // updating existing section
+            if (selected && selected.type === "TEXT_BLOCK")
               updateTextBlock(selected.id, content);
-            } else {
-              // creating new section
-              createTextBlock(content);
-            }
+            else createTextBlock(content);
           }}
           saving={textBlockSaving}
         />

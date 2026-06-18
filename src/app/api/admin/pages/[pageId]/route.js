@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
-import { hasRole, ROLES } from "@/lib/rbac";
+import { canAssignRole, ROLES } from "@/lib/rbac";
 import { logAction } from "@/lib/audit";
 import { z } from "zod";
 
@@ -27,12 +27,13 @@ async function getSiteRole(userId, siteId) {
 }
 
 // Returns true if user.globalRole is SUPERADMIN OR site role meets requiredRole via hasRole()
+// Returns true if user.globalRole is SUPERADMIN OR site role meets requiredRole via canAssignRole()
 async function userHasSiteRole(user, siteId, requiredRole) {
   if (!user) return false;
   if (user.globalRole === ROLES.SUPERADMIN) return true;
   const siteRole = await getSiteRole(user.id, siteId);
   if (!siteRole) return false;
-  return hasRole(siteRole, requiredRole);
+  return canAssignRole(siteRole, requiredRole);
 }
 
 const PageUpdateSchema = z.object({
@@ -41,6 +42,7 @@ const PageUpdateSchema = z.object({
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
+  jsonLd: z.any().optional(), // accept JSON or null
 });
 
 export async function PATCH(req, { params }) {

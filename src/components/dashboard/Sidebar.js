@@ -8,6 +8,7 @@ import {
   Newspaper,
   Briefcase,
   Settings,
+  Users,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -41,6 +42,11 @@ export default function Sidebar() {
       href: "/settings",
       label: "Settings",
       icon: Settings,
+    },
+    {
+      href: "/users",
+      label: "Users",
+      icon: Users,
     },
   ];
 

@@ -33,6 +33,10 @@ model Site {
   users SiteUser[]
   pages Page[]
 
+  integrationKey       String?               @unique
+  integrationManifests IntegrationManifest[]
+  globalSettings       GlobalSettings[]
+
   @@index([isActive])
 }
 
@@ -179,9 +183,6 @@ enum PageStatus {
   PUBLISHED
 }
 
-
-
-
 model Page {
   id     String @id @default(cuid())
   siteId String
@@ -191,15 +192,18 @@ model Page {
   slug   String // Unique per site, e.g., "home", "about-us"
   status String @default("DRAFT") // DRAFT, PUBLISHED
 
-  // new fields
-  publishedAt DateTime?
-  publishedBy String? // user.id of publisher
+  // ---- New field for JSON-LD structured data ----
+  jsonLd Json? // nullable JSON field to store structured data
+  // -------------------------------------------------
 
   seoTitle       String?
   seoDescription String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  publishedAt DateTime?
+  publishedBy String?
 
   sections Section[]
 
@@ -211,7 +215,7 @@ model Section {
   id String @id @default(cuid())
 
   pageId String
-  page   Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   name String?
 
@@ -229,4 +233,33 @@ model Section {
 
   @@index([pageId])
   @@index([pageId, order])
+}
+
+model IntegrationManifest {
+  id           String   @id @default(cuid())
+  siteId       String
+  source       String? // e.g. "next-app", repo name
+  manifestHash String? // optional, for quick diff check
+  rawJson      Json // the full manifest JSON
+  createdAt    DateTime @default(now())
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@index([createdAt])
+}
+
+model GlobalSettings {
+  id        String   @id @default(cuid())
+  siteId    String   @unique
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  header    Json? // JSON structure for header (menu, logo, etc.)
+  footer    Json? // JSON structure for footer (columns, links, newsletter)
+  analytics Json? // Example: { googleAnalyticsId: "...", clarityId: "..." }
+  scripts   Json? // Extra scripts for head/footer
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([siteId])
+  @@map("GlobalSettings")
 }
