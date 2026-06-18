@@ -36,6 +36,9 @@ model Site {
   integrationKey       String?               @unique
   integrationManifests IntegrationManifest[]
   globalSettings       GlobalSettings[]
+  webhookEvents        WebhookEvent[]
+  webhookSubscriptions WebhookSubscription[]
+  posts                Post[]
 
   @@index([isActive])
 }
@@ -43,10 +46,10 @@ model Site {
 model User {
   id String @id @default(cuid())
 
-  email        String @unique
-  passwordHash String
-
-  globalRole GlobalRole @default(VIEWER)
+  email                String                @unique
+  passwordHash         String
+  webhookSubscriptions WebhookSubscription[]
+  globalRole           GlobalRole            @default(VIEWER)
 
   isActive Boolean @default(true)
 
@@ -60,6 +63,7 @@ model User {
   auditLogs    AuditLog[]
   loginHistory LoginHistory[]
   twoFactor    TwoFactor?
+  posts        Post[]
 
   @@index([email])
   @@index([isActive])
@@ -161,6 +165,7 @@ model Media {
 
   folderId String?
   folder   MediaFolder? @relation(fields: [folderId], references: [id])
+  posts    Post[]
 }
 
 model MediaFolder {
@@ -262,4 +267,91 @@ model GlobalSettings {
 
   @@index([siteId])
   @@map("GlobalSettings")
+}
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  siteId    String
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([siteId])
+  @@index([type])
+}
+
+model WebhookSubscription {
+  id        String   @id @default(cuid())
+  siteId    String
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name      String
+  url       String
+  events    String[]
+  secret    String
+  isActive  Boolean  @default(true)
+  failCount Int      @default(0)
+  lastError String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+
+  @@index([siteId])
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Category {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+  posts Post[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  slug  String @unique
+  posts Post[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id      String     @id @default(cuid())
+  siteId  String
+  site    Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  title   String
+  slug    String
+  content Json?
+  excerpt String?
+  status  PostStatus @default(DRAFT)
+
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  featuredImageId String?
+  featuredImage   Media?  @relation(fields: [featuredImageId], references: [id])
+
+  categories Category[]
+  tags       Tag[]
+
+  seoTitle       String?
+  seoDescription String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([authorId])
+  @@index([featuredImageId])
 }
