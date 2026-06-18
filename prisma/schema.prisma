@@ -39,6 +39,7 @@ model Site {
   webhookEvents        WebhookEvent[]
   webhookSubscriptions WebhookSubscription[]
   posts                Post[]
+  services             Service[]
 
   @@index([isActive])
 }
@@ -166,6 +167,7 @@ model Media {
   folderId String?
   folder   MediaFolder? @relation(fields: [folderId], references: [id])
   posts    Post[]
+  services Service[]
 }
 
 model MediaFolder {
@@ -353,5 +355,33 @@ model Post {
   @@unique([siteId, slug])
   @@index([siteId])
   @@index([authorId])
+  @@index([featuredImageId])
+}
+
+enum ServiceStatus {
+  DRAFT
+  ACTIVE
+}
+
+model Service {
+  id     String @id @default(cuid())
+  siteId String
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  title         String
+  description   String?
+  price         String?
+  ctaButtonText String?
+  ctaButtonLink String?
+  sortOrder     Int           @default(0)
+  status        ServiceStatus @default(DRAFT)
+
+  featuredImageId String?
+  featuredImage   Media?  @relation(fields: [featuredImageId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([siteId])
   @@index([featuredImageId])
 }

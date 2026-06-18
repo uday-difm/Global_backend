@@ -13,13 +13,15 @@ async function getAuthenticatedUser() {
 }
 
 /* --------------------- GET (single post) --------------------- */
-export async function GET(req, { params }) {
+export async function GET(req, { params: rawParams }) {
+  // Await params
   const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { postId } = params;
+  const actualParams = await rawParams;
+  const { postId } = actualParams;
 
   const post = await prisma.post.findUnique({
     where: { id: postId },
@@ -34,9 +36,6 @@ export async function GET(req, { params }) {
   if (!post) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
-
-  // Basic authorization: In a real app, you'd check if the user has rights to this site's post
-  // For now, we just check if they are authenticated.
 
   return NextResponse.json({ post });
 }
@@ -55,13 +54,15 @@ const UpdatePostSchema = z.object({
   tagIds: z.array(z.string()).optional(),
 });
 
-export async function PATCH(req, { params }) {
+export async function PATCH(req, { params: rawParams }) {
+  // Await params
   const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { postId } = params;
+  const actualParams = await rawParams;
+  const { postId } = actualParams;
 
   try {
     const body = await req.json();
@@ -73,7 +74,6 @@ export async function PATCH(req, { params }) {
     if (!postToUpdate) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
-    // Add authorization check here if needed (e.g., user belongs to post's site)
 
     const updatedPost = await prisma.post.update({
       where: { id: postId },
@@ -84,7 +84,6 @@ export async function PATCH(req, { params }) {
         seoTitle: data.seoTitle,
         seoDescription: data.seoDescription,
         featuredImageId: data.featuredImageId,
-        // For relations, .set() replaces existing relations
         categories: data.categoryIds
           ? { set: data.categoryIds.map((id) => ({ id })) }
           : undefined,
@@ -107,7 +106,6 @@ export async function PATCH(req, { params }) {
         { status: 400 },
       );
     }
-    // Handle other potential errors (e.g., Prisma errors) as needed
     return NextResponse.json(
       { error: "Failed to update post" },
       { status: 500 },
@@ -116,19 +114,20 @@ export async function PATCH(req, { params }) {
 }
 
 /* --------------------- DELETE (single post) --------------------- */
-export async function DELETE(req, { params }) {
+export async function DELETE(req, { params: rawParams }) {
+  // Await params
   const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { postId } = params;
+  const actualParams = await rawParams;
+  const { postId } = actualParams;
 
   const postToDelete = await prisma.post.findUnique({ where: { id: postId } });
   if (!postToDelete) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
-  // Add authorization check here if needed
 
   await prisma.post.delete({
     where: { id: postId },
