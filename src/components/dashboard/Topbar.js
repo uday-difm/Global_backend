@@ -26,7 +26,7 @@ export default function Topbar() {
 
   async function handleLogout() {
     setMenuOpen(false);
-    await signOut({ callbackUrl: "/login" });
+    await signOut({ callbackUrl: "/" });
   }
 
   return (

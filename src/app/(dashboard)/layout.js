@@ -6,7 +6,7 @@ export default async function Layout({ children }) {
   const user = await requireAuth();
 
   if (!user) {
-    redirect("/login");
+    redirect("/");
   }
 
   return <DashboardLayout>{children}</DashboardLayout>;
