@@ -488,6 +488,51 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     placeholder="GTM-XXXXXXX"
                   />
                 </div>
+
+                <div>
+                  <label htmlFor="searchConsoleId" className="block text-sm font-medium text-gray-700 mb-2">
+                    Google Search Console ID / Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    name="searchConsoleId"
+                    id="searchConsoleId"
+                    value={analytics.searchConsoleId || ""}
+                    onChange={handleAnalyticsChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    placeholder="e.g. google1234567890abcdef"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="metaPixelId" className="block text-sm font-medium text-gray-700 mb-2">
+                    Facebook Meta Pixel ID
+                  </label>
+                  <input
+                    type="text"
+                    name="metaPixelId"
+                    id="metaPixelId"
+                    value={analytics.metaPixelId || ""}
+                    onChange={handleAnalyticsChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    placeholder="e.g. 123456789012345"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="linkedInTagId" className="block text-sm font-medium text-gray-700 mb-2">
+                    LinkedIn Partner Insight ID
+                  </label>
+                  <input
+                    type="text"
+                    name="linkedInTagId"
+                    id="linkedInTagId"
+                    value={analytics.linkedInTagId || ""}
+                    onChange={handleAnalyticsChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    placeholder="e.g. 1234567"
+                  />
+                </div>
               </div>
             </div>
           )}
