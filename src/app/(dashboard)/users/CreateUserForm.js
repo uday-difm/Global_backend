@@ -34,9 +34,10 @@ export default function CreateUserForm() {
 
   async function handleCreate() {
     setError(null);
-    if (!email.trim()) return setError("Email required");
-    if (!password) return setError("Password required");
-    if (password !== confirm) return setError("Passwords do not match");
+    if (!email.trim()) return setError("Email is required.");
+    if (!password) return setError("Password is required.");
+    if (password.length < 6) return setError("Password must be at least 6 characters.");
+    if (password !== confirm) return setError("Passwords do not match.");
     setLoading(true);
     try {
       const res = await fetch("/api/admin/users", {
@@ -46,7 +47,12 @@ export default function CreateUserForm() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error || "Failed to create user");
+        // Surface the first Zod field error if available, otherwise use top-level error
+        const detail = json.details?.[0];
+        const msg = detail
+          ? `${detail.path?.join(".") || "field"}: ${detail.message}`
+          : json.error || "Failed to create user";
+        setError(msg);
         setLoading(false);
         return;
       }
@@ -114,7 +120,10 @@ export default function CreateUserForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Password</label>
+                <label className="block text-sm font-medium">
+                  Password
+                  <span className="ml-1 text-xs font-normal text-gray-400">(min 6 chars)</span>
+                </label>
                 <input
                   type="password"
                   className="mt-1 block w-full border rounded p-2"
