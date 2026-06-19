@@ -239,15 +239,79 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
     }
   }
 
-  async function createHero(content) {
+  async function saveHero(content) {
     if (!pageId) return flash("pageId missing");
     setHeroSaving(true);
     try {
-      const payload = { type: "HERO", content };
+      if (selected && selected.type === "HERO") {
+        // PATCH update
+        const res = await fetch(`/api/admin/pages/${pageId}/sections/${selected.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          if (res.status === 400 && json.error === "Validation failed") {
+            const errors = parseValidationResponse(json);
+            setValidationErrors(errors);
+            setShowValidationErrors(true);
+            document
+              .getElementById("validation-errors")
+              ?.scrollIntoView({ behavior: "smooth" });
+            return;
+          }
+          flash(json.error || "Failed to update hero");
+          return;
+        }
+        setSections((list) =>
+          list.map((it) => (it.id === json.section.id ? json.section : it))
+        );
+        setSelected(json.section);
+        flash("Hero updated");
+      } else {
+        // POST create
+        const res = await fetch(`/api/admin/pages/${pageId}/sections`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "HERO", content }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          if (res.status === 400 && json.error === "Validation failed") {
+            const errors = parseValidationResponse(json);
+            setValidationErrors(errors);
+            setShowValidationErrors(true);
+            document
+              .getElementById("validation-errors")
+              ?.scrollIntoView({ behavior: "smooth" });
+            return;
+          }
+          flash(json.error || "Failed to create hero");
+          return;
+        }
+        setSections((s) => [...s, json.section]);
+        flash("Hero section created");
+      }
+      setValidationErrors([]);
+      setShowValidationErrors(false);
+      setShowHeroModal(false);
+    } catch (err) {
+      console.error("saveHero error", err);
+      flash("Network error saving hero");
+    } finally {
+      setHeroSaving(false);
+    }
+  }
+
+  async function createTextBlock(content) {
+    if (!pageId) return flash("pageId missing");
+    setTextBlockSaving(true);
+    try {
       const res = await fetch(`/api/admin/pages/${pageId}/sections`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ type: "TEXT_BLOCK", content }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -260,17 +324,58 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
             ?.scrollIntoView({ behavior: "smooth" });
           return;
         }
-        flash(json.error || "Failed to create hero");
+        flash(json.error || "Failed to create text block");
         return;
       }
+      setValidationErrors([]);
+      setShowValidationErrors(false);
       setSections((s) => [...s, json.section]);
-      setShowHeroModal(false);
-      flash("Hero section created");
+      setShowTextBlockModal(false);
+      flash("Text block section created");
     } catch (err) {
-      console.error("createHero error", err);
-      flash("Network error creating hero");
+      console.error("createTextBlock error", err);
+      flash("Network error creating text block");
     } finally {
-      setHeroSaving(false);
+      setTextBlockSaving(false);
+    }
+  }
+
+  async function updateTextBlock(sectionId, content) {
+    if (!pageId) return flash("pageId missing");
+    setTextBlockSaving(true);
+    try {
+      const res = await fetch(`/api/admin/pages/${pageId}/sections/${sectionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        if (res.status === 400 && json.error === "Validation failed") {
+          const errors = parseValidationResponse(json);
+          setValidationErrors(errors);
+          setShowValidationErrors(true);
+          document
+            .getElementById("validation-errors")
+            ?.scrollIntoView({ behavior: "smooth" });
+          return;
+        }
+        flash(json.error || "Failed to update text block");
+        return;
+      }
+      setValidationErrors([]);
+      setShowValidationErrors(false);
+      setSections((list) =>
+        list.map((it) => (it.id === json.section.id ? json.section : it))
+      );
+      setSelected(json.section);
+      setShowTextBlockModal(false);
+      flash("Text block updated");
+    } catch (err) {
+      console.error("updateTextBlock error", err);
+      flash("Network error updating text block");
+    } finally {
+      setTextBlockSaving(false);
     }
   }
 
@@ -535,14 +640,20 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
         <div className="space-x-2">
           <button
             className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={() => addSection("TEXT_BLOCK")}
+            onClick={() => {
+              setSelected(null);
+              setShowTextBlockModal(true);
+            }}
             disabled={actionLoading}
           >
             Add Text Block
           </button>
           <button
             className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-            onClick={() => setShowHeroModal(true)}
+            onClick={() => {
+              setSelected(null);
+              setShowHeroModal(true);
+            }}
             disabled={actionLoading}
           >
             Add Hero
@@ -827,6 +938,22 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                   >
                     Save Section
                   </button>
+                  {(selected.type === "TEXT_BLOCK" || selected.type === "HERO") && (
+                    <button
+                      type="button"
+                      className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                      onClick={() => {
+                        if (selected.type === "TEXT_BLOCK") {
+                          setShowTextBlockModal(true);
+                        } else if (selected.type === "HERO") {
+                          setShowHeroModal(true);
+                        }
+                      }}
+                      disabled={actionLoading}
+                    >
+                      Edit Visually
+                    </button>
+                  )}
                   <button
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                     onClick={() => openMediaPicker()}
@@ -918,8 +1045,9 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
       {/* Hero modal */}
       {showHeroModal && (
         <HeroEditorModal
+          initial={selected && selected.type === "HERO" ? selected.content : {}}
           onCancel={() => setShowHeroModal(false)}
-          onSave={(content) => createHero(content)}
+          onSave={(content) => saveHero(content)}
           saving={heroSaving}
         />
       )}
@@ -932,7 +1060,6 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
           }
           onCancel={() => {
             setShowTextBlockModal(false);
-            setSelected(null);
           }}
           onSave={(content) => {
             if (selected && selected.type === "TEXT_BLOCK")
