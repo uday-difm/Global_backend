@@ -13,14 +13,24 @@ export default async function NewPostPage() {
     );
   }
 
+  // Fetch categories and authors for selection
+  const categories = await prisma.category.findMany({
+    orderBy: { name: "asc" }
+  });
+
+  const authors = await prisma.user.findMany({
+    select: { id: true, email: true },
+    orderBy: { email: "asc" }
+  });
+
   return (
     <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold">Create New Post</h1>
       </div>
       <div className="bg-white shadow rounded p-6">
-        {/* We pass the siteId for the API call */}
-        <PostEditor siteId={site.id} />
+        {/* We pass the siteId, categories, and authors */}
+        <PostEditor siteId={site.id} categories={categories} authors={authors} />
       </div>
     </div>
   );

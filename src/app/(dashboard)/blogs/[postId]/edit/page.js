@@ -2,10 +2,14 @@ import PostEditor from "../../PostEditor";
 import prisma from "@/lib/prisma";
 
 export default async function EditPostPage({ params }) {
-  const { postId } = params;
+  const { postId } = await params;
 
   const post = await prisma.post.findUnique({
     where: { id: postId },
+    include: {
+      categories: true,
+      featuredImage: true,
+    }
   });
 
   if (!post) {
@@ -16,6 +20,16 @@ export default async function EditPostPage({ params }) {
       </div>
     );
   }
+
+  // Fetch categories and authors for selection
+  const categories = await prisma.category.findMany({
+    orderBy: { name: "asc" }
+  });
+
+  const authors = await prisma.user.findMany({
+    select: { id: true, email: true },
+    orderBy: { email: "asc" }
+  });
 
   // The siteId is taken from the post itself
   const siteId = post.siteId;
@@ -28,7 +42,7 @@ export default async function EditPostPage({ params }) {
       </div>
       <div className="bg-white shadow rounded p-6">
         {/* We pass the full post object to pre-fill the form */}
-        <PostEditor siteId={siteId} post={post} />
+        <PostEditor siteId={siteId} post={post} categories={categories} authors={authors} />
       </div>
     </div>
   );

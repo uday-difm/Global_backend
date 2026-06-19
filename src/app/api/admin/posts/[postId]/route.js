@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
+import { canManageBlogs } from "@/lib/permissions";
 import { z } from "zod";
 
 // Dev-friendly authenticated user helper
@@ -14,10 +15,13 @@ async function getAuthenticatedUser() {
 
 /* --------------------- GET (single post) --------------------- */
 export async function GET(req, { params: rawParams }) {
-  // Await params
   const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!canManageBlogs(user)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const actualParams = await rawParams;
@@ -52,13 +56,18 @@ const UpdatePostSchema = z.object({
   featuredImageId: z.string().nullable().optional(),
   categoryIds: z.array(z.string()).optional(),
   tagIds: z.array(z.string()).optional(),
+  publishedAt: z.string().nullable().optional(),
+  authorId: z.string().nullable().optional(),
 });
 
 export async function PATCH(req, { params: rawParams }) {
-  // Await params
   const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!canManageBlogs(user)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const actualParams = await rawParams;
@@ -75,6 +84,14 @@ export async function PATCH(req, { params: rawParams }) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
+    // Process publishedAt logic
+    let publishedAtVal = undefined;
+    if (data.publishedAt !== undefined) {
+      publishedAtVal = data.publishedAt ? new Date(data.publishedAt) : null;
+    } else if (data.status === "PUBLISHED" && !postToUpdate.publishedAt) {
+      publishedAtVal = new Date();
+    }
+
     const updatedPost = await prisma.post.update({
       where: { id: postId },
       data: {
@@ -84,6 +101,8 @@ export async function PATCH(req, { params: rawParams }) {
         seoTitle: data.seoTitle,
         seoDescription: data.seoDescription,
         featuredImageId: data.featuredImageId,
+        authorId: data.authorId !== undefined ? data.authorId : undefined,
+        publishedAt: publishedAtVal,
         categories: data.categoryIds
           ? { set: data.categoryIds.map((id) => ({ id })) }
           : undefined,
@@ -94,6 +113,8 @@ export async function PATCH(req, { params: rawParams }) {
       include: {
         categories: true,
         tags: true,
+        featuredImage: true,
+        author: { select: { id: true, email: true } },
       },
     });
 
@@ -115,10 +136,13 @@ export async function PATCH(req, { params: rawParams }) {
 
 /* --------------------- DELETE (single post) --------------------- */
 export async function DELETE(req, { params: rawParams }) {
-  // Await params
   const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!canManageBlogs(user)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const actualParams = await rawParams;

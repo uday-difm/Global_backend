@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
+import { canManageBlogs } from "@/lib/permissions";
 import { z } from "zod";
 
 // Dev-friendly authenticated user helper
@@ -18,6 +19,10 @@ export async function GET(req) {
   const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!canManageBlogs(user)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -39,6 +44,7 @@ export async function GET(req) {
       },
       categories: true,
       tags: true,
+      featuredImage: true,
     },
   });
 
@@ -57,9 +63,12 @@ const CreatePostSchema = z.object({
   // SEO fields
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
-  // Relationships
+  // Relationships & media
   categoryIds: z.array(z.string()).optional(),
   tagIds: z.array(z.string()).optional(),
+  featuredImageId: z.string().nullable().optional(),
+  publishedAt: z.string().nullable().optional(),
+  authorId: z.string().nullable().optional(),
 });
 
 // Slug generation helpers
@@ -93,6 +102,10 @@ export async function POST(req) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (!canManageBlogs(user)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const body = await req.json();
     const data = CreatePostSchema.parse(body);
@@ -101,6 +114,14 @@ export async function POST(req) {
       (data.slug && slugify(data.slug)) || slugify(data.title || "new-post");
     const slug = await generateUniquePostSlug(data.siteId, baseSlug);
 
+    // Setup publication date logic
+    let publishedAtVal = null;
+    if (data.publishedAt) {
+      publishedAtVal = new Date(data.publishedAt);
+    } else if (data.status === "PUBLISHED") {
+      publishedAtVal = new Date();
+    }
+
     const newPost = await prisma.post.create({
       data: {
         siteId: data.siteId,
@@ -108,7 +129,9 @@ export async function POST(req) {
         slug,
         content: data.content,
         status: data.status || "DRAFT",
-        authorId: user.id, // Assign the current user as the author
+        authorId: data.authorId || user.id, // Assign custom or current user as author
+        featuredImageId: data.featuredImageId,
+        publishedAt: publishedAtVal,
         seoTitle: data.seoTitle,
         seoDescription: data.seoDescription,
         categories: data.categoryIds
@@ -121,6 +144,13 @@ export async function POST(req) {
       include: {
         categories: true,
         tags: true,
+        featuredImage: true,
+        author: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
       },
     });
 
@@ -155,3 +185,4 @@ export async function POST(req) {
     );
   }
 }
+
