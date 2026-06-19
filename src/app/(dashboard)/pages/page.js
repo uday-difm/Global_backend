@@ -3,6 +3,7 @@ import Link from "next/link";
 import prisma from "@/lib/prisma";
 import CreatePageForm from "./CreatePageForm";
 import PublishToggle from "./PublishToggle";
+import DeletePageButton from "./DeletePageButton";
 
 /**
  * Pages admin list (server component)
@@ -113,6 +114,9 @@ export default async function PagesAdmin() {
 
                   {/* Publish toggle: client component; only primitive props passed */}
                   <PublishToggle pageId={p.id} initialStatus={p.status} />
+
+                  {/* Delete button: client component */}
+                  <DeletePageButton pageId={p.id} />
                 </td>
               </tr>
             ))}

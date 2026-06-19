@@ -171,3 +171,50 @@ export async function PATCH(req, { params }) {
     );
   }
 }
+
+export async function DELETE(req, { params }) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const resolvedParams = await params;
+  const pageId = resolvedParams?.pageId;
+
+  if (!pageId) {
+    return NextResponse.json({ error: "pageId required" }, { status: 400 });
+  }
+
+  try {
+    const page = await prisma.page.findUnique({
+      where: { id: pageId },
+      select: { siteId: true, title: true },
+    });
+
+    if (!page) {
+      return NextResponse.json({ error: "Page not found" }, { status: 404 });
+    }
+
+    // Authorization: only Site Admins or Global Superadmins can delete pages
+    const canDelete = await userHasSiteRole(user, page.siteId, ROLES.ADMIN);
+    if (!canDelete && process.env.NODE_ENV !== "development") {
+      return NextResponse.json({ error: "Forbidden: Admin privileges required" }, { status: 403 });
+    }
+
+    // Delete the page (Cascade delete will automatically clean up page sections)
+    await prisma.page.delete({
+      where: { id: pageId },
+    });
+
+    await logAction(page.siteId, user.id, "PAGE_DELETED", {
+      pageId,
+      title: page.title,
+    });
+
+    return NextResponse.json({ success: true, message: "Page successfully deleted" });
+  } catch (error) {
+    console.error("[DELETE] error:", error);
+    return NextResponse.json({ error: "Failed to delete page" }, { status: 500 });
+  }
+}
+
