@@ -1,42 +1,70 @@
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/requireAuth";
 import LeadsManager from "./LeadsManager";
 
+export const metadata = {
+  title: "Leads & Contact Forms | CMS Admin",
+  description: "Manage contact form submissions, leads pipeline, email settings and spam protection",
+};
+
+async function getSiteForUser(user) {
+  if (user.globalRole === "SUPERADMIN") {
+    return prisma.site.findFirst({ orderBy: { createdAt: "asc" } });
+  }
+  const membership = await prisma.siteMembership.findFirst({
+    where: { userId: user.id },
+    orderBy: { createdAt: "asc" },
+    include: { site: true },
+  });
+  return membership?.site || null;
+}
+
 export default async function LeadsPage() {
-  const site = await prisma.site.findFirst({ where: { isActive: true } });
+  const user = await requireAuth();
+  if (!user) return null;
+
+  const site = await getSiteForUser(user);
 
   if (!site) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold">Leads & Submissions CRM</h1>
-        <p className="mt-4 text-sm text-red-600">No active site found. Please configure a site in the database.</p>
+        <h1 className="text-2xl font-bold">Leads & Contact Forms</h1>
+        <p className="mt-4 text-sm text-red-600">No active site found. Please configure a site first.</p>
       </div>
     );
   }
 
-  const submissions = await prisma.contactFormSubmission.findMany({
-    where: { siteId: site.id },
-    orderBy: { createdAt: "desc" },
-  });
+  const [submissions, leads, settings] = await Promise.all([
+    prisma.contactFormSubmission.findMany({
+      where: { siteId: site.id },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.lead.findMany({
+      where: { siteId: site.id },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.globalSettings.findUnique({
+      where: { siteId: site.id },
+      select: { emailSettings: true, securityControls: true },
+    }),
+  ]);
 
-  const leads = await prisma.lead.findMany({
-    where: { siteId: site.id },
-    orderBy: { createdAt: "desc" },
-  });
+  // Sanitize email settings: never expose password to client
+  const emailSettings = settings?.emailSettings
+    ? { ...settings.emailSettings, password: settings.emailSettings.password ? "********" : "" }
+    : {};
+
+  const initialConfig = {
+    emailSettings,
+    spamConfig: settings?.securityControls || {},
+  };
 
   return (
-    <div className="w-full">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Leads & Submissions CRM</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Site: <span className="font-medium text-gray-800">{site.name}</span> ({site.domain || site.id})
-        </p>
-      </div>
-
-      <LeadsManager
-        siteId={site.id}
-        initialSubmissions={JSON.parse(JSON.stringify(submissions))}
-        initialLeads={JSON.parse(JSON.stringify(leads))}
-      />
-    </div>
+    <LeadsManager
+      siteId={site.id}
+      initialSubmissions={JSON.parse(JSON.stringify(submissions))}
+      initialLeads={JSON.parse(JSON.stringify(leads))}
+      initialConfig={initialConfig}
+    />
   );
 }

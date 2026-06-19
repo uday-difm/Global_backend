@@ -18,6 +18,7 @@ import {
   PanelBottom,
   PanelTop,
   ShieldCheck,
+  Phone,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -74,6 +75,11 @@ export default function Sidebar() {
           href: "/team",
           label: "Team Members",
           icon: UsersRound,
+        },
+        {
+          href: "/contact",
+          label: "Contact Details",
+          icon: Phone,
         },
         {
           href: "/header",

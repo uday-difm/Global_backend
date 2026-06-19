@@ -57,7 +57,7 @@ export async function PATCH(req) {
     encoding: "base32",
     token: token.toString().trim(), // Ensure input is string
     window: 2,
-    algorith: "sha1",
+    algorithm: "sha1",
   });
 
   if (verified) {

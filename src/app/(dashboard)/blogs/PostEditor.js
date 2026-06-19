@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import MediaPickerModal from "@/components/media/MediaPickerModal";
 
 export default function PostEditor({ siteId, post, categories = [], authors = [] }) {
   const router = useRouter();
@@ -27,8 +28,6 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
 
   // Media Selector states
   const [showMediaPicker, setShowMediaPicker] = useState(false);
-  const [mediaList, setMediaList] = useState([]);
-  const [mediaLoading, setMediaLoading] = useState(false);
   const [featuredImageId, setFeaturedImageId] = useState(null);
   const [featuredImageUrl, setFeaturedImageUrl] = useState("");
 
@@ -146,22 +145,7 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
   };
 
   // Media Picker Dialog Functions
-  const openMediaPicker = async () => {
-    setShowMediaPicker(true);
-    if (mediaList.length > 0) return;
-    setMediaLoading(true);
-    try {
-      const res = await fetch(`/api/media`);
-      const json = await res.json();
-      if (res.ok) {
-        setMediaList(Array.isArray(json) ? json : json.media ? json.media : []);
-      }
-    } catch (err) {
-      console.error("Fetch media error:", err);
-    } finally {
-      setMediaLoading(false);
-    }
-  };
+  const openMediaPicker = () => setShowMediaPicker(true);
 
   const selectFeaturedImage = (media) => {
     setFeaturedImageId(media.id);
@@ -526,48 +510,12 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
 
       {/* Media Picker Modal */}
       {showMediaPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900 opacity-40" onClick={() => setShowMediaPicker(false)} />
-          
-          <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col z-10 overflow-hidden border border-slate-200">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h4 className="font-semibold text-slate-900 text-sm">Select Image from Media Library</h4>
-              <button
-                className="text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors"
-                onClick={() => setShowMediaPicker(false)}
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto flex-1 bg-slate-50">
-              {mediaLoading ? (
-                <div className="py-12 text-center text-xs text-slate-400">Loading library media...</div>
-              ) : mediaList.length === 0 ? (
-                <div className="py-12 text-center text-xs text-slate-400">
-                  No media found. Upload images to the Media Library page first.
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-4">
-                  {mediaList.map((m) => (
-                    <div
-                      key={m.id}
-                      onClick={() => selectFeaturedImage(m)}
-                      className="cursor-pointer border border-slate-200 rounded-md overflow-hidden bg-white hover:shadow-md hover:border-slate-400 transition-all aspect-video relative group"
-                    >
-                      <img
-                        src={m.secureUrl || m.url}
-                        alt={m.altText || m.fileName}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-0 transition-opacity" />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <MediaPickerModal
+          title="Select Featured Image"
+          filter="images"
+          onSelect={selectFeaturedImage}
+          onClose={() => setShowMediaPicker(false)}
+        />
       )}
     </div>
   );

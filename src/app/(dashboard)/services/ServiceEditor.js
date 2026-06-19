@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Image as ImageIcon, Plus, Trash2, Edit, AlertCircle, HelpCircle, Save, CheckCircle } from "lucide-react";
+import MediaPickerModal from "@/components/media/MediaPickerModal";
 
 export default function ServiceEditor({ siteId, service }) {
   const router = useRouter();
@@ -23,8 +24,6 @@ export default function ServiceEditor({ siteId, service }) {
 
   // Media Picker states
   const [showMediaPicker, setShowMediaPicker] = useState(false);
-  const [mediaList, setMediaList] = useState([]);
-  const [mediaLoading, setMediaLoading] = useState(false);
 
   // FAQs states
   const [faqs, setFaqs] = useState([]);
@@ -126,22 +125,7 @@ export default function ServiceEditor({ siteId, service }) {
   };
 
   // Media picker helpers
-  const openMediaPicker = async () => {
-    setShowMediaPicker(true);
-    if (mediaList.length > 0) return;
-    setMediaLoading(true);
-    try {
-      const res = await fetch(`/api/media`);
-      const json = await res.json();
-      if (res.ok) {
-        setMediaList(json.media || json || []);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setMediaLoading(false);
-    }
-  };
+  const openMediaPicker = () => setShowMediaPicker(true);
 
   const attachImage = (media) => {
     setFormData((prev) => ({ ...prev, featuredImageId: media.id }));
@@ -460,50 +444,12 @@ export default function ServiceEditor({ siteId, service }) {
 
       {/* Media Picker Modal */}
       {showMediaPicker && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
-          <div className="absolute inset-0 bg-black opacity-30" onClick={() => setShowMediaPicker(false)} />
-          <div className="relative bg-white rounded-xl shadow-lg w-full max-w-4xl p-6 z-10">
-            <div className="flex items-center justify-between mb-4 pb-2 border-b">
-              <h3 className="font-bold text-gray-900 text-base">Select Featured Image</h3>
-              <button className="text-xs font-semibold text-gray-500 hover:text-gray-900" onClick={() => setShowMediaPicker(false)}>
-                Close
-              </button>
-            </div>
-
-            {mediaLoading ? (
-              <div className="py-12 text-center text-xs text-gray-400">Loading library media...</div>
-            ) : mediaList.length === 0 ? (
-              <div className="py-12 text-center text-xs text-gray-400">
-                No media found. Upload images to the Media Library page first.
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-h-[50vh] overflow-y-auto p-1">
-                {mediaList.map((m) => (
-                  <div key={m.id} className="border rounded-lg p-2 bg-gray-50/50 hover:shadow transition">
-                    <div className="relative w-full h-24 rounded overflow-hidden">
-                      <img
-                        src={m.secureUrl || m.url}
-                        alt={m.altText || m.fileName || ""}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-gray-500 truncate max-w-[120px]">
-                        {m.fileName}
-                      </span>
-                      <button
-                        onClick={() => attachImage(m)}
-                        className="px-2 py-1 bg-blue-600 text-white rounded text-[10px] font-semibold hover:bg-blue-700 transition"
-                      >
-                        Choose
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <MediaPickerModal
+          title="Select Featured Image"
+          filter="images"
+          onSelect={attachImage}
+          onClose={() => setShowMediaPicker(false)}
+        />
       )}
 
       {/* FAQ Edit/Create Modal */}
