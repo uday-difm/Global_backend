@@ -1,5 +1,6 @@
 import Link from "next/link";
 import prisma from "@/lib/prisma";
+import DeleteServiceButton from "./DeleteServiceButton";
 
 export default async function ServicesAdmin() {
   // Fetch the first active site, consistent with other admin pages
@@ -94,9 +95,7 @@ export default async function ServicesAdmin() {
                   >
                     Edit
                   </Link>
-                  <button className="px-2 py-1 bg-red-600 text-white rounded text-xs">
-                    Delete
-                  </button>
+                  <DeleteServiceButton serviceId={service.id} />
                 </td>
               </tr>
             ))}

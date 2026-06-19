@@ -8,6 +8,7 @@ export default async function EditServicePage({ params: rawParams }) {
 
   const service = await prisma.service.findUnique({
     where: { id: serviceId },
+    include: { featuredImage: true },
   });
 
   if (!service) {
