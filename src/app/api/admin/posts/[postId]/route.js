@@ -49,10 +49,11 @@ export async function GET(req, { params: rawParams }) {
 // Using .partial() to make all fields optional for updates
 const UpdatePostSchema = z.object({
   title: z.string().min(1).optional(),
+  excerpt: z.string().nullable().optional(),
   content: z.any().optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
-  seoTitle: z.string().optional(),
-  seoDescription: z.string().optional(),
+  seoTitle: z.string().nullable().optional(),
+  seoDescription: z.string().nullable().optional(),
   featuredImageId: z.string().nullable().optional(),
   categoryIds: z.array(z.string()).optional(),
   tagIds: z.array(z.string()).optional(),
@@ -96,6 +97,7 @@ export async function PATCH(req, { params: rawParams }) {
       where: { id: postId },
       data: {
         title: data.title,
+        excerpt: data.excerpt,
         content: data.content,
         status: data.status,
         seoTitle: data.seoTitle,

@@ -58,11 +58,12 @@ const CreatePostSchema = z.object({
   siteId: z.string().min(1),
   title: z.string().min(1),
   slug: z.string().optional(),
+  excerpt: z.string().nullable().optional(),
   content: z.any().optional(),
   status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
   // SEO fields
-  seoTitle: z.string().optional(),
-  seoDescription: z.string().optional(),
+  seoTitle: z.string().nullable().optional(),
+  seoDescription: z.string().nullable().optional(),
   // Relationships & media
   categoryIds: z.array(z.string()).optional(),
   tagIds: z.array(z.string()).optional(),
@@ -127,6 +128,7 @@ export async function POST(req) {
         siteId: data.siteId,
         title: data.title,
         slug,
+        excerpt: data.excerpt,
         content: data.content,
         status: data.status || "DRAFT",
         authorId: data.authorId || user.id, // Assign custom or current user as author
