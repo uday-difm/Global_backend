@@ -1,23 +1,12 @@
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
+import { getSiteForUser } from "@/lib/getSiteForUser";
 import LeadsManager from "./LeadsManager";
 
 export const metadata = {
   title: "Leads & Contact Forms | CMS Admin",
   description: "Manage contact form submissions, leads pipeline, email settings and spam protection",
 };
-
-async function getSiteForUser(user) {
-  if (user.globalRole === "SUPERADMIN") {
-    return prisma.site.findFirst({ orderBy: { createdAt: "asc" } });
-  }
-  const membership = await prisma.siteMembership.findFirst({
-    where: { userId: user.id },
-    orderBy: { createdAt: "asc" },
-    include: { site: true },
-  });
-  return membership?.site || null;
-}
 
 export default async function LeadsPage() {
   const user = await requireAuth();
