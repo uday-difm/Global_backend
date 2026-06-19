@@ -1,10 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, Search, Bell, UserCircle } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Menu, Search, Bell, UserCircle, LogOut, ChevronDown } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function Topbar() {
   const [showSearch, setShowSearch] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const { data: session } = useSession();
+
+  const userEmail = session?.user?.email ?? "Admin";
+  const userRole = session?.user?.globalRole ?? "—";
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  async function handleLogout() {
+    setMenuOpen(false);
+    await signOut({ callbackUrl: "/login" });
+  }
 
   return (
     <>
@@ -22,7 +45,6 @@ export default function Topbar() {
               <h1 className="text-lg font-semibold text-gray-900 md:text-xl">
                 Admin Panel
               </h1>
-
               <p className="hidden text-sm text-gray-500 sm:block">
                 Manage your website content
               </p>
@@ -37,7 +59,6 @@ export default function Topbar() {
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
-
               <input
                 type="text"
                 placeholder="Search..."
@@ -58,15 +79,57 @@ export default function Topbar() {
               <Bell size={18} />
             </button>
 
-            {/* User */}
-            <div className="flex items-center gap-2 rounded-lg border px-2 py-2 sm:px-3">
-              <UserCircle size={22} />
+            {/* User menu */}
+            <div className="relative" ref={menuRef}>
+              <button
+                id="user-menu-btn"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex items-center gap-2 rounded-lg border px-2 py-2 transition hover:bg-gray-50 sm:px-3"
+              >
+                <UserCircle size={22} className="text-gray-600 shrink-0" />
 
-              <div className="hidden lg:block">
-                <p className="text-sm font-medium">Admin</p>
+                <div className="hidden lg:block text-left">
+                  <p className="text-sm font-medium text-gray-900 leading-tight max-w-[140px] truncate">
+                    {userEmail}
+                  </p>
+                  <p className="text-xs text-gray-500">{userRole}</p>
+                </div>
 
-                <p className="text-xs text-gray-500">Super Admin</p>
-              </div>
+                <ChevronDown
+                  size={14}
+                  className={`hidden lg:block text-gray-400 transition-transform ${
+                    menuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown */}
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-52 rounded-xl border bg-white shadow-lg overflow-hidden z-50">
+                  {/* User info header */}
+                  <div className="px-4 py-3 border-b bg-gray-50">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Signed in as
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 truncate mt-0.5">
+                      {userEmail}
+                    </p>
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">
+                      {userRole}
+                    </span>
+                  </div>
+
+                  {/* Logout */}
+                  <button
+                    id="logout-btn"
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut size={15} />
+                    Sign out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -79,7 +142,6 @@ export default function Topbar() {
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
-
               <input
                 type="text"
                 placeholder="Search..."
