@@ -7,16 +7,26 @@ export async function GET(req) {
     const siteId = searchParams.get("siteId");
 
     if (!siteId) {
-      return NextResponse.json({ error: "siteId is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "siteId is required" },
+        { status: 400 },
+      );
     }
 
     const settings = await prisma.globalSettings.findUnique({
       where: { siteId },
-      select: { ctaConfig: true }
+      select: { ctaConfig: true },
     });
 
-    return NextResponse.json({ success: true, ctaConfig: settings?.ctaConfig || null });
+    return NextResponse.json({
+      success: true,
+      ctaConfig: settings?.ctaConfig || null,
+    });
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    console.error("GET /api/cta error:", err);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

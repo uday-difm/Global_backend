@@ -9,7 +9,7 @@ import { useState } from "react";
   - pageId: string
   - initialStatus: "DRAFT" | "PUBLISHED"
 */
-export default function PublishToggle({ pageId, initialStatus }) {
+export default function PublishToggle({ pageId, initialStatus, siteId }) {
   const [status, setStatus] = useState(initialStatus);
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +19,10 @@ export default function PublishToggle({ pageId, initialStatus }) {
       const newStatus = status === "PUBLISHED" ? "DRAFT" : "PUBLISHED";
       const res = await fetch(`/api/admin/pages/${pageId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-site-id": siteId,
+        },
         body: JSON.stringify({ status: newStatus }),
       });
       const json = await res.json();

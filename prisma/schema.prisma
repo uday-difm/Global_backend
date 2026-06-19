@@ -33,7 +33,7 @@ model Site {
   users SiteUser[]
   pages Page[]
 
-  integrationKey       String?               @unique
+  integrationKey       String?                 @unique
   integrationManifests IntegrationManifest[]
   globalSettings       GlobalSettings[]
   webhookEvents        WebhookEvent[]
@@ -49,6 +49,8 @@ model Site {
   contactSubmissions   ContactFormSubmission[]
   leads                Lead[]
   apiKeys              ApiKey[]
+  media                Media[]
+  mediaFolders         MediaFolder[]
 
   @@index([isActive])
 }
@@ -70,10 +72,11 @@ model User {
 
   sites SiteUser[]
 
-  auditLogs    AuditLog[]
-  loginHistory LoginHistory[]
-  twoFactor    TwoFactor?
-  posts        Post[]
+  auditLogs      AuditLog[]
+  loginHistory   LoginHistory[]
+  twoFactor      TwoFactor?
+  posts          Post[]
+  passwordResets PasswordReset[]
 
   @@index([email])
   @@index([isActive])
@@ -146,8 +149,24 @@ model TwoFactor {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model Media {
   id String @id @default(cuid())
+  siteId String
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
   fileName     String
   originalName String?
@@ -177,10 +196,14 @@ model Media {
   folder   MediaFolder? @relation(fields: [folderId], references: [id])
   posts    Post[]
   services Service[]
+
+  @@index([siteId])
 }
 
 model MediaFolder {
   id String @id @default(cuid())
+  siteId String
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
   name String
 
@@ -192,6 +215,8 @@ model MediaFolder {
   media Media[]
 
   createdAt DateTime @default(now())
+
+  @@index([siteId])
 }
 
 enum PageStatus {
@@ -429,7 +454,7 @@ model Faq {
   site         Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
   question     String
   answer       String
-  page         String?  // page slug/name
+  page         String? // page slug/name
   sortOrder    Int      @default(0)
   showHide     Boolean  @default(true)
   schemaMarkup Boolean  @default(false)
@@ -448,7 +473,7 @@ model TeamMember {
   role        String
   photo       String?
   bio         String?
-  socialLinks Json?    // e.g. { twitter: "...", linkedin: "..." }
+  socialLinks Json? // e.g. { twitter: "...", linkedin: "..." }
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -461,7 +486,7 @@ model LegalPage {
   id          String   @id @default(cuid())
   siteId      String
   site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  type        String   // "privacy" | "terms" | "cookie" | "disclaimer" | "refund"
+  type        String // "privacy" | "terms" | "cookie" | "disclaimer" | "refund"
   title       String
   content     String
   lastUpdated DateTime @default(now())
@@ -475,9 +500,9 @@ model LegalPage {
 model Redirect {
   id        String   @id @default(cuid())
   siteId    String
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  source    String   // "/old-path"
-  target    String   // "/new-path"
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  source    String // "/old-path"
+  target    String // "/new-path"
   type      Int      @default(301) // 301 or 302
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -490,11 +515,11 @@ model VisitorLog {
   id            String   @id @default(cuid())
   siteId        String
   site          Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  visitorId     String   // browser session/cookie identifier
-  pageViewed    String   // e.g., "/" or "/about"
-  location      String?  // e.g., "US", "IN"
-  deviceInfo    String?  // e.g., "Mobile - Chrome"
-  trafficSource String?  // e.g., "Google", "Direct"
+  visitorId     String // browser session/cookie identifier
+  pageViewed    String // e.g., "/" or "/about"
+  location      String? // e.g., "US", "IN"
+  deviceInfo    String? // e.g., "Mobile - Chrome"
+  trafficSource String? // e.g., "Google", "Direct"
   duration      Int      @default(0) // seconds on page
   createdAt     DateTime @default(now())
 

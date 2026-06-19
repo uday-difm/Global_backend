@@ -1,12 +1,27 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "./auth";
+import prisma from "./prisma";
 
 export async function requireAuth() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user) {
+  if (!session?.user?.id) {
     return null;
   }
 
-  return session.user;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id }
+    });
+    if (!user) {
+      return null;
+    }
+    return {
+      ...session.user,
+      ...user
+    };
+  } catch (err) {
+    console.error("requireAuth database validation failed:", err);
+    return null;
+  }
 }

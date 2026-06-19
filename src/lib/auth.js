@@ -26,42 +26,21 @@ export const authOptions = {
       },
 
       async authorize(credentials, req) {
-        // 2. Add 'req' argument
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password required");
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
-        console.log("Found user:", user);
-        if (!user || !user.isActive) {
-          throw new Error("Invalid credentials");
-        }
-
-        const validPassword = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash,
-        );
-
-        if (!validPassword) {
-          throw new Error("Invalid credentials");
-        }
-
-        // 3. Record the login
         try {
-          const ip = req.headers?.["x-forwarded-for"] || "unknown";
-          const agent = req.headers?.["user-agent"] || "unknown";
-          await recordLogin(user.id, ip, agent);
+          const { authService } = await import("@/services/auth.service");
+          const user = await authService.authenticate(
+            credentials.email,
+            credentials.password,
+            req.headers || {}
+          );
+          return user;
         } catch (err) {
-          console.error("Failed to record login history:", err);
+          throw new Error(err.message || "Invalid credentials");
         }
-
-        return {
-          id: user.id,
-          email: user.email,
-          globalRole: user.globalRole,
-        };
       },
     }),
   ],

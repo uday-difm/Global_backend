@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { settingsService } from "@/services/settings.service";
+import { handleApiError } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "EDITOR");
@@ -9,14 +10,10 @@ export async function GET(req) {
   }
 
   try {
-    const settings = await prisma.globalSettings.findUnique({
-      where: { siteId: auth.siteId },
-      select: { footer: true }
-    });
-
-    return NextResponse.json({ success: true, footer: settings?.footer || null });
+    const footer = await settingsService.getSettingsField(auth.siteId, "footer");
+    return NextResponse.json({ success: true, footer });
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return handleApiError(err);
   }
 }
 
@@ -28,15 +25,16 @@ export async function PUT(req) {
 
   try {
     const body = await req.json();
+    const result = await settingsService.updateSettingsField(
+      auth.siteId,
+      "footer",
+      body,
+      auth.user.id
+    );
 
-    const settings = await prisma.globalSettings.upsert({
-      where: { siteId: auth.siteId },
-      update: { footer: body },
-      create: { siteId: auth.siteId, footer: body }
-    });
-
-    return NextResponse.json({ success: true, footer: settings.footer });
+    return NextResponse.json({ success: true, footer: result });
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return handleApiError(err);
   }
 }
+

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getSiteId } from "@/lib/siteGuard";
+import { mediaService } from "@/services/media.service";
 import { requireAuth } from "@/lib/requireAuth";
+import { prisma } from "@/lib/prisma";
+import { handleApiError } from "@/core/errors";
 
 async function getAuthenticatedUser() {
   const user = await requireAuth();
@@ -10,56 +13,32 @@ async function getAuthenticatedUser() {
   return user;
 }
 
-// GET /api/media/folders - Get folders inside a parent
 export async function GET(request) {
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
-    const { searchParams } = new URL(request.url);
-    const parentId = searchParams.get("parentId");
-
-    const whereClause = {};
-    if (parentId !== "all") {
-      if (parentId === "root" || parentId === null || parentId === "") {
-        whereClause.parentId = null;
-      } else {
-        whereClause.parentId = parentId;
-      }
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const folders = await prisma.mediaFolder.findMany({
-      where: whereClause,
-      include: {
-        _count: {
-          select: {
-            media: true,
-            children: true,
-          }
-        }
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
+    const siteId = getSiteId(request);
+    const { searchParams } = new URL(request.url);
+    const parentId = searchParams.get("parentId") || "root";
 
+    const folders = await mediaService.getFolders(siteId, parentId);
     return NextResponse.json({ folders });
   } catch (err) {
-    console.error("Fetch folders error:", err);
-    return NextResponse.json({ error: "Failed to fetch folders" }, { status: 500 });
+    return handleApiError(err);
   }
 }
 
-// POST /api/media/folders - Create a new folder
 export async function POST(request) {
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const siteId = getSiteId(request);
     const body = await request.json();
     const { name, parentId } = body;
 
@@ -67,11 +46,11 @@ export async function POST(request) {
       return NextResponse.json({ error: "Folder name is required" }, { status: 400 });
     }
 
+    // Check if folder name duplicate exists within parent for this site
     const parentIdVal = (parentId === "root" || parentId === "null" || !parentId) ? null : parentId;
-
-    // Check if a folder with the same name already exists in this parent folder
     const existing = await prisma.mediaFolder.findFirst({
       where: {
+        siteId,
         name: name.trim(),
         parentId: parentIdVal,
       },
@@ -81,16 +60,9 @@ export async function POST(request) {
       return NextResponse.json({ error: "A folder with this name already exists in this directory." }, { status: 400 });
     }
 
-    const folder = await prisma.mediaFolder.create({
-      data: {
-        name: name.trim(),
-        parentId: parentIdVal,
-      },
-    });
-
+    const folder = await mediaService.createFolder(siteId, name.trim(), parentIdVal);
     return NextResponse.json({ folder }, { status: 201 });
   } catch (err) {
-    console.error("Create folder error:", err);
-    return NextResponse.json({ error: "Failed to create folder" }, { status: 500 });
+    return handleApiError(err);
   }
 }

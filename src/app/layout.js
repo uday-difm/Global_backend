@@ -4,6 +4,7 @@ import AuthProvider from "@/components/providers/SessionProvider";
 import prisma from "@/lib/prisma";
 import Script from "next/script";
 import ClientScripts from "@/components/utils/ClientScripts"; // Import the new component
+import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -81,8 +82,9 @@ export default async function RootLayout({ children }) {
             `}
           </Script>
         )}
-
-        <AuthProvider>{children}</AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

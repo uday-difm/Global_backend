@@ -5,6 +5,39 @@ import { useEffect, useState } from "react";
 import HeroEditorModal from "./HeroEditorModal";
 import TextBlockEditorModal from "./TextEditorModal";
 
+function SafeImage({ src, alt, ...props }) {
+  if (!src) return null;
+
+  const isLocal = src.startsWith("/") || src.startsWith(".") || src.startsWith("..");
+  const isCloudinary = src.includes("res.cloudinary.com");
+
+  if (isLocal || isCloudinary) {
+    return <Image src={src} alt={alt} {...props} />;
+  }
+
+  const { fill, style, ...rest } = props;
+  if (fill) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        style={{
+          position: "absolute",
+          height: "100%",
+          width: "100%",
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          ...style,
+        }}
+        {...rest}
+      />
+    );
+  }
+  return <img src={src} alt={alt} style={style} {...rest} />;
+}
+
 /*
   PageEditorClient (updated with JSON-LD support)
   - Props: pageId, siteId, pageTitle (passed from server wrapper)
@@ -13,9 +46,20 @@ import TextBlockEditorModal from "./TextEditorModal";
 */
 
 export default function PageEditorClient({ pageId, siteId, pageTitle }) {
+  const fetch = (url, options = {}) => {
+    return globalThis.fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        "x-site-id": siteId,
+      },
+    });
+  };
+
   // modal states
   const [showHeroModal, setShowHeroModal] = useState(false);
   const [heroSaving, setHeroSaving] = useState(false);
+
   const [showTextBlockModal, setShowTextBlockModal] = useState(false);
   const [textBlockSaving, setTextBlockSaving] = useState(false);
 
@@ -732,7 +776,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
                     {s.content?.bannerUrl && (
                       <div className="mt-3 relative w-full h-28 rounded-md overflow-hidden">
-                        <Image
+                        <SafeImage
                           src={s.content.bannerUrl}
                           alt={s.content.altText || ""}
                           fill
@@ -1015,7 +1059,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                 {mediaList.map((m) => (
                   <div key={m.id} className="border rounded p-2">
                     <div className="relative w-full h-28 rounded overflow-hidden">
-                      <Image
+                      <SafeImage
                         src={m.secureUrl || m.url}
                         alt={m.altText || m.fileName || ""}
                         fill

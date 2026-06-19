@@ -1,11 +1,26 @@
 import { NextResponse } from "next/server";
-import { Readable } from "stream";
+import { getSiteId } from "@/lib/siteGuard";
+import { mediaService } from "@/services/media.service";
+import { requireAuth } from "@/lib/requireAuth";
+import { prisma } from "@/lib/prisma";
+import { handleApiError } from "@/core/errors";
 
-import cloudinary from "@/lib/cloudinary";
-import prisma from "@/lib/prisma";
+async function getAuthenticatedUser() {
+  const user = await requireAuth();
+  if (!user && process.env.NODE_ENV === "development") {
+    return await prisma.user.findFirst();
+  }
+  return user;
+}
 
 export async function POST(request) {
   try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const siteId = getSiteId(request);
     const formData = await request.formData();
 
     const file = formData.get("file");
@@ -18,60 +33,13 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: "global-cms",
-          resource_type: "auto",
-          quality: "auto",
-          fetch_format: "auto",
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        },
-      );
+    const media = await mediaService.uploadMedia(siteId, buffer, file.name, file.type, folderId);
 
-      Readable.from(buffer).pipe(uploadStream);
-    });
-
-    const folderIdVal = (folderId === "root" || folderId === "null" || !folderId) ? null : folderId;
-
-    const media = await prisma.media.create({
-      data: {
-        fileName: file.name,
-        originalName: file.name,
-
-        publicId: result.public_id,
-
-        url: result.secure_url,
-        secureUrl: result.secure_url,
-
-        mimeType: file.type,
-        extension: result.format,
-
-        size: result.bytes,
-
-        width: result.width || null,
-        height: result.height || null,
-        folderId: folderIdVal,
-      },
-    });
-    console.log(media);
     return NextResponse.json({
       success: true,
       media,
     });
-  } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      {
-        error: "Upload failed",
-      },
-      {
-        status: 500,
-      },
-    );
+  } catch (err) {
+    return handleApiError(err);
   }
 }

@@ -1,24 +1,11 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { seoService } from "@/services/seo.service";
+import { getSiteId } from "@/lib/siteGuard";
+import { handleApiError } from "@/core/errors";
 
 export async function GET(req) {
   try {
-    const { searchParams } = new URL(req.url);
-    const siteId = searchParams.get("siteId");
-
-    if (!siteId) {
-      return new Response("User-agent: *\nAllow: /", {
-        headers: { "Content-Type": "text/plain" }
-      });
-    }
-
-    const settings = await prisma.globalSettings.findUnique({
-      where: { siteId },
-      select: { scripts: true }
-    });
-
-    const scripts = settings?.scripts || {};
-    const robotsText = scripts.robotsTxt || "User-agent: *\nAllow: /";
+    const siteId = getSiteId(req);
+    const robotsText = await seoService.getRobotsTxt(siteId);
 
     return new Response(robotsText, {
       headers: { "Content-Type": "text/plain" }

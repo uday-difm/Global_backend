@@ -16,16 +16,20 @@ const CtaSchema = z
   })
   .partial({ url: false });
 
+const UrlOrRelative = z.string().refine(
+  (val) => val.startsWith("/") || val.startsWith(".") || /^(https?:)?\/\//.test(val),
+  {
+    message: "Must be a valid absolute URL or relative path",
+  }
+);
+
 // HERO content schema
 const HeroContentSchema = z
   .object({
     title: z.string().nonempty("Hero title is required"),
     subtitle: z.string().optional(),
     backgroundMediaId: z.string().optional(),
-    backgroundUrl: z
-      .string()
-      .url("backgroundUrl must be a valid URL")
-      .optional(),
+    backgroundUrl: UrlOrRelative.optional(),
     overlayColor: z.string().optional(),
     primaryButton: CtaSchema.optional(),
     secondaryButton: CtaSchema.optional(),
@@ -39,11 +43,12 @@ const TextBlockContentSchema = z
     title: z.string().optional(),
     body: z.string().optional(),
     imageMediaId: z.string().optional(),
-    imageUrl: z.string().url("imageUrl must be a valid URL").optional(),
+    imageUrl: UrlOrRelative.optional(),
     imagePosition: z.enum(["left", "right", "top"]).optional(),
     cta: CtaSchema.optional(),
   })
   .strict();
+
 
 const TypeSchemaMap = {
   HERO: HeroContentSchema,

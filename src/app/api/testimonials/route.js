@@ -1,22 +1,14 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { testimonialService } from "@/services/testimonial.service";
+import { getSiteId } from "@/lib/siteGuard";
+import { handleApiError } from "@/core/errors";
 
 export async function GET(req) {
   try {
-    const { searchParams } = new URL(req.url);
-    const siteId = searchParams.get("siteId");
-
-    if (!siteId) {
-      return NextResponse.json({ error: "siteId is required" }, { status: 400 });
-    }
-
-    const testimonials = await prisma.testimonial.findMany({
-      where: { siteId, showHide: true },
-      orderBy: { sortOrder: "asc" }
-    });
-
+    const siteId = getSiteId(req);
+    const testimonials = await testimonialService.getTestimonials(siteId, { showHide: true });
     return NextResponse.json({ success: true, testimonials });
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return handleApiError(err);
   }
 }

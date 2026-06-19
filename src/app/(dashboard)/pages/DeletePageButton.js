@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function DeletePageButton({ pageId }) {
+export default function DeletePageButton({ pageId, siteId }) {
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
@@ -14,6 +14,9 @@ export default function DeletePageButton({ pageId }) {
     try {
       const res = await fetch(`/api/admin/pages/${pageId}`, {
         method: "DELETE",
+        headers: {
+          "x-site-id": siteId,
+        },
       });
 
       const json = await res.json();

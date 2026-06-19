@@ -95,7 +95,7 @@ export default async function ServicesAdmin() {
                   >
                     Edit
                   </Link>
-                  <DeleteServiceButton serviceId={service.id} />
+                  <DeleteServiceButton serviceId={service.id} siteId={site.id} />
                 </td>
               </tr>
             ))}

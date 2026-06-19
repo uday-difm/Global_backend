@@ -113,10 +113,10 @@ export default async function PagesAdmin() {
                   </a>
 
                   {/* Publish toggle: client component; only primitive props passed */}
-                  <PublishToggle pageId={p.id} initialStatus={p.status} />
+                  <PublishToggle pageId={p.id} initialStatus={p.status} siteId={site.id} />
 
                   {/* Delete button: client component */}
-                  <DeletePageButton pageId={p.id} />
+                  <DeletePageButton pageId={p.id} siteId={site.id} />
                 </td>
               </tr>
             ))}

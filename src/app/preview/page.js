@@ -3,6 +3,39 @@ import React from "react";
 import Image from "next/image";
 import prisma from "@/lib/prisma";
 
+function SafeImage({ src, alt, ...props }) {
+  if (!src) return null;
+
+  const isLocal = src.startsWith("/") || src.startsWith(".") || src.startsWith("..");
+  const isCloudinary = src.includes("res.cloudinary.com");
+
+  if (isLocal || isCloudinary) {
+    return <Image src={src} alt={alt} {...props} />;
+  }
+
+  const { fill, style, ...rest } = props;
+  if (fill) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        style={{
+          position: "absolute",
+          height: "100%",
+          width: "100%",
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          ...style,
+        }}
+        {...rest}
+      />
+    );
+  }
+  return <img src={src} alt={alt} style={style} {...rest} />;
+}
+
 /*
   Preview page (server component)
   - URL: /preview?pageId=<PAGE_ID>&siteId=<SITE_ID>
@@ -17,7 +50,7 @@ function Hero({ content }) {
     <section className="relative w-full h-[420px] bg-gray-800 text-white overflow-hidden">
       {bg ? (
         <div className="absolute inset-0">
-          <Image
+          <SafeImage
             src={bg}
             alt={content?.subtitle || content?.title || "Hero"}
             fill
@@ -67,7 +100,7 @@ function TextBlock({ content }) {
         ) : null}
         {content?.imageUrl && (
           <div className="mb-4 relative w-full h-56 rounded overflow-hidden">
-            <Image
+            <SafeImage
               src={content.imageUrl}
               alt={content.title || ""}
               fill

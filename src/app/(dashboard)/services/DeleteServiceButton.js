@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function DeleteServiceButton({ serviceId }) {
+export default function DeleteServiceButton({ serviceId, siteId }) {
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
@@ -18,6 +18,9 @@ export default function DeleteServiceButton({ serviceId }) {
     try {
       const res = await fetch(`/api/admin/services/${serviceId}`, {
         method: "DELETE",
+        headers: {
+          "x-site-id": siteId,
+        },
       });
 
       const json = await res.json();

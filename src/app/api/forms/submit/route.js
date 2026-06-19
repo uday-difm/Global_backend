@@ -94,24 +94,23 @@ export async function POST(req) {
       );
     }
 
-    // ── Save Submission ────────────────────────────────────────────────────────
-    const submission = await prisma.contactFormSubmission.create({
-      data: { siteId, name, email, phone, message, status: "new" },
-    });
-
-    // ── Save Lead ──────────────────────────────────────────────────────────────
-    const lead = await prisma.lead.create({
-      data: {
-        siteId,
-        name,
-        email,
-        phone,
-        serviceInterest: "Contact Form Submission",
-        sourcePage: "Contact Page",
-        status: "new",
-        notes: `Form Message: ${message}`,
-      },
-    });
+    const [submission, lead] = await prisma.$transaction([
+      prisma.contactFormSubmission.create({
+        data: { siteId, name, email, phone, message, status: "new" },
+      }),
+      prisma.lead.create({
+        data: {
+          siteId,
+          name,
+          email,
+          phone,
+          serviceInterest: "Contact Form Submission",
+          sourcePage: "Contact Page",
+          status: "new",
+          notes: `Form Message: ${message}`,
+        },
+      }),
+    ]);
 
     // ── Send emails via SMTP ───────────────────────────────────────────────────
     const {

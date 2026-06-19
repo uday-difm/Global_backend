@@ -64,7 +64,11 @@ export default function ServiceEditor({ siteId, service }) {
     if (!isEditMode) return;
     setFaqsLoading(true);
     try {
-      const res = await fetch(`/api/admin/faq`);
+      const res = await fetch(`/api/admin/faq`, {
+        headers: {
+          "x-site-id": siteId,
+        },
+      });
       const json = await res.json();
       if (res.ok) {
         const filtered = (json.faqs || []).filter(
@@ -106,6 +110,7 @@ export default function ServiceEditor({ siteId, service }) {
         method: method,
         headers: {
           "Content-Type": "application/json",
+          "x-site-id": siteId,
         },
         body: JSON.stringify(serviceData),
       });
@@ -151,7 +156,10 @@ export default function ServiceEditor({ siteId, service }) {
     try {
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-site-id": siteId,
+        },
         body: JSON.stringify(payload),
       });
 
@@ -170,7 +178,12 @@ export default function ServiceEditor({ siteId, service }) {
   const handleDeleteFaq = async (faqId) => {
     if (!confirm("Are you sure you want to delete this FAQ?")) return;
     try {
-      const res = await fetch(`/api/admin/faq/${faqId}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/faq/${faqId}`, {
+        method: "DELETE",
+        headers: {
+          "x-site-id": siteId,
+        },
+      });
       if (!res.ok) throw new Error("Failed to delete FAQ");
       fetchFaqs();
     } catch (err) {
@@ -449,6 +462,7 @@ export default function ServiceEditor({ siteId, service }) {
           filter="images"
           onSelect={attachImage}
           onClose={() => setShowMediaPicker(false)}
+          siteId={siteId}
         />
       )}
 

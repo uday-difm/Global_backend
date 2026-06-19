@@ -11,7 +11,7 @@ import { Upload, CheckCircle, XCircle } from "lucide-react";
  *  - onUpload()            — called after all files are uploaded
  *  - currentFolderId       — folder context for uploads (string | "root")
  */
-export default function MediaUploader({ onUpload, currentFolderId }) {
+export default function MediaUploader({ onUpload, currentFolderId, siteId }) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState([]); // [{name, status: "pending"|"uploading"|"done"|"error"}]
 
@@ -39,8 +39,12 @@ export default function MediaUploader({ onUpload, currentFolderId }) {
 
         const res = await fetch("/api/media/upload", {
           method: "POST",
+          headers: {
+            "x-site-id": siteId,
+          },
           body: formData,
         });
+
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Upload failed");

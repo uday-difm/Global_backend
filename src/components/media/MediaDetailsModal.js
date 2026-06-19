@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Copy, Trash2, Save, RefreshCw, X, FileIcon, Info, Folder } from "lucide-react";
 
-export default function MediaDetailsModal({ mediaId, onClose, onUpdate, onDelete }) {
+export default function MediaDetailsModal({ mediaId, onClose, onUpdate, onDelete, siteId }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [replacing, setReplacing] = useState(false);
@@ -26,7 +26,7 @@ export default function MediaDetailsModal({ mediaId, onClose, onUpdate, onDelete
     setError(null);
     try {
       // 1. Fetch file info and usage lists
-      const detailsRes = await fetch(`/api/media/${mediaId}`);
+      const detailsRes = await fetch(`/api/media/${mediaId}?siteId=${siteId}`);
       const detailsData = await detailsRes.json();
       if (!detailsRes.ok) throw new Error(detailsData.error || "Failed to load media details");
       
@@ -37,7 +37,7 @@ export default function MediaDetailsModal({ mediaId, onClose, onUpdate, onDelete
       setFolderId(detailsData.media.folderId || "root");
 
       // 2. Fetch all folders for moving
-      const foldersRes = await fetch("/api/media/folders?parentId=all");
+      const foldersRes = await fetch(`/api/media/folders?parentId=all&siteId=${siteId}`);
       const foldersData = await foldersRes.json();
       if (foldersRes.ok) {
         setAllFolders(foldersData.folders || []);
@@ -50,10 +50,10 @@ export default function MediaDetailsModal({ mediaId, onClose, onUpdate, onDelete
   }
 
   useEffect(() => {
-    if (mediaId) {
+    if (mediaId && siteId) {
       loadDetails();
     }
-  }, [mediaId]);
+  }, [mediaId, siteId]);
 
   // Handle patch/save details
   const handleSave = async (e) => {
@@ -65,7 +65,10 @@ export default function MediaDetailsModal({ mediaId, onClose, onUpdate, onDelete
     try {
       const res = await fetch(`/api/media/${mediaId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-site-id": siteId
+        },
         body: JSON.stringify({
           fileName,
           altText,
@@ -100,8 +103,12 @@ export default function MediaDetailsModal({ mediaId, onClose, onUpdate, onDelete
     try {
       const res = await fetch(`/api/media/${mediaId}/replace`, {
         method: "POST",
+        headers: {
+          "x-site-id": siteId,
+        },
         body: formData,
       });
+
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to replace file");

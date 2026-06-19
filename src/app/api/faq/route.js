@@ -1,28 +1,17 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { faqService } from "@/services/faq.service";
+import { getSiteId } from "@/lib/siteGuard";
+import { handleApiError } from "@/core/errors";
 
 export async function GET(req) {
   try {
+    const siteId = getSiteId(req);
     const { searchParams } = new URL(req.url);
-    const siteId = searchParams.get("siteId");
-    const page = searchParams.get("page");
+    const page = searchParams.get("page") || undefined;
 
-    if (!siteId) {
-      return NextResponse.json({ error: "siteId is required" }, { status: 400 });
-    }
-
-    const where = { siteId, showHide: true };
-    if (page) {
-      where.page = page;
-    }
-
-    const faqs = await prisma.faq.findMany({
-      where,
-      orderBy: { sortOrder: "asc" }
-    });
-
+    const faqs = await faqService.getFaqs(siteId, { page, showHide: true });
     return NextResponse.json({ success: true, faqs });
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return handleApiError(err);
   }
 }

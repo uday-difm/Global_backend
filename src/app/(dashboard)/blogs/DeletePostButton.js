@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function DeletePostButton({ postId }) {
+export default function DeletePostButton({ postId, siteId }) {
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
@@ -14,6 +14,9 @@ export default function DeletePostButton({ postId }) {
     try {
       const res = await fetch(`/api/admin/posts/${postId}`, {
         method: "DELETE",
+        headers: {
+          "x-site-id": siteId,
+        },
       });
 
       const json = await res.json();

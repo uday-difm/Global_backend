@@ -19,4 +19,6 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
+import "@/core/listeners";
+
 export default prisma;

@@ -185,7 +185,10 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
     try {
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-site-id": siteId,
+        },
         body: JSON.stringify(postData),
       });
 
@@ -515,6 +518,7 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
           filter="images"
           onSelect={selectFeaturedImage}
           onClose={() => setShowMediaPicker(false)}
+          siteId={siteId}
         />
       )}
     </div>

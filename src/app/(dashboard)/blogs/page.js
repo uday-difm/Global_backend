@@ -154,7 +154,7 @@ export default async function BlogsAdmin() {
                       >
                         Edit
                       </Link>
-                      <DeletePostButton postId={post.id} />
+                      <DeletePostButton postId={post.id} siteId={site.id} />
                     </td>
                   </tr>
                 );

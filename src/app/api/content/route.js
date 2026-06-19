@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
+import { pageService } from "@/services/page.service";
 import prisma from "@/lib/prisma";
+import { handleApiError } from "@/core/errors";
 
-/**
- GET /api/content?siteId=...&slug=/about
- Response:
- {
-   page: { id, title, slug, status, seo: {...}, jsonLd: string|null, ... },
-   sections: [ { id, type, order, isVisible, content: {...} }, ... ]
- }
-*/
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
@@ -22,35 +16,11 @@ export async function GET(req) {
       );
     }
 
-    const page = await prisma.page.findUnique({
-      where: { siteId_slug: { siteId, slug } },
-      select: {
-        id: true,
-        siteId: true,
-        title: true,
-        slug: true,
-        status: true,
-        seoTitle: true,
-        seoDescription: true,
-        jsonLd: true, // <-- add this
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    if (!page) {
-      return NextResponse.json({ error: "Page not found" }, { status: 404 });
-    }
-
-    // If not published and not in preview mode, optionally block (here we allow)
-    const sections = await prisma.section.findMany({
-      where: { pageId: page.id },
-      orderBy: { order: "asc" },
-    });
+    const page = await pageService.getPageWithSections(siteId, slug);
 
     // Resolve referenced media ids -> URLs in content
     const mediaIds = new Set();
-    sections.forEach((s) => {
+    page.sections.forEach((s) => {
       const c = s.content || {};
       if (c.bannerMediaId) mediaIds.add(c.bannerMediaId);
       if (c.imageMediaId) mediaIds.add(c.imageMediaId);
@@ -68,7 +38,7 @@ export async function GET(req) {
       }, {});
     }
 
-    const sectionsWithUrls = sections.map((s) => {
+    const sectionsWithUrls = page.sections.map((s) => {
       const content = { ...(s.content || {}) };
       if (content.bannerMediaId && mediaMap[content.bannerMediaId]) {
         content.bannerUrl = mediaMap[content.bannerMediaId];
@@ -86,17 +56,15 @@ export async function GET(req) {
       ogImage: null,
     };
 
+    const { sections, ...pageData } = page;
+
     return NextResponse.json({
-      page,
+      page: pageData,
       sections: sectionsWithUrls,
       seo,
       jsonLd: page.jsonLd ?? null,
     });
   } catch (err) {
-    console.error("GET /api/content error:", err);
-    return NextResponse.json(
-      { error: "Internal Server Error", message: String(err?.message) },
-      { status: 500 },
-    );
+    return handleApiError(err);
   }
 }

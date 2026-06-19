@@ -19,6 +19,7 @@ import {
   PanelTop,
   ShieldCheck,
   Phone,
+  Megaphone,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -90,6 +91,11 @@ export default function Sidebar() {
           href: "/footer",
           label: "Footer Builder",
           icon: PanelBottom,
+        },
+        {
+          href: "/cta",
+          label: "CTA & Popups",
+          icon: Megaphone,
         },
       ],
     },

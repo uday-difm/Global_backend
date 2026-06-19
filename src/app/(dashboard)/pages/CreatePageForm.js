@@ -30,7 +30,10 @@ export default function CreatePageForm({ siteId }) {
     try {
       const res = await fetch("/api/admin/pages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-site-id": siteId,
+        },
         body: JSON.stringify({
           siteId,
           title: title.trim(),

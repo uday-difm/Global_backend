@@ -12,7 +12,7 @@ import { X, Upload, Folder, Home, ArrowLeft, Search, Image as ImageIcon, FileIco
  *  - title               — optional heading text
  *  - filter              — "images" | "all" (default "images")
  */
-export default function MediaPickerModal({ onSelect, onClose, title = "Select from Media Library", filter = "images" }) {
+export default function MediaPickerModal({ onSelect, onClose, title = "Select from Media Library", filter = "images", siteId }) {
   const [currentFolderId, setCurrentFolderId] = useState("root");
   const [folderHistory, setFolderHistory] = useState([{ id: "root", name: "Media Library" }]);
 
@@ -29,8 +29,16 @@ export default function MediaPickerModal({ onSelect, onClose, title = "Select fr
     setLoading(true);
     try {
       const [mediaRes, foldersRes] = await Promise.all([
-        fetch(`/api/media?folderId=${currentFolderId}`),
-        fetch(`/api/media/folders?parentId=${currentFolderId}`),
+        fetch(`/api/media?folderId=${currentFolderId}`, {
+          headers: {
+            "x-site-id": siteId,
+          },
+        }),
+        fetch(`/api/media/folders?parentId=${currentFolderId}`, {
+          headers: {
+            "x-site-id": siteId,
+          },
+        }),
       ]);
 
       const mediaData = await mediaRes.json();
@@ -94,7 +102,13 @@ export default function MediaPickerModal({ onSelect, onClose, title = "Select fr
         formData.append("file", file);
         if (folderIdVal) formData.append("folderId", folderIdVal);
 
-        const res = await fetch("/api/media/upload", { method: "POST", body: formData });
+        const res = await fetch("/api/media/upload", {
+          method: "POST",
+          headers: {
+            "x-site-id": siteId,
+          },
+          body: formData,
+        });
         if (!res.ok) throw new Error("Upload failed");
 
         setUploadProgress((prev) =>
