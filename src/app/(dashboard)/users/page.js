@@ -11,7 +11,20 @@ import DeleteUserButton from "./DeleteUserButton";
  Shows list of users and provides Create button. Edit opens modal via client-side action.
 */
 
+import { requireAuth } from "@/lib/requireAuth";
+import { redirect } from "next/navigation";
+
 export default async function UsersPage() {
+  const sessionUser = await requireAuth();
+
+  if (!sessionUser) {
+    redirect("/login");
+  }
+
+  if (sessionUser.globalRole !== "SUPERADMIN" && sessionUser.globalRole !== "ADMIN") {
+    redirect("/dashboard");
+  }
+
   // Fetch users server-side
   const users = await prisma.user.findMany({
     select: {

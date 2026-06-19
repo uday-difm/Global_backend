@@ -9,17 +9,24 @@ async function checkAdminAuth() {
   const user = await requireAuth();
   const isDev = process.env.NODE_ENV === "development";
 
-  if (user) return { user };
-
-  if (isDev) {
+  let caller = user;
+  if (!caller && isDev) {
     // FETCH REAL USER to satisfy foreign key constraints
-    const firstUser = await prisma.user.findFirst();
-    if (firstUser) {
-      return { user: { ...firstUser, globalRole: "SUPERADMIN" } };
+    caller = await prisma.user.findFirst();
+    if (caller) {
+      caller = { ...caller, globalRole: "SUPERADMIN" };
     }
   }
 
-  return { error: "Forbidden", status: 403 };
+  if (!caller) {
+    return { error: "Unauthorized", status: 401 };
+  }
+
+  if (caller.globalRole !== "SUPERADMIN" && caller.globalRole !== "ADMIN") {
+    return { error: "Forbidden: Admin access required", status: 403 };
+  }
+
+  return { user: caller };
 }
 
 // GET: View specific user details
@@ -60,20 +67,51 @@ export async function PATCH(req, { params }) {
 
   try {
     const body = await req.json();
+    const caller = auth.user;
+
+    // Retrieve target user
+    const target = await prisma.user.findUnique({ where: { id } });
+    if (!target) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Role levels verification
+    const c = ROLE_LEVEL[caller.globalRole] || 0;
+    const t = ROLE_LEVEL[target.globalRole] || 0;
+
+    // Caller must have higher or equal role to modify target
+    if (c < t) {
+      return NextResponse.json(
+        { error: "Forbidden: Insufficient privileges to modify this user" },
+        { status: 403 }
+      );
+    }
+
+    // If changing role, verify caller can assign that role
+    if (body.globalRole) {
+      const n = ROLE_LEVEL[body.globalRole] || 0;
+      if (c < n) {
+        return NextResponse.json(
+          { error: "Forbidden: Cannot assign role higher than your own" },
+          { status: 403 }
+        );
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id },
       data: { globalRole: body.globalRole, isActive: body.isActive },
     });
 
-    // Use auth.user.id, not user.id
-    await logAction(null, auth.user.id, "USER_ROLE_UPDATED", {
+    await logAction(null, caller.id, "USER_ROLE_UPDATED", {
       targetUserId: id,
       newRole: body.globalRole,
+      isActive: body.isActive,
     });
 
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
-    console.error("PATCH Error:", error); // Added log to see real error
+    console.error("PATCH Error:", error);
     return NextResponse.json({ error: "Failed to update" }, { status: 400 });
   }
 }

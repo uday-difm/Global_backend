@@ -17,6 +17,7 @@ import {
   ArrowLeftRight,
   PanelBottom,
   PanelTop,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -98,6 +99,11 @@ export default function Sidebar() {
           href: "/backup",
           label: "Backup & Restore",
           icon: Database,
+        },
+        {
+          href: "/security",
+          label: "Security Center",
+          icon: ShieldCheck,
         },
         {
           href: "/settings",
