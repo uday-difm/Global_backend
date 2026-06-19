@@ -48,10 +48,7 @@ export async function GET() {
     });
     return NextResponse.json({ users });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch users", error },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
 }
 
@@ -99,9 +96,9 @@ export async function POST(req) {
       },
     });
 
-    // Audit: log that authUser created this new user
+    // Audit: log that caller created this new user
     try {
-      await logAction(null, authUser.id, "USER_CREATED", {
+      await logAction(null, caller.id, "USER_CREATED", {
         targetUserId: newUser.id,
         email: validated.email,
       });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
-import { ROLES } from "@/lib/rbac";
+import { ROLES, ROLE_LEVEL } from "@/lib/rbac";
 import { logAction } from "@/lib/audit";
 
 // Helper to enforce Admin access for all routes in this file
@@ -112,7 +112,10 @@ export async function PATCH(req, { params }) {
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
     console.error("PATCH Error:", error);
-    return NextResponse.json({ error: "Failed to update" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Failed to update", message: String(error?.message || error) },
+      { status: 500 }
+    );
   }
 }
 
