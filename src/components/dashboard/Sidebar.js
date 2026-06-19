@@ -16,6 +16,7 @@ import {
   Database,
   ArrowLeftRight,
   PanelBottom,
+  PanelTop,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -72,6 +73,11 @@ export default function Sidebar() {
           href: "/team",
           label: "Team Members",
           icon: UsersRound,
+        },
+        {
+          href: "/header",
+          label: "Header Builder",
+          icon: PanelTop,
         },
         {
           href: "/footer",
