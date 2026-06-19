@@ -12,21 +12,107 @@ import {
   Code,
   Image as ImageIcon,
   Globe,
-  FileText,
-  Sparkles,
-  X,
+  Menu,
+  Grid,
+  Settings,
   HelpCircle,
+  AlertTriangle
 } from "lucide-react";
+
+// Inline SVG components to ensure compatibility across lucide-react versions
+function FacebookIcon({ className }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+    </svg>
+  );
+}
+
+function TwitterIcon({ className }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
+    </svg>
+  );
+}
+
+function InstagramIcon({ className }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    </svg>
+  );
+}
+
+function LinkedinIcon({ className }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+      <rect x="2" y="9" width="4" height="12"></rect>
+      <circle cx="4" cy="4" r="2"></circle>
+    </svg>
+  );
+}
+
+function MapPinIcon({ className }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+      <circle cx="12" cy="10" r="3"></circle>
+    </svg>
+  );
+}
+
+function ClockIcon({ className }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="12" r="10"></circle>
+      <polyline points="12 6 12 12 16 14"></polyline>
+    </svg>
+  );
+}
+
+function PhoneCallIcon({ className }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+    </svg>
+  );
+}
 import MediaPickerModal from "@/components/media/MediaPickerModal";
 
 export default function SettingsEditor({ siteId, initialSettings }) {
   const [activeTab, setActiveTab] = useState("brand");
-  
+
   // Settings States
   const [websiteSettings, setWebsiteSettings] = useState(initialSettings?.websiteSettings || {});
   const [analytics, setAnalytics] = useState(initialSettings?.analytics || {});
   const [scripts, setScripts] = useState(initialSettings?.scripts || {});
   
+  // New Layout & Info Settings States
+  const [header, setHeader] = useState(initialSettings?.header || {
+    sticky: true,
+    showSearch: true,
+    showSocials: true,
+    logoHeight: 40,
+    layout: "standard"
+  });
+  const [footer, setFooter] = useState(initialSettings?.footer || {
+    layout: "4-columns",
+    copyright: `© ${new Date().getFullYear()} Company. All rights reserved.`,
+    showNewsletter: true
+  });
+  const [contactDetails, setContactDetails] = useState(initialSettings?.contactDetails || {
+    phone: "",
+    email: "",
+    address: "",
+    operatingHours: "",
+    socials: { facebook: "", twitter: "", instagram: "", linkedin: "" },
+    mapsUrl: ""
+  });
+
   // UI Loading/Status States
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -36,8 +122,37 @@ export default function SettingsEditor({ siteId, initialSettings }) {
   const [activePickerField, setActivePickerField] = useState(null); // "logo", "favicon", "ogImage"
 
   const handleWebsiteChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    const val = type === "checkbox" ? checked : value;
+    setWebsiteSettings((prev) => ({ ...prev, [name]: val }));
+  };
+
+  const handleHeaderChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    const val = type === "checkbox" ? checked : value;
+    setHeader((prev) => ({ ...prev, [name]: val }));
+  };
+
+  const handleFooterChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    const val = type === "checkbox" ? checked : value;
+    setFooter((prev) => ({ ...prev, [name]: val }));
+  };
+
+  const handleContactChange = (e) => {
     const { name, value } = e.target;
-    setWebsiteSettings((prev) => ({ ...prev, [name]: value }));
+    if (name.startsWith("socials.")) {
+      const socialKey = name.split(".")[1];
+      setContactDetails((prev) => ({
+        ...prev,
+        socials: {
+          ...(prev.socials || {}),
+          [socialKey]: value
+        }
+      }));
+    } else {
+      setContactDetails((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleAnalyticsChange = (e) => {
@@ -73,6 +188,9 @@ export default function SettingsEditor({ siteId, initialSettings }) {
       siteId,
       analytics,
       scripts,
+      header,
+      footer,
+      contactDetails,
     };
 
     try {
@@ -95,11 +213,11 @@ export default function SettingsEditor({ siteId, initialSettings }) {
 
       if (!resGlobal.ok) {
         const errorData = await resGlobal.json();
-        throw new Error(errorData.error || "Failed to save tracking/script settings");
+        throw new Error(errorData.error || "Failed to save tracking/layout settings");
       }
       if (!resWebsite.ok) {
         const errorData = await resWebsite.json();
-        throw new Error(errorData.error || "Failed to save website/SEO settings");
+        throw new Error(errorData.error || "Failed to save website settings");
       }
 
       setSuccess(true);
@@ -124,23 +242,23 @@ export default function SettingsEditor({ siteId, initialSettings }) {
         </div>
       )}
       {success && (
-        <div className="p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 rounded-md flex items-start gap-3 shadow-xs">
-          <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 animate-bounce" />
+        <div className="p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 rounded-md flex items-start gap-3 shadow-xs animate-in fade-in duration-200">
+          <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold">Settings Saved</p>
-            <p className="text-sm">Global website settings updated successfully!</p>
+            <p className="text-sm">Global website configurations saved successfully!</p>
           </div>
         </div>
       )}
 
       {/* Main Card */}
-      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap border-b border-gray-100 bg-gray-50/50">
+        <div className="flex flex-wrap border-b border-gray-200 bg-gray-50/50">
           <button
             type="button"
             onClick={() => setActiveTab("brand")}
-            className={`px-5 py-4 text-center font-medium text-xs border-b-2 transition flex items-center gap-2 ${
+            className={`px-5 py-4 text-center font-bold text-xs border-b-2 transition flex items-center gap-2 ${
               activeTab === "brand"
                 ? "border-blue-600 text-blue-600 bg-white"
                 : "border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/80"
@@ -149,11 +267,50 @@ export default function SettingsEditor({ siteId, initialSettings }) {
             <Layout className="w-4 h-4" />
             Brand & Identity
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("header")}
+            className={`px-5 py-4 text-center font-bold text-xs border-b-2 transition flex items-center gap-2 ${
+              activeTab === "header"
+                ? "border-blue-600 text-blue-600 bg-white"
+                : "border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/80"
+            }`}
+          >
+            <Menu className="w-4 h-4" />
+            Header Settings
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("footer")}
+            className={`px-5 py-4 text-center font-bold text-xs border-b-2 transition flex items-center gap-2 ${
+              activeTab === "footer"
+                ? "border-blue-600 text-blue-600 bg-white"
+                : "border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/80"
+            }`}
+          >
+            <Grid className="w-4 h-4" />
+            Footer Settings
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("contact")}
+            className={`px-5 py-4 text-center font-bold text-xs border-b-2 transition flex items-center gap-2 ${
+              activeTab === "contact"
+                ? "border-blue-600 text-blue-600 bg-white"
+                : "border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/80"
+            }`}
+          >
+            <PhoneCallIcon className="w-4 h-4" />
+            Default Contact Info
+          </button>
           
           <button
             type="button"
             onClick={() => setActiveTab("seo")}
-            className={`px-5 py-4 text-center font-medium text-xs border-b-2 transition flex items-center gap-2 ${
+            className={`px-5 py-4 text-center font-bold text-xs border-b-2 transition flex items-center gap-2 ${
               activeTab === "seo"
                 ? "border-blue-600 text-blue-600 bg-white"
                 : "border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/80"
@@ -166,7 +323,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
           <button
             type="button"
             onClick={() => setActiveTab("analytics")}
-            className={`px-5 py-4 text-center font-medium text-xs border-b-2 transition flex items-center gap-2 ${
+            className={`px-5 py-4 text-center font-bold text-xs border-b-2 transition flex items-center gap-2 ${
               activeTab === "analytics"
                 ? "border-blue-600 text-blue-600 bg-white"
                 : "border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/80"
@@ -179,20 +336,20 @@ export default function SettingsEditor({ siteId, initialSettings }) {
           <button
             type="button"
             onClick={() => setActiveTab("robots")}
-            className={`px-5 py-4 text-center font-medium text-xs border-b-2 transition flex items-center gap-2 ${
+            className={`px-5 py-4 text-center font-bold text-xs border-b-2 transition flex items-center gap-2 ${
               activeTab === "robots"
                 ? "border-blue-600 text-blue-600 bg-white"
                 : "border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/80"
             }`}
           >
             <Bot className="w-4 h-4" />
-            Robots & AI Agents
+            Robots & AI
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("scripts")}
-            className={`px-5 py-4 text-center font-medium text-xs border-b-2 transition flex items-center gap-2 ${
+            className={`px-5 py-4 text-center font-bold text-xs border-b-2 transition flex items-center gap-2 ${
               activeTab === "scripts"
                 ? "border-blue-600 text-blue-600 bg-white"
                 : "border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50/80"
@@ -211,7 +368,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
                 <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Brand Information & Assets</h3>
-                <p className="text-xs text-gray-500 mt-1">Configure your canonical site domain, logos, and favicons.</p>
+                <p className="text-xs text-gray-500 mt-1">Configure your domain base URL, color theme palletes, and logos.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -227,39 +384,124 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     value={websiteSettings.domain || ""}
                     onChange={handleWebsiteChange}
                     placeholder="e.g. https://yourcompany.com"
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                   />
-                  <p className="text-[10px] text-gray-400 mt-1.5">
-                    Used to generate correct Sitemap URLs, Canonical tags, and absolute links in RSS feeds.
-                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                    Primary Brand Color
+                <div className="space-y-4">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Brand Color Palette
                   </label>
-                  <div className="flex gap-3">
-                    <input
-                      type="color"
-                      name="primaryColor"
-                      value={websiteSettings.primaryColor || "#3b82f6"}
-                      onChange={handleWebsiteChange}
-                      className="w-11 h-11 p-0.5 bg-white border border-gray-200 rounded-lg cursor-pointer shrink-0"
-                    />
-                    <input
-                      type="text"
-                      name="primaryColor"
-                      value={websiteSettings.primaryColor || "#3b82f6"}
-                      onChange={handleWebsiteChange}
-                      placeholder="#3b82f6"
-                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
-                    />
+                  
+                  {/* Colors Row */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {/* Primary */}
+                    <div>
+                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block mb-1">Primary</span>
+                      <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
+                        <input
+                          type="color"
+                          name="primaryColor"
+                          value={websiteSettings.primaryColor || "#2563eb"}
+                          onChange={handleWebsiteChange}
+                          className="w-8 h-8 p-0 bg-transparent border-0 rounded cursor-pointer shrink-0"
+                        />
+                        <input
+                          type="text"
+                          name="primaryColor"
+                          value={websiteSettings.primaryColor || "#2563eb"}
+                          onChange={handleWebsiteChange}
+                          className="w-full text-xs outline-none bg-transparent font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Secondary */}
+                    <div>
+                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block mb-1">Secondary</span>
+                      <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
+                        <input
+                          type="color"
+                          name="secondaryColor"
+                          value={websiteSettings.secondaryColor || "#4f46e5"}
+                          onChange={handleWebsiteChange}
+                          className="w-8 h-8 p-0 bg-transparent border-0 rounded cursor-pointer shrink-0"
+                        />
+                        <input
+                          type="text"
+                          name="secondaryColor"
+                          value={websiteSettings.secondaryColor || "#4f46e5"}
+                          onChange={handleWebsiteChange}
+                          className="w-full text-xs outline-none bg-transparent font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Accent */}
+                    <div>
+                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block mb-1">Accent</span>
+                      <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
+                        <input
+                          type="color"
+                          name="accentColor"
+                          value={websiteSettings.accentColor || "#f59e0b"}
+                          onChange={handleWebsiteChange}
+                          className="w-8 h-8 p-0 bg-transparent border-0 rounded cursor-pointer shrink-0"
+                        />
+                        <input
+                          type="text"
+                          name="accentColor"
+                          value={websiteSettings.accentColor || "#f59e0b"}
+                          onChange={handleWebsiteChange}
+                          className="w-full text-xs outline-none bg-transparent font-mono"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
+              {/* Maintenance Mode Sub-card */}
+              <div className="bg-amber-50/50 border border-amber-200/70 p-5 rounded-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-amber-600" />
+                    <div>
+                      <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">Maintenance Mode</h4>
+                      <p className="text-[10px] text-amber-700">Block public access to website content with a custom message.</p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="maintenanceMode"
+                      checked={!!websiteSettings.maintenanceMode}
+                      onChange={handleWebsiteChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-600"></div>
+                  </label>
+                </div>
+                {websiteSettings.maintenanceMode && (
+                  <div className="animate-in fade-in slide-in-from-top-1 duration-150">
+                    <label htmlFor="maintenanceMessage" className="block text-[10px] font-bold text-amber-800 uppercase tracking-wider mb-1.5">
+                      Custom Maintenance Message
+                    </label>
+                    <textarea
+                      id="maintenanceMessage"
+                      name="maintenanceMessage"
+                      value={websiteSettings.maintenanceMessage || ""}
+                      onChange={handleWebsiteChange}
+                      rows={2}
+                      placeholder="We are currently undergoing scheduled system updates. Please visit us back shortly."
+                      className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg text-xs text-amber-900 focus:outline-none focus:ring-1 focus:ring-amber-400 placeholder-amber-400"
+                    />
+                  </div>
+                )}
+              </div>
+
               {/* Logo & Favicon Picker Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-150">
                 {/* Logo Select */}
                 <div className="space-y-2">
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -271,13 +513,13 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                       name="logoUrl"
                       value={websiteSettings.logoUrl || ""}
                       onChange={handleWebsiteChange}
-                      placeholder="/logo.png or Cloudinary URL"
-                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                      placeholder="/logo.png or Media URL"
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                     />
                     <button
                       type="button"
                       onClick={() => setActivePickerField("logo")}
-                      className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0"
+                      className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0 border"
                     >
                       Browse
                     </button>
@@ -286,11 +528,9 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg inline-flex items-center gap-3">
                       <img
                         src={websiteSettings.logoUrl}
-                        alt="Brand Logo Preview"
+                        alt="Logo Preview"
                         className="max-h-8 max-w-[120px] object-contain"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                        }}
+                        onError={(e) => { e.target.style.display = "none"; }}
                       />
                       <span className="text-[10px] text-gray-400 font-mono truncate max-w-[160px]">{websiteSettings.logoUrl}</span>
                     </div>
@@ -308,13 +548,13 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                       name="favicon"
                       value={websiteSettings.favicon || ""}
                       onChange={handleWebsiteChange}
-                      placeholder="/favicon.ico or Cloudinary URL"
-                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                      placeholder="/favicon.ico or Media URL"
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                     />
                     <button
                       type="button"
                       onClick={() => setActivePickerField("favicon")}
-                      className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0"
+                      className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0 border"
                     >
                       Browse
                     </button>
@@ -325,9 +565,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                         src={websiteSettings.favicon}
                         alt="Favicon Preview"
                         className="w-5 h-5 object-contain"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                        }}
+                        onError={(e) => { e.target.style.display = "none"; }}
                       />
                       <span className="text-[10px] text-gray-400 font-mono truncate max-w-[160px]">{websiteSettings.favicon}</span>
                     </div>
@@ -338,12 +576,326 @@ export default function SettingsEditor({ siteId, initialSettings }) {
             </div>
           )}
 
-          {/* Tab 2: SEO Defaults */}
+          {/* Tab 2: Header Settings */}
+          {activeTab === "header" && (
+            <div className="space-y-6">
+              <div className="border-b border-gray-100 pb-3">
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Header Configuration</h3>
+                <p className="text-xs text-gray-500 mt-1">Configure layout style, navigation rules, and header elements behavior.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="headerLayout" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Header Layout Style
+                  </label>
+                  <select
+                    id="headerLayout"
+                    name="layout"
+                    value={header.layout || "standard"}
+                    onChange={handleHeaderChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  >
+                    <option value="standard">Standard (Logo Left, Menu Right)</option>
+                    <option value="centered">Centered (Logo Center, Menu Underneath)</option>
+                    <option value="minimal">Minimal (Logo Left, Hamburger Menu)</option>
+                    <option value="boxed">Boxed (Contained block grid width)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="logoHeight" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Header Logo Height (Pixels)
+                  </label>
+                  <input
+                    type="number"
+                    id="logoHeight"
+                    name="logoHeight"
+                    min="20"
+                    max="100"
+                    value={header.logoHeight || 40}
+                    onChange={handleHeaderChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {/* Sticky Header Toggle */}
+                <div className="flex items-center justify-between border p-4 rounded-xl bg-gray-50/50">
+                  <div>
+                    <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Sticky Header</h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Fixed header position on scroll.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="sticky"
+                      checked={!!header.sticky}
+                      onChange={handleHeaderChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-100"></div>
+                  </label>
+                </div>
+
+                {/* Show Search Toggle */}
+                <div className="flex items-center justify-between border p-4 rounded-xl bg-gray-50/50">
+                  <div>
+                    <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Search Utility</h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Display search icon button in header.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="showSearch"
+                      checked={!!header.showSearch}
+                      onChange={handleHeaderChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-100"></div>
+                  </label>
+                </div>
+
+                {/* Show Socials Toggle */}
+                <div className="flex items-center justify-between border p-4 rounded-xl bg-gray-50/50">
+                  <div>
+                    <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Social Links</h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Show active social profile links.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="showSocials"
+                      checked={!!header.showSocials}
+                      onChange={handleHeaderChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-100"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 3: Footer Settings */}
+          {activeTab === "footer" && (
+            <div className="space-y-6">
+              <div className="border-b border-gray-100 pb-3">
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Footer Layout & copyright</h3>
+                <p className="text-xs text-gray-500 mt-1">Configure layout, newsletter signup widgets, and legal copyright line.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="footerLayout" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Footer Column Scheme
+                  </label>
+                  <select
+                    id="footerLayout"
+                    name="layout"
+                    value={footer.layout || "4-columns"}
+                    onChange={handleFooterChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  >
+                    <option value="4-columns">4 Columns Grid layout (Complex)</option>
+                    <option value="3-columns">3 Columns Grid layout (Standard)</option>
+                    <option value="2-columns">2 Columns Grid layout (Simple)</option>
+                    <option value="minimal">Minimalist (Copyright and links line only)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="copyright" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Legal Copyright Notice Line
+                  </label>
+                  <input
+                    type="text"
+                    id="copyright"
+                    name="copyright"
+                    value={footer.copyright || ""}
+                    onChange={handleFooterChange}
+                    placeholder="e.g. © 2026 Company Name. All rights reserved."
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border p-4 rounded-xl bg-gray-50/50 max-w-sm mt-4">
+                <div>
+                  <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Newsletter Widget</h5>
+                  <p className="text-[10px] text-gray-400 mt-0.5">Show newsletter subscription block in footer columns.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="showNewsletter"
+                    checked={!!footer.showNewsletter}
+                    onChange={handleFooterChange}
+                    className="sr-only peer"
+                  />
+                  <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-100"></div>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 4: Default Contact Info */}
+          {activeTab === "contact" && (
+            <div className="space-y-6">
+              <div className="border-b border-gray-100 pb-3">
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Default Company Contact Info</h3>
+                <p className="text-xs text-gray-500 mt-1">Global contact references used in CTAs, footer contact blocks, and forms page.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="contact_phone" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <PhoneCallIcon className="w-3.5 h-3.5 text-gray-400" />
+                    Default Phone Number
+                  </label>
+                  <input
+                    type="text"
+                    id="contact_phone"
+                    name="phone"
+                    value={contactDetails.phone || ""}
+                    onChange={handleContactChange}
+                    placeholder="e.g. +1 (555) 019-2834"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="contact_email" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-gray-400" />
+                    Default Support/Sales Email
+                  </label>
+                  <input
+                    type="email"
+                    id="contact_email"
+                    name="email"
+                    value={contactDetails.email || ""}
+                    onChange={handleContactChange}
+                    placeholder="e.g. contact@yourcompany.com"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="contact_address" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <MapPinIcon className="w-3.5 h-3.5 text-gray-400" />
+                    Office/HQ Address
+                  </label>
+                  <input
+                    type="text"
+                    id="contact_address"
+                    name="address"
+                    value={contactDetails.address || ""}
+                    onChange={handleContactChange}
+                    placeholder="e.g. 100 Pine St, Suite 200, San Francisco, CA"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="contact_hours" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <ClockIcon className="w-3.5 h-3.5 text-gray-400" />
+                    Operating/Office Hours
+                  </label>
+                  <input
+                    type="text"
+                    id="contact_hours"
+                    name="operatingHours"
+                    value={contactDetails.operatingHours || ""}
+                    onChange={handleContactChange}
+                    placeholder="e.g. Mon - Fri: 9:00 AM - 6:00 PM"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="contact_maps" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-gray-400" />
+                    Google Maps Link/Embed Coordinates URL
+                  </label>
+                  <input
+                    type="url"
+                    id="contact_maps"
+                    name="mapsUrl"
+                    value={contactDetails.mapsUrl || ""}
+                    onChange={handleContactChange}
+                    placeholder="e.g. https://maps.google.com/?q=..."
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Social links block */}
+              <div className="pt-4 border-t border-gray-150 space-y-4">
+                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Social Media Profile Slugs/URLs</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Facebook */}
+                  <div className="flex items-center gap-2 border p-2 rounded-lg bg-gray-50/50">
+                    <FacebookIcon className="w-4 h-4 text-blue-600 shrink-0" />
+                    <input
+                      type="text"
+                      name="socials.facebook"
+                      value={contactDetails.socials?.facebook || ""}
+                      onChange={handleContactChange}
+                      placeholder="Facebook profile URL"
+                      className="w-full text-xs outline-none bg-transparent"
+                    />
+                  </div>
+
+                  {/* Twitter */}
+                  <div className="flex items-center gap-2 border p-2 rounded-lg bg-gray-50/50">
+                    <TwitterIcon className="w-4 h-4 text-slate-800 shrink-0" />
+                    <input
+                      type="text"
+                      name="socials.twitter"
+                      value={contactDetails.socials?.twitter || ""}
+                      onChange={handleContactChange}
+                      placeholder="Twitter/X profile URL"
+                      className="w-full text-xs outline-none bg-transparent"
+                    />
+                  </div>
+
+                  {/* Instagram */}
+                  <div className="flex items-center gap-2 border p-2 rounded-lg bg-gray-50/50">
+                    <InstagramIcon className="w-4 h-4 text-pink-600 shrink-0" />
+                    <input
+                      type="text"
+                      name="socials.instagram"
+                      value={contactDetails.socials?.instagram || ""}
+                      onChange={handleContactChange}
+                      placeholder="Instagram profile URL"
+                      className="w-full text-xs outline-none bg-transparent"
+                    />
+                  </div>
+
+                  {/* LinkedIn */}
+                  <div className="flex items-center gap-2 border p-2 rounded-lg bg-gray-50/50">
+                    <LinkedinIcon className="w-4 h-4 text-blue-700 shrink-0" />
+                    <input
+                      type="text"
+                      name="socials.linkedin"
+                      value={contactDetails.socials?.linkedin || ""}
+                      onChange={handleContactChange}
+                      placeholder="LinkedIn profile URL"
+                      className="w-full text-xs outline-none bg-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 5: SEO Defaults */}
           {activeTab === "seo" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
                 <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Global SEO Configurations</h3>
-                <p className="text-xs text-gray-500 mt-1">Define default values applied when pages or posts lack specific metadata overrides.</p>
+                <p className="text-xs text-gray-500 mt-1">Define default metadata values applied when pages or posts lack overrides.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -358,7 +910,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     value={websiteSettings.title || ""}
                     onChange={handleWebsiteChange}
                     placeholder="e.g. Acme Corporation | Home"
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                   />
                 </div>
 
@@ -374,7 +926,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     value={websiteSettings.titleTemplate || ""}
                     onChange={handleWebsiteChange}
                     placeholder="e.g. %s | Acme Corporation"
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                   />
                 </div>
               </div>
@@ -390,7 +942,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                   onChange={handleWebsiteChange}
                   rows={3}
                   placeholder="Provide a general description of your website for search engines..."
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all resize-none"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all resize-none"
                 />
               </div>
 
@@ -407,12 +959,12 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     value={websiteSettings.ogImageUrl || ""}
                     onChange={handleWebsiteChange}
                     placeholder="https://yourdomain.com/og-image.jpg"
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                   />
                   <button
                     type="button"
                     onClick={() => setActivePickerField("ogImage")}
-                    className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0"
+                    className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0 border"
                   >
                     Browse
                   </button>
@@ -421,21 +973,18 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                   <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg inline-flex items-center gap-3">
                     <img
                       src={websiteSettings.ogImageUrl}
-                      alt="OG Image Preview"
+                      alt="OG Preview"
                       className="max-h-16 max-w-[160px] object-cover rounded"
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                      }}
+                      onError={(e) => { e.target.style.display = "none"; }}
                     />
                     <span className="text-[10px] text-gray-400 font-mono truncate max-w-[160px]">{websiteSettings.ogImageUrl}</span>
                   </div>
                 )}
               </div>
-
             </div>
           )}
 
-          {/* Tab 3: Analytics & Tracking */}
+          {/* Tab 6: Analytics & Tracking */}
           {activeTab === "analytics" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
@@ -454,7 +1003,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     id="googleAnalyticsId"
                     value={analytics.googleAnalyticsId || ""}
                     onChange={handleAnalyticsChange}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                     placeholder="G-XXXXXXXXXX"
                   />
                 </div>
@@ -469,7 +1018,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     id="clarityId"
                     value={analytics.clarityId || ""}
                     onChange={handleAnalyticsChange}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                     placeholder="xxxxxxxxxx"
                   />
                 </div>
@@ -484,7 +1033,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     id="googleTagManagerId"
                     value={analytics.googleTagManagerId || ""}
                     onChange={handleAnalyticsChange}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                     placeholder="GTM-XXXXXXX"
                   />
                 </div>
@@ -499,7 +1048,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     id="searchConsoleId"
                     value={analytics.searchConsoleId || ""}
                     onChange={handleAnalyticsChange}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                     placeholder="e.g. google1234567890abcdef"
                   />
                 </div>
@@ -514,7 +1063,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     id="metaPixelId"
                     value={analytics.metaPixelId || ""}
                     onChange={handleAnalyticsChange}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                     placeholder="e.g. 123456789012345"
                   />
                 </div>
@@ -529,7 +1078,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     id="linkedInTagId"
                     value={analytics.linkedInTagId || ""}
                     onChange={handleAnalyticsChange}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                     placeholder="e.g. 1234567"
                   />
                 </div>
@@ -537,7 +1086,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
             </div>
           )}
 
-          {/* Tab 4: Robots & AI Agents */}
+          {/* Tab 7: Robots & AI */}
           {activeTab === "robots" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3 flex justify-between items-center flex-wrap gap-2">
@@ -584,11 +1133,8 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                   onChange={handleWebsiteChange}
                   rows={6}
                   placeholder={`User-agent: *\nAllow: /\nDisallow: /api/`}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                 />
-                <p className="text-[10px] text-gray-400 mt-1.5">
-                  Overwrites standard robot directives. Leave blank to generate default crawler permissions.
-                </p>
               </div>
 
               <div>
@@ -602,22 +1148,18 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                   onChange={handleWebsiteChange}
                   rows={6}
                   placeholder={`# AI Agent System Guide\n\nThis site hosts company resources indexable by agents.`}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                 />
-                <p className="text-[10px] text-gray-400 mt-1.5">
-                  Overwrites auto-generated LLM instructions. Leave blank to dynamically guide agents using services and posts index lists.
-                </p>
               </div>
-
             </div>
           )}
 
-          {/* Tab 5: Custom Scripts */}
+          {/* Tab 8: Custom Scripts */}
           {activeTab === "scripts" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
                 <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Custom Header & Body Scripts</h3>
-                <p className="text-xs text-gray-500 mt-1">Inject custom script snippets (meta verifications, chat triggers, fonts) globally.</p>
+                <p className="text-xs text-gray-500 mt-1">Inject custom script snippets globally.</p>
               </div>
 
               <div className="space-y-4">
@@ -631,7 +1173,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     value={scripts.head || ""}
                     onChange={handleScriptsChange}
                     rows={6}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                     placeholder={`<script>... head injection ...</script>`}
                   />
                 </div>
@@ -646,7 +1188,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     value={scripts.body || ""}
                     onChange={handleScriptsChange}
                     rows={6}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
                     placeholder={`<!-- body open snippet injection -->`}
                   />
                 </div>
@@ -657,14 +1199,14 @@ export default function SettingsEditor({ siteId, initialSettings }) {
         </div>
 
         {/* Submit Bar */}
-        <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
+        <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-200 flex justify-between items-center">
           <span className="text-xs text-gray-400 font-medium">
-            Be careful updating script tags and robots rules in production.
+            Be careful updating brand identities and layout scripts on production sites.
           </span>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer border-0 outline-none"
           >
             <Save className="w-4 h-4" />
             {isSubmitting ? "Saving..." : "Save Settings"}
@@ -693,11 +1235,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
   );
 }
 
-// Simple internal helper icon to avoid extra lucide-react import variations
 function ExternalLinkIcon({ className }) {
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
+      xmlns="http://www.w3.org/2050/svg"
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={2}

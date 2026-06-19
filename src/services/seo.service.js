@@ -9,14 +9,20 @@ export class SeoService extends BaseService {
 
   async getSitemapItems(siteId) {
     const pages = await prisma.page.findMany({
-      where: { siteId, status: "PUBLISHED" },
+      where: { siteId, status: "PUBLISHED", deletedAt: null },
       select: { slug: true, updatedAt: true },
       orderBy: { updatedAt: "desc" },
     });
 
     const posts = await prisma.post.findMany({
-      where: { siteId, status: "PUBLISHED" },
+      where: { siteId, status: "PUBLISHED", deletedAt: null },
       select: { slug: true, updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    const legalPages = await prisma.legalPage.findMany({
+      where: { siteId, deletedAt: null },
+      select: { type: true, updatedAt: true },
       orderBy: { updatedAt: "desc" },
     });
 
@@ -28,6 +34,10 @@ export class SeoService extends BaseService {
       ...posts.map(p => ({
         url: `/blogs/${p.slug}`,
         lastModified: p.updatedAt.toISOString(),
+      })),
+      ...legalPages.map(lp => ({
+        url: `/legal/${lp.type}`,
+        lastModified: lp.updatedAt.toISOString(),
       })),
     ];
 

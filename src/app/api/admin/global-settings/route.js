@@ -12,6 +12,7 @@ const SettingsSchema = z.object({
   analytics: z.any().optional(),
   scripts: z.any().optional(),
   ctaConfig: z.any().optional(),
+  contactDetails: z.any().optional(),
 });
 
 export async function POST(request) {

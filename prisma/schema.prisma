@@ -22,13 +22,13 @@ enum SiteRole {
 }
 
 model Site {
-  id       String  @id @default(cuid())
-  name     String
-  domain   String? @unique
-  isActive Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String    @id @default(cuid())
+  name      String
+  domain    String?   @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   users SiteUser[]
   pages Page[]
@@ -51,6 +51,9 @@ model Site {
   apiKeys              ApiKey[]
   media                Media[]
   mediaFolders         MediaFolder[]
+  ipBlocks             IpBlock[]
+  errorLogs            SystemErrorLog[]
+  notificationAlerts   NotificationAlert[]
 
   @@index([isActive])
 }
@@ -67,8 +70,9 @@ model User {
 
   twoFAEnabled Boolean @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   sites SiteUser[]
 
@@ -90,7 +94,8 @@ model SiteUser {
 
   role SiteRole @default(EDITOR)
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -164,7 +169,7 @@ model PasswordReset {
 }
 
 model Media {
-  id String @id @default(cuid())
+  id     String @id @default(cuid())
   siteId String
   site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
@@ -189,8 +194,9 @@ model Media {
   isVideo    Boolean @default(false)
   isDocument Boolean @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   folderId String?
   folder   MediaFolder? @relation(fields: [folderId], references: [id])
@@ -201,7 +207,7 @@ model Media {
 }
 
 model MediaFolder {
-  id String @id @default(cuid())
+  id     String @id @default(cuid())
   siteId String
   site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
@@ -214,7 +220,8 @@ model MediaFolder {
 
   media Media[]
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   @@index([siteId])
 }
@@ -230,18 +237,17 @@ model Page {
   site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
   title  String
-  slug   String // Unique per site, e.g., "home", "about-us"
-  status String @default("DRAFT") // DRAFT, PUBLISHED
+  slug   String
+  status String @default("DRAFT")
 
-  // ---- New field for JSON-LD structured data ----
-  jsonLd Json? // nullable JSON field to store structured data
-  // -------------------------------------------------
+  jsonLd Json?
 
   seoTitle       String?
   seoDescription String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   publishedAt DateTime?
   publishedBy String?
@@ -269,8 +275,9 @@ model Section {
 
   content Json
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@index([pageId])
   @@index([pageId, order])
@@ -279,9 +286,9 @@ model Section {
 model IntegrationManifest {
   id           String   @id @default(cuid())
   siteId       String
-  source       String? // e.g. "next-app", repo name
-  manifestHash String? // optional, for quick diff check
-  rawJson      Json // the full manifest JSON
+  source       String?
+  manifestHash String?
+  rawJson      Json
   createdAt    DateTime @default(now())
 
   site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
@@ -291,13 +298,13 @@ model IntegrationManifest {
 }
 
 model GlobalSettings {
-  id                String   @id @default(cuid())
-  siteId            String   @unique
-  site              Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  header            Json? // JSON structure for header (menu, logo, etc.)
-  footer            Json? // JSON structure for footer (columns, links, newsletter)
-  analytics         Json? // Example: { googleAnalyticsId: "...", clarityId: "..." }
-  scripts           Json? // Extra scripts for head/footer
+  id                String    @id @default(cuid())
+  siteId            String    @unique
+  site              Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  header            Json?
+  footer            Json?
+  analytics         Json?
+  scripts           Json?
   contactDetails    Json?
   websiteSettings   Json?
   emailSettings     Json?
@@ -308,8 +315,9 @@ model GlobalSettings {
   performanceConfig Json?
   devTools          Json?
   navigation        Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
 
   @@index([siteId])
   @@map("GlobalSettings")
@@ -328,18 +336,19 @@ model WebhookEvent {
 }
 
 model WebhookSubscription {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   siteId    String
-  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site      Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
   name      String
   url       String
   events    String[]
   secret    String
-  isActive  Boolean  @default(true)
-  failCount Int      @default(0)
+  isActive  Boolean   @default(true)
+  failCount Int       @default(0)
   lastError String?
-  createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  user      User?     @relation(fields: [userId], references: [id])
   userId    String?
 
   @@index([siteId])
@@ -356,8 +365,9 @@ model Category {
   slug  String @unique
   posts Post[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Tag {
@@ -366,8 +376,9 @@ model Tag {
   slug  String @unique
   posts Post[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Post {
@@ -394,6 +405,7 @@ model Post {
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
   publishedAt DateTime?
 
   @@unique([siteId, slug])
@@ -424,88 +436,94 @@ model Service {
   featuredImageId String?
   featuredImage   Media?  @relation(fields: [featuredImageId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@index([siteId])
   @@index([featuredImageId])
 }
 
 model Testimonial {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   siteId      String
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site        Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
   clientName  String
   clientImage String?
-  rating      Int      @default(5)
+  rating      Int       @default(5)
   content     String
-  showHide    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  showHide    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   @@index([siteId])
   @@index([siteId, sortOrder])
 }
 
 model Faq {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   siteId       String
-  site         Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site         Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
   question     String
   answer       String
-  page         String? // page slug/name
-  sortOrder    Int      @default(0)
-  showHide     Boolean  @default(true)
-  schemaMarkup Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  page         String?
+  sortOrder    Int       @default(0)
+  showHide     Boolean   @default(true)
+  schemaMarkup Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 
   @@index([siteId])
   @@index([siteId, sortOrder])
 }
 
 model TeamMember {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   siteId      String
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site        Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
   name        String
   role        String
   photo       String?
   bio         String?
-  socialLinks Json? // e.g. { twitter: "...", linkedin: "..." }
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  socialLinks Json?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   @@index([siteId])
   @@index([siteId, sortOrder])
 }
 
 model LegalPage {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   siteId      String
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  type        String // "privacy" | "terms" | "cookie" | "disclaimer" | "refund"
+  site        Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  type        String
   title       String
   content     String
-  lastUpdated DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  lastUpdated DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   @@unique([siteId, type])
   @@index([siteId])
 }
 
 model Redirect {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   siteId    String
-  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  source    String // "/old-path"
-  target    String // "/new-path"
-  type      Int      @default(301) // 301 or 302
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  site      Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  source    String
+  target    String
+  type      Int       @default(301)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@unique([siteId, source])
   @@index([siteId])
@@ -515,12 +533,12 @@ model VisitorLog {
   id            String   @id @default(cuid())
   siteId        String
   site          Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  visitorId     String // browser session/cookie identifier
-  pageViewed    String // e.g., "/" or "/about"
-  location      String? // e.g., "US", "IN"
-  deviceInfo    String? // e.g., "Mobile - Chrome"
-  trafficSource String? // e.g., "Google", "Direct"
-  duration      Int      @default(0) // seconds on page
+  visitorId     String
+  pageViewed    String
+  location      String?
+  deviceInfo    String?
+  trafficSource String?
+  duration      Int      @default(0)
   createdAt     DateTime @default(now())
 
   @@index([siteId])
@@ -528,49 +546,92 @@ model VisitorLog {
 }
 
 model ContactFormSubmission {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   siteId    String
-  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site      Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
   name      String
   email     String
   phone     String?
   message   String
-  status    String   @default("new") // "new" | "read" | "spam" | "archived"
+  status    String    @default("new")
   notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@index([siteId])
   @@index([siteId, status])
 }
 
 model Lead {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   siteId          String
-  site            Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site            Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
   name            String
   email           String
   phone           String?
   serviceInterest String?
   sourcePage      String?
-  status          String   @default("new") // "new" | "contacted" | "qualified" | "closed"
+  status          String    @default("new")
   notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
 
   @@index([siteId])
   @@index([siteId, status])
 }
 
 model ApiKey {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   siteId    String
-  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site      Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
   name      String
-  key       String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  key       String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@index([siteId])
 }
+
+model IpBlock {
+  id        String   @id @default(cuid())
+  siteId    String
+  ipAddress String
+  reason    String?
+  createdAt DateTime @default(now())
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, ipAddress])
+  @@index([siteId])
+}
+
+model SystemErrorLog {
+  id        String   @id @default(cuid())
+  siteId    String?
+  message   String
+  stack     String?
+  context   Json?
+  createdAt DateTime @default(now())
+  site      Site?    @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@index([createdAt])
+}
+
+model NotificationAlert {
+  id        String   @id @default(cuid())
+  siteId    String
+  title     String
+  message   String
+  type      String   // "NEW_LEAD" | "FAILED_FORM" | "BLOG_ALERT"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+  @@index([createdAt])
+}
+

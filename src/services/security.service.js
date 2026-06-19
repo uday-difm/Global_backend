@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { BaseService } from "@/core/service";
 import { logAction } from "@/lib/audit";
+import { ValidationError } from "@/core/errors";
 
 export class SecurityService extends BaseService {
   constructor() {
@@ -10,12 +11,17 @@ export class SecurityService extends BaseService {
   async getSecurityControls(siteId) {
     const settings = await prisma.globalSettings.findUnique({
       where: { siteId },
-      select: { securityControls: true }
+      select: { securityControls: true },
     });
     return settings?.securityControls || { ipBlocklist: [], rateLimit: 60 };
   }
 
   async blockIp(siteId, ip, userId) {
+    const net = await import("net");
+    if (net.isIP(ip) === 0) {
+      throw new ValidationError("Invalid IP address format. Must be a valid IPv4 or IPv6 address.");
+    }
+
     const controls = await this.getSecurityControls(siteId);
     const ipBlocklist = controls.ipBlocklist || [];
 
@@ -28,9 +34,9 @@ export class SecurityService extends BaseService {
       data: {
         securityControls: {
           ...controls,
-          ipBlocklist
-        }
-      }
+          ipBlocklist,
+        },
+      },
     });
 
     await logAction(siteId, userId, "IP_BLOCKED", { ip });
@@ -40,16 +46,16 @@ export class SecurityService extends BaseService {
   async unblockIp(siteId, ip, userId) {
     const controls = await this.getSecurityControls(siteId);
     const ipBlocklist = controls.ipBlocklist || [];
-    const updatedBlocklist = ipBlocklist.filter(item => item !== ip);
+    const updatedBlocklist = ipBlocklist.filter((item) => item !== ip);
 
     await prisma.globalSettings.update({
       where: { siteId },
       data: {
         securityControls: {
           ...controls,
-          ipBlocklist: updatedBlocklist
-        }
-      }
+          ipBlocklist: updatedBlocklist,
+        },
+      },
     });
 
     await logAction(siteId, userId, "IP_UNBLOCKED", { ip });

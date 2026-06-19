@@ -2,6 +2,8 @@ import { seoService } from "@/services/seo.service";
 import { getSiteId } from "@/lib/siteGuard";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req) {
   try {
     const siteId = getSiteId(req);

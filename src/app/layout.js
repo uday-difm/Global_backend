@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import Script from "next/script";
 import ClientScripts from "@/components/utils/ClientScripts"; // Import the new component
 import { ThemeProvider } from "next-themes";
+import SessionTimeoutHandler from "@/components/utils/SessionTimeoutHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +30,9 @@ export default async function RootLayout({ children }) {
 
   const analytics = settings?.analytics || {};
   const scripts = settings?.scripts || {};
+  const timeoutMinutes = settings?.securityControls?.sessionTimeoutMinutes || 30;
+  const performanceConfig = settings?.performanceConfig || {};
+  const deferScripts = performanceConfig.deferNonEssentialScripts ?? true;
 
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
@@ -40,7 +44,7 @@ export default async function RootLayout({ children }) {
       </head>
       <body>
         {/* The ClientScripts component will inject scripts here and in the head */}
-        <ClientScripts headScripts={scripts.head} bodyScripts={scripts.body} />
+        <ClientScripts headScripts={scripts.head} bodyScripts={scripts.body} deferScripts={deferScripts} />
 
         {/* Google Tag Manager */}
         {analytics.googleTagManagerId && (
@@ -145,7 +149,10 @@ export default async function RootLayout({ children }) {
         )}
 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <SessionTimeoutHandler timeoutMinutes={timeoutMinutes} />
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

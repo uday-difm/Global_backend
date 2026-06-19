@@ -60,6 +60,7 @@ export class SettingsService extends BaseService {
       analytics: data.analytics !== undefined ? data.analytics : undefined,
       scripts: data.scripts !== undefined ? data.scripts : undefined,
       ctaConfig: data.ctaConfig !== undefined ? data.ctaConfig : undefined,
+      contactDetails: data.contactDetails !== undefined ? data.contactDetails : undefined,
     };
 
     // Filter undefined keys

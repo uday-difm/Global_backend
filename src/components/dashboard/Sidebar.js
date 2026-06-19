@@ -23,7 +23,15 @@ import {
   Phone,
   Megaphone,
   BarChart2,
+  Scale,
+  Menu,
+  Mail,
+  Activity,
+  Bell,
+  Fingerprint,
+  Terminal,
 } from "lucide-react";
+
 
 // Role hierarchy: higher number = more access
 const ROLE_LEVEL = {
@@ -62,6 +70,8 @@ const sections = [
       { href: "/faq",          label: "FAQs",            icon: HelpCircle,    minRole: "EDITOR" },
       { href: "/team",         label: "Team Members",    icon: UsersRound,    minRole: "EDITOR" },
       { href: "/contact",      label: "Contact Details", icon: Phone,         minRole: "EDITOR" },
+      { href: "/legal",        label: "Legal Pages",     icon: Scale,         minRole: "EDITOR" },
+      { href: "/navigation",   label: "Navigation Menus",icon: Menu,          minRole: "EDITOR" },
       { href: "/header",       label: "Header Builder",  icon: PanelTop,      minRole: "ADMIN"  },
       { href: "/footer",       label: "Footer Builder",  icon: PanelBottom,   minRole: "ADMIN"  },
       { href: "/cta",          label: "CTA & Popups",    icon: Megaphone,     minRole: "ADMIN"  },
@@ -73,6 +83,11 @@ const sections = [
       { href: "/redirects", label: "Redirect Rules",   icon: ArrowLeftRight, minRole: "ADMIN"      },
       { href: "/backup",    label: "Backup & Restore",  icon: Database,       minRole: "SUPERADMIN" },
       { href: "/security",  label: "Security Center",   icon: ShieldCheck,    minRole: "ADMIN"      },
+      { href: "/compliance", label: "Compliance & GDPR", icon: Fingerprint,   minRole: "ADMIN"      },
+      { href: "/dev",        label: "Developer Tools",   icon: Terminal,      minRole: "ADMIN"      },
+      { href: "/performance", label: "Performance & Logs", icon: Activity, minRole: "ADMIN"      },
+      { href: "/notifications", label: "Notifications", icon: Bell,           minRole: "ADMIN"      },
+      { href: "/email",     label: "Email Settings",    icon: Mail,           minRole: "ADMIN"      },
       { href: "/settings",  label: "Settings",          icon: Settings,       minRole: "ADMIN"      },
       { href: "/users",     label: "Users",             icon: Users,          minRole: "ADMIN"      },
     ],

@@ -32,6 +32,26 @@ export async function checkSitePermission(req, requiredRole) {
     return { error: "Missing site_id", status: 400 };
   }
 
+  // Enforce IP Blockcheck & Rate Limiting
+  try {
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    const { securityService } = await import("@/services/security.service");
+    const isBlocked = await securityService.isIpBlocked(siteId, ip);
+    if (isBlocked) {
+      return { error: "Access Denied: Your IP is blocked", status: 403 };
+    }
+
+    const controls = await securityService.getSecurityControls(siteId);
+    const limitRps = controls.rateLimitRps || 60;
+    const { checkRateLimit } = await import("@/lib/rateLimiter");
+    const allowed = checkRateLimit(ip, limitRps);
+    if (!allowed) {
+      return { error: "Too Many Requests: Rate limit exceeded", status: 429 };
+    }
+  } catch (e) {
+    console.error("IP checking / Rate limiting failed inside checkSitePermission:", e);
+  }
+
   if (requiredRole) {
     const hasAccess = await userHasSiteRole(user, siteId, requiredRole);
     if (!hasAccess) {

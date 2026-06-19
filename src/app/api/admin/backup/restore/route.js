@@ -11,11 +11,19 @@ export async function POST(req) {
 
   try {
     const { backup } = await req.json();
-    const result = await backupService.restoreBackup(auth.siteId, backup);
+    
+    let result;
+    if (backup && (backup.media || backup.folders)) {
+      result = await backupService.restoreMediaBackup(auth.siteId, backup);
+    } else {
+      result = await backupService.restoreBackup(auth.siteId, backup);
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: "Site database restored successfully from backup" 
+      message: backup && (backup.media || backup.folders)
+        ? "Site media snapshot restored successfully from backup"
+        : "Site database restored successfully from backup" 
     });
   } catch (err) {
     return handleApiError(err);

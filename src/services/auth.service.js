@@ -25,16 +25,22 @@ export class AuthService extends BaseService {
       throw new UnauthorizedError("Invalid credentials");
     }
 
+    const ip = reqHeaders["x-forwarded-for"] || "unknown";
+    const agent = reqHeaders["user-agent"] || "unknown";
+
     const validPassword = await bcrypt.compare(password, user.passwordHash);
     if (!validPassword) {
+      try {
+        await recordLogin(user.id, ip, agent, false);
+      } catch (err) {
+        console.error("Failed to record failed login details:", err);
+      }
       throw new UnauthorizedError("Invalid credentials");
     }
 
     // Record login audit history
     try {
-      const ip = reqHeaders["x-forwarded-for"] || "unknown";
-      const agent = reqHeaders["user-agent"] || "unknown";
-      await recordLogin(user.id, ip, agent);
+      await recordLogin(user.id, ip, agent, true);
     } catch (err) {
       console.error("Failed to record login audit details:", err);
     }

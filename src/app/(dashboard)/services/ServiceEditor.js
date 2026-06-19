@@ -2,7 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Image as ImageIcon, Plus, Trash2, Edit, AlertCircle, HelpCircle, Save, CheckCircle } from "lucide-react";
+import { 
+  Image as ImageIcon, 
+  Plus, 
+  Trash2, 
+  Edit, 
+  AlertCircle, 
+  HelpCircle, 
+  Save, 
+  CheckCircle, 
+  Eye, 
+  EyeOff, 
+  Sparkles, 
+  ExternalLink,
+  ChevronRight,
+  Loader2
+} from "lucide-react";
 import MediaPickerModal from "@/components/media/MediaPickerModal";
 
 export default function ServiceEditor({ siteId, service }) {
@@ -35,6 +50,7 @@ export default function ServiceEditor({ siteId, service }) {
   const [faqSortOrder, setFaqSortOrder] = useState(0);
   const [faqShowHide, setFaqShowHide] = useState(true);
   const [faqSchemaMarkup, setFaqSchemaMarkup] = useState(false);
+  const [faqError, setFaqError] = useState(null);
 
   const isEditMode = !!service;
 
@@ -74,7 +90,7 @@ export default function ServiceEditor({ siteId, service }) {
         const filtered = (json.faqs || []).filter(
           (f) => f.page === `/services/${service.id}`
         );
-        setFaqs(filtered);
+        setFaqs(filtered.sort((a, b) => a.sortOrder - b.sortOrder));
       }
     } catch (err) {
       console.error("Fetch FAQs error:", err);
@@ -141,6 +157,8 @@ export default function ServiceEditor({ siteId, service }) {
   // FAQ CRUD helpers
   const handleSaveFaq = async (e) => {
     e.preventDefault();
+    setFaqError(null);
+
     const payload = {
       question: faqQuestion,
       answer: faqAnswer,
@@ -171,7 +189,7 @@ export default function ServiceEditor({ siteId, service }) {
       setShowFaqModal(false);
       fetchFaqs();
     } catch (err) {
-      alert(err.message);
+      setFaqError(err.message);
     }
   };
 
@@ -193,167 +211,231 @@ export default function ServiceEditor({ siteId, service }) {
 
   return (
     <div className="space-y-8">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="flex gap-3 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm">
-            <AlertCircle className="shrink-0" size={18} />
-            <p className="font-semibold">{error}</p>
-          </div>
-        )}
+      {error && (
+        <div className="flex gap-3 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold shadow-xs animate-fade-in">
+          <AlertCircle className="shrink-0 text-rose-500" size={16} />
+          <p>{error}</p>
+        </div>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="md:col-span-2">
-            <label htmlFor="title" className="block text-xs font-semibold text-gray-500 mb-1">
-              Service Title
-            </label>
-            <input
-              type="text"
-              name="title"
-              id="title"
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm font-semibold"
-              required
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left Core Area */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Main Attributes Card */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-5">
+            <div>
+              <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase mb-4 pb-2 border-b border-slate-100">
+                Service Description
+              </h2>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="title" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Service Title <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  id="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  placeholder="e.g., Premium Consulting Pack"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                  required
+                />
+              </div>
 
-          <div className="md:col-span-2">
-            <label htmlFor="description" className="block text-xs font-semibold text-gray-500 mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
-              id="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={4}
-              className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="price" className="block text-xs font-semibold text-gray-500 mb-1">
-              Price
-            </label>
-            <input
-              type="text"
-              name="price"
-              id="price"
-              value={formData.price}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm"
-              placeholder="e.g., $500 or Contact for Quote"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="status" className="block text-xs font-semibold text-gray-500 mb-1">
-              Status
-            </label>
-            <select
-              name="status"
-              id="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm bg-white"
-            >
-              <option value="DRAFT">Draft</option>
-              <option value="ACTIVE">Active (Published)</option>
-            </select>
+              <div>
+                <label htmlFor="description" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Detailed Description
+                </label>
+                <textarea
+                  name="description"
+                  id="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Enter detailed description of what is included in this service..."
+                  rows={6}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-medium text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 resize-none"
+                />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="ctaButtonText" className="block text-xs font-semibold text-gray-500 mb-1">
-              CTA Button Text
-            </label>
-            <input
-              type="text"
-              name="ctaButtonText"
-              id="ctaButtonText"
-              value={formData.ctaButtonText}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm"
-              placeholder="e.g., Learn More"
-            />
-          </div>
+          {/* CTA Integration Card */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-5">
+            <div>
+              <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase mb-1">
+                Call to Action Setup
+              </h2>
+              <p className="text-[10px] text-slate-400">Configure CTA redirection buttons linked directly to this service card.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="ctaButtonText" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  CTA Button Label
+                </label>
+                <input
+                  type="text"
+                  name="ctaButtonText"
+                  id="ctaButtonText"
+                  value={formData.ctaButtonText}
+                  onChange={handleChange}
+                  placeholder="e.g., Get Started"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                />
+              </div>
 
-          <div>
-            <label htmlFor="ctaButtonLink" className="block text-xs font-semibold text-gray-500 mb-1">
-              CTA Button Link
-            </label>
-            <input
-              type="text"
-              name="ctaButtonLink"
-              id="ctaButtonLink"
-              value={formData.ctaButtonLink}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm font-mono"
-              placeholder="e.g., /contact-us"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="sortOrder" className="block text-xs font-semibold text-gray-500 mb-1">
-              Sort Order
-            </label>
-            <input
-              type="number"
-              name="sortOrder"
-              id="sortOrder"
-              value={formData.sortOrder}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm"
-            />
-          </div>
-
-          {/* Featured Image */}
-          <div className="md:col-span-2 border-t pt-4">
-            <label className="block text-xs font-semibold text-gray-500 mb-2">Featured Image</label>
-            <div className="flex items-center gap-4">
-              {featuredImageUrl ? (
-                <div className="relative w-36 h-24 rounded-lg overflow-hidden border">
-                  <img
-                    src={featuredImageUrl}
-                    alt="Featured Preview"
-                    className="w-full h-full object-cover"
+              <div>
+                <label htmlFor="ctaButtonLink" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  CTA Button Path/Link
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="ctaButtonLink"
+                    id="ctaButtonLink"
+                    value={formData.ctaButtonLink}
+                    onChange={handleChange}
+                    placeholder="e.g., /contact"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/30 pl-3.5 pr-10 py-2.5 text-xs font-mono text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
                   />
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                    <ExternalLink size={12} />
+                  </div>
                 </div>
-              ) : (
-                <div className="w-36 h-24 bg-gray-50 border border-dashed rounded-lg flex items-center justify-center text-xs text-gray-400 font-medium">
-                  No image selected
-                </div>
-              )}
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={openMediaPicker}
-                  className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition"
-                >
-                  <ImageIcon size={14} />
-                  Select Image
-                </button>
-                {featuredImageUrl && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFeaturedImageUrl("");
-                      setFormData((prev) => ({ ...prev, featuredImageId: null }));
-                    }}
-                    className="block px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-semibold hover:bg-red-100 transition border border-red-200"
-                  >
-                    Remove Image
-                  </button>
-                )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
+        {/* Right Settings Sidebar */}
+        <div className="space-y-6">
+          {/* Settings Console Card */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-5">
+            <div>
+              <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase mb-4 pb-2 border-b border-slate-100">
+                Publishing Console
+              </h2>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="status" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Publish Status
+                </label>
+                <div className="relative">
+                  <select
+                    name="status"
+                    id="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 appearance-none cursor-pointer"
+                  >
+                    <option value="DRAFT">Draft</option>
+                    <option value="ACTIVE">Active (Published)</option>
+                  </select>
+                  <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                    <ChevronRight size={14} className="rotate-90" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="price" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Pricing Label
+                </label>
+                <input
+                  type="text"
+                  name="price"
+                  id="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  placeholder="e.g., $499 or Call for Quote"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="sortOrder" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Order Priority Weight
+                </label>
+                <input
+                  type="number"
+                  name="sortOrder"
+                  id="sortOrder"
+                  value={formData.sortOrder}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Featured Image upload preview card */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-4">
+            <div>
+              <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase mb-1">
+                Featured Cover Image
+              </h2>
+              <p className="text-[10px] text-slate-400">Visual visual presentation card cover image.</p>
+            </div>
+
+            <div className="space-y-4">
+              {featuredImageUrl ? (
+                <div className="group relative aspect-video rounded-xl overflow-hidden border border-slate-200 shadow-inner bg-slate-50">
+                  <img
+                    src={featuredImageUrl}
+                    alt="Cover preview"
+                    className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition duration-200 flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={openMediaPicker}
+                      className="px-3 py-1.5 bg-white text-slate-800 hover:bg-slate-50 rounded-lg text-[10px] font-bold shadow-sm transition"
+                    >
+                      Change
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFeaturedImageUrl("");
+                        setFormData((prev) => ({ ...prev, featuredImageId: null }));
+                      }}
+                      className="px-3 py-1.5 bg-rose-600 text-white hover:bg-rose-700 rounded-lg text-[10px] font-bold shadow-sm transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={openMediaPicker}
+                  className="w-full aspect-video border-2 border-dashed border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/5 rounded-xl flex flex-col items-center justify-center gap-2 text-center p-4 transition-all duration-200 cursor-pointer group"
+                >
+                  <div className="p-3 bg-slate-50 group-hover:bg-indigo-50 group-hover:text-indigo-600 text-slate-400 rounded-full transition">
+                    <ImageIcon size={20} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-700 block">Select Cover Cover Image</span>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">JPEG, PNG or WebP up to 5MB</span>
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Floating action bar styling for form */}
+        <div className="lg:col-span-3 flex justify-end items-center gap-3 pt-4 border-t border-slate-100 mt-2">
           <button
             type="button"
             onClick={() => router.push("/services")}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition"
+            className="px-5 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 active:bg-slate-100 transition-all duration-200"
             disabled={isSubmitting}
           >
             Cancel
@@ -361,28 +443,34 @@ export default function ServiceEditor({ siteId, service }) {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting
-              ? "Saving..."
-              : isEditMode
-                ? "Update Service"
-                : "Create Service"}
+            {isSubmitting ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Loader2 size={12} className="animate-spin" />
+                Saving...
+              </span>
+            ) : (
+              <>
+                <Save size={14} />
+                {isEditMode ? "Save Changes" : "Create Service"}
+              </>
+            )}
           </button>
         </div>
       </form>
 
       {/* FAQs Panel for Active service pages */}
       {isEditMode && (
-        <div className="border-t pt-6 space-y-4">
-          <div className="flex justify-between items-center">
+        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
             <div>
-              <h3 className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                <HelpCircle size={18} className="text-blue-600" />
-                Service FAQs
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <HelpCircle size={18} className="text-indigo-600" />
+                Service Frequently Asked Questions (FAQs)
               </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Configure questions and answers displayed directly on this service page path.
+              <p className="text-xs text-slate-400 mt-1">
+                Configure context-specific questions and answers mapped directly to the route: <code className="bg-slate-50 px-1.5 py-0.5 rounded font-mono text-slate-600">/services/{service.id}</code>
               </p>
             </div>
             <button
@@ -394,9 +482,10 @@ export default function ServiceEditor({ siteId, service }) {
                 setFaqSortOrder(0);
                 setFaqShowHide(true);
                 setFaqSchemaMarkup(false);
+                setFaqError(null);
                 setShowFaqModal(true);
               }}
-              className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition duration-200 self-start sm:self-auto"
             >
               <Plus size={14} />
               Add FAQ
@@ -404,27 +493,54 @@ export default function ServiceEditor({ siteId, service }) {
           </div>
 
           {faqsLoading ? (
-            <div className="text-xs text-gray-400 text-center py-6">Loading service FAQs...</div>
+            <div className="flex flex-col items-center justify-center py-10 gap-2 text-slate-400">
+              <Loader2 size={24} className="animate-spin text-indigo-600" />
+              <span className="text-xs font-semibold">Loading service FAQs...</span>
+            </div>
           ) : faqs.length === 0 ? (
-            <div className="text-xs text-gray-400 text-center py-6 border border-dashed rounded-lg bg-gray-50/50">
-              No FAQs defined for this service page yet.
+            <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/30">
+              <HelpCircle className="mx-auto text-slate-300 mb-2" size={32} />
+              <p className="text-xs font-bold text-slate-600">No FAQs mapped to this service yet.</p>
+              <p className="text-[10px] text-slate-400 mt-1">Click the Add FAQ button above to create one.</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-4">
               {faqs.map((faq) => (
-                <div key={faq.id} className="border rounded-xl p-4 bg-white hover:shadow-sm transition flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold text-gray-800 text-sm">{faq.question}</h4>
-                    <p className="text-xs text-gray-600 mt-1">{faq.answer}</p>
-                    <div className="flex gap-3 mt-2 text-[10px] text-gray-400 font-semibold uppercase">
-                      <span>Order: {faq.sortOrder}</span>
-                      <span>•</span>
-                      <span>Visibility: {faq.showHide ? "Visible" : "Hidden"}</span>
-                      <span>•</span>
-                      <span>SEO Schema: {faq.schemaMarkup ? "Yes" : "No"}</span>
+                <div 
+                  key={faq.id} 
+                  className="group border border-slate-100 hover:border-slate-200 rounded-2xl p-5 bg-slate-50/20 hover:bg-white hover:shadow-xs transition duration-200 flex flex-col md:flex-row md:items-start md:justify-between gap-4"
+                >
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">
+                        Weight: {faq.sortOrder}
+                      </span>
+                      {faq.showHide ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 text-[10px] font-bold">
+                          <Eye size={10} />
+                          Visible
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-50 text-slate-400 border border-slate-200 text-[10px] font-bold">
+                          <EyeOff size={10} />
+                          Hidden
+                        </span>
+                      )}
+                      {faq.schemaMarkup && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold">
+                          <Sparkles size={10} />
+                          JSON-LD Schema Active
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-sm">{faq.question}</h4>
+                      <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">{faq.answer}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2 ml-4 shrink-0">
+
+                  <div className="flex gap-2 shrink-0 self-end md:self-start opacity-90 md:opacity-0 group-hover:opacity-100 transition duration-200">
                     <button
                       type="button"
                       onClick={() => {
@@ -434,17 +550,20 @@ export default function ServiceEditor({ siteId, service }) {
                         setFaqSortOrder(faq.sortOrder);
                         setFaqShowHide(faq.showHide);
                         setFaqSchemaMarkup(faq.schemaMarkup);
+                        setFaqError(null);
                         setShowFaqModal(true);
                       }}
-                      className="px-2.5 py-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 rounded-lg text-xs font-semibold transition border border-yellow-200"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[10px] font-bold shadow-xs transition"
                     >
+                      <Edit size={10} />
                       Edit
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeleteFaq(faq.id)}
-                      className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-semibold transition border border-red-200"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[10px] font-bold shadow-xs transition"
                     >
+                      <Trash2 size={10} />
                       Delete
                     </button>
                   </div>
@@ -468,92 +587,115 @@ export default function ServiceEditor({ siteId, service }) {
 
       {/* FAQ Edit/Create Modal */}
       {showFaqModal && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
-          <div className="absolute inset-0 bg-black opacity-30" onClick={() => setShowFaqModal(false)} />
-          <form onSubmit={handleSaveFaq} className="relative bg-white rounded-xl shadow-lg w-full max-w-lg p-6 z-10 space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b">
-              <h3 className="font-bold text-gray-900 text-base">
-                {editingFaq ? "Edit FAQ" : "Add Service FAQ"}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300" 
+            onClick={() => setShowFaqModal(false)} 
+          />
+          <form 
+            onSubmit={handleSaveFaq} 
+            className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 z-10 border border-slate-100 transform transition-all duration-300 scale-100 flex flex-col gap-4 animate-fade-in"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
+                <HelpCircle size={18} className="text-indigo-600" />
+                {editingFaq ? "Modify FAQ" : "Add Service FAQ"}
               </h3>
               <button
                 type="button"
-                className="text-xs font-semibold text-gray-500 hover:text-gray-900"
+                className="text-xs font-bold text-slate-400 hover:text-slate-600 transition"
                 onClick={() => setShowFaqModal(false)}
               >
-                Close
+                Cancel
               </button>
             </div>
 
-            <div className="space-y-3">
+            {faqError && (
+              <div className="flex gap-2.5 p-3 bg-rose-50 border border-rose-150 text-rose-800 rounded-xl text-xs font-semibold">
+                <AlertCircle className="shrink-0 text-rose-500" size={15} />
+                <p>{faqError}</p>
+              </div>
+            )}
+
+            <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Question</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Question Text</label>
                 <input
                   type="text"
                   required
                   value={faqQuestion}
                   onChange={(e) => setFaqQuestion(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm font-semibold"
+                  placeholder="e.g., What is included in this bundle?"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">Answer</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Answer Text</label>
                 <textarea
                   required
                   value={faqAnswer}
                   onChange={(e) => setFaqAnswer(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm"
+                  placeholder="Provide a clear, detailed answer..."
+                  rows={4}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 resize-none"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Sort Order</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Display Sort Weight</label>
                   <input
                     type="number"
                     value={faqSortOrder}
                     onChange={(e) => setFaqSortOrder(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-2">
-                <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+              <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                <label className="flex-1 flex items-center justify-between p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-700">Display FAQ</span>
+                    <span className="text-[10px] text-slate-400">Make FAQ visible on page</span>
+                  </div>
                   <input
                     type="checkbox"
                     checked={faqShowHide}
                     onChange={(e) => setFaqShowHide(e.target.checked)}
-                    className="rounded text-blue-600 h-4 w-4"
+                    className="rounded text-indigo-600 h-4.5 w-4.5 border-slate-300 focus:ring-indigo-500/20"
                   />
-                  Show FAQ on page
                 </label>
 
-                <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                <label className="flex-1 flex items-center justify-between p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-700">Inject Schema</span>
+                    <span className="text-[10px] text-slate-400">SEO Schema JSON-LD markup</span>
+                  </div>
                   <input
                     type="checkbox"
                     checked={faqSchemaMarkup}
                     onChange={(e) => setFaqSchemaMarkup(e.target.checked)}
-                    className="rounded text-blue-600 h-4 w-4"
+                    className="rounded text-indigo-600 h-4.5 w-4.5 border-slate-300 focus:ring-indigo-500/20"
                   />
-                  Inject Schema Markup (JSON-LD)
                 </label>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-3 border-t">
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 mt-2">
               <button
                 type="button"
-                className="px-3.5 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition"
+                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition"
                 onClick={() => setShowFaqModal(false)}
               >
-                Cancel
+                Discard
               </button>
               <button
                 type="submit"
-                className="px-3.5 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-md shadow-indigo-600/10"
               >
+                <Save size={12} />
                 Save FAQ
               </button>
             </div>
@@ -563,3 +705,4 @@ export default function ServiceEditor({ siteId, service }) {
     </div>
   );
 }
+

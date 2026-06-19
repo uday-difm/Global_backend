@@ -1,131 +1,182 @@
-// global_backend/src/app/(dashboard)/pages/page.js
+// src/app/(dashboard)/pages/page.js
+import React from "react";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import CreatePageForm from "./CreatePageForm";
 import PublishToggle from "./PublishToggle";
 import DeletePageButton from "./DeletePageButton";
+import { requireAuth } from "@/lib/requireAuth";
+import { getSiteForUser } from "@/lib/getSiteForUser";
+import { FileText, Eye, Edit2, FilePlus2, CheckCircle, RefreshCw } from "lucide-react";
 
-/**
- * Pages admin list (server component)
- *
- * Server component must NOT pass functions to client components.
- * Interactive actions (publish toggle) are handled by a client component PublishToggle.
- */
+export const metadata = {
+  title: "Pages Management | CMS Admin",
+  description: "Create pages, edit layouts, modify text/images, and toggle publishing statuses.",
+};
 
 export default async function PagesAdmin() {
-  const site = await prisma.site.findFirst({ where: { isActive: true } });
+  const user = await requireAuth();
+  if (!user) return null;
+
+  const site = await getSiteForUser(user);
   if (!site) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-semibold">Pages</h1>
-        <p className="mt-4 text-sm text-red-600">No active site found in DB.</p>
+        <h1 className="text-2xl font-bold text-gray-900">Pages</h1>
+        <p className="mt-4 text-sm text-red-655">No active tenant site configured for your profile.</p>
       </div>
     );
   }
 
+  // Retrieve all pages under this site
   const pages = await prisma.page.findMany({
     where: { siteId: site.id },
     orderBy: { updatedAt: "desc" },
   });
 
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Pages</h1>
-          <div className="text-sm text-slate-500 mt-1">
-            Site: {site.name} ({site.domain || site.id})
-          </div>
-        </div>
+  // Calculate metrics
+  const totalPages = pages.length;
+  const publishedPages = pages.filter((p) => p.status === "PUBLISHED").length;
+  const draftPages = pages.filter((p) => p.status === "DRAFT").length;
 
-        <div className="flex items-center gap-3">
+  return (
+    <div className="space-y-6">
+      {/* Header section */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Pages Manager</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Site: <span className="font-semibold text-gray-800">{site.name}</span> ({site.domain || site.id})
+          </p>
+        </div>
+        <div className="shrink-0">
           <CreatePageForm siteId={site.id} />
         </div>
       </div>
 
-      <div className="bg-white shadow rounded">
-        <table className="min-w-full divide-y">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Title
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Slug
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Updated
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white border rounded-xl p-5 shadow-sm flex items-center gap-4">
+          <div className="p-3 rounded-lg bg-indigo-50 text-indigo-600">
+            <FileText size={20} />
+          </div>
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Pages</div>
+            <div className="text-2xl font-bold text-gray-900 mt-0.5">{totalPages}</div>
+          </div>
+        </div>
 
-          <tbody className="bg-white divide-y">
-            {pages.map((p) => (
-              <tr key={p.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {p.title}
-                  </div>
-                </td>
+        <div className="bg-white border rounded-xl p-5 shadow-sm flex items-center gap-4">
+          <div className="p-3 rounded-lg bg-green-50 text-green-600">
+            <CheckCircle size={20} />
+          </div>
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Published</div>
+            <div className="text-2xl font-bold text-gray-900 mt-0.5">{publishedPages}</div>
+          </div>
+        </div>
 
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {p.slug}
-                </td>
+        <div className="bg-white border rounded-xl p-5 shadow-sm flex items-center gap-4">
+          <div className="p-3 rounded-lg bg-slate-50 text-slate-600">
+            <FilePlus2 size={20} />
+          </div>
+          <div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Drafts</div>
+            <div className="text-2xl font-bold text-gray-900 mt-0.5">{draftPages}</div>
+          </div>
+        </div>
+      </div>
 
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      p.status === "PUBLISHED"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {p.status}
-                  </span>
-                </td>
-
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(p.updatedAt).toLocaleString()}
-                </td>
-
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                  <Link
-                    href={`/pages/${p.id}/edit`}
-                    className="px-2 py-1 bg-blue-600 text-white rounded text-xs"
-                  >
-                    Edit
-                  </Link>
-
-                  {/* Preview as plain anchor (no JS handler passed) */}
-                  <a
-                    href={`/preview?pageId=${encodeURIComponent(p.id)}&siteId=${encodeURIComponent(site.id)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2 py-1 bg-emerald-600 text-white rounded text-xs"
-                  >
-                    Preview
-                  </a>
-
-                  {/* Publish toggle: client component; only primitive props passed */}
-                  <PublishToggle pageId={p.id} initialStatus={p.status} siteId={site.id} />
-
-                  {/* Delete button: client component */}
-                  <DeletePageButton pageId={p.id} siteId={site.id} />
-                </td>
+      {/* Main Pages Table */}
+      <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-150 text-xs text-left">
+            <thead className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
+              <tr>
+                <th className="px-6 py-4">Page Title & ID</th>
+                <th className="px-6 py-4">Access Slug Path</th>
+                <th className="px-6 py-4">Publishing Status</th>
+                <th className="px-6 py-4">Last Updated</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody className="bg-white divide-y divide-gray-100 font-medium text-gray-700">
+              {pages.map((p) => (
+                <tr key={p.id} className="hover:bg-gray-50/50 transition">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                        <FileText size={16} />
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-900 block">{p.title}</span>
+                        <span className="text-[10px] text-gray-400 font-mono block">ID: {p.id}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="font-mono text-gray-500 bg-gray-50 px-2 py-1 rounded border">
+                      {p.slug || "/"}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {p.status === "PUBLISHED" ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-[10px] font-bold text-green-700 border border-green-200 uppercase tracking-wider">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-600 animate-pulse" />
+                        Published
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-0.5 text-[10px] font-bold text-slate-700 border border-slate-200 uppercase tracking-wider">
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                        Draft
+                      </span>
+                    )}
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-400">
+                    {new Date(p.updatedAt).toLocaleString()}
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-xs font-semibold space-x-1.5">
+                    {/* Edit button */}
+                    <Link
+                      href={`/pages/${p.id}/edit`}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold shadow-sm transition"
+                    >
+                      <Edit2 size={12} />
+                      Edit Builder
+                    </Link>
+
+                    {/* Preview button */}
+                    <a
+                      href={`/preview?pageId=${encodeURIComponent(p.id)}&siteId=${encodeURIComponent(site.id)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold shadow-sm transition"
+                    >
+                      <Eye size={12} />
+                      Preview
+                    </a>
+
+                    {/* Publish/Draft toggle */}
+                    <PublishToggle pageId={p.id} initialStatus={p.status} siteId={site.id} />
+
+                    {/* Delete button */}
+                    <DeletePageButton pageId={p.id} siteId={site.id} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {pages.length === 0 && (
-          <div className="p-6 text-sm text-gray-500">
-            No pages found for this site.
+          <div className="p-12 text-center text-gray-400 space-y-2">
+            <FileText className="mx-auto text-gray-300" size={32} />
+            <p className="text-sm font-semibold">No pages created yet.</p>
           </div>
         )}
       </div>

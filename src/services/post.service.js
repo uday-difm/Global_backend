@@ -128,6 +128,46 @@ export class PostService extends BaseService {
     }
     return candidate;
   }
+
+  async checkScheduledPosts() {
+    const now = new Date();
+    const prisma = (await import("@/lib/prisma")).default;
+    const posts = await prisma.post.findMany({
+      where: {
+        status: "PUBLISHED",
+        publishedAt: { lte: now },
+        deletedAt: null,
+      },
+    });
+
+    console.log(`⏰ Checking scheduled posts... Found ${posts.length} published posts.`);
+
+    for (const post of posts) {
+      const alreadyNotified = await prisma.auditLog.count({
+        where: {
+          action: "POST_PUBLISHED_ALERT",
+          meta: {
+            path: ["postId"],
+            equals: post.id,
+          },
+        },
+      });
+
+      if (alreadyNotified === 0) {
+        console.log(`📢 Publishing scheduled post: ${post.title}`);
+        EventBus.emit("post.published", { siteId: post.siteId, data: post });
+
+        await prisma.auditLog.create({
+          data: {
+            siteId: post.siteId,
+            userId: post.authorId || "system",
+            action: "POST_PUBLISHED_ALERT",
+            meta: { postId: post.id },
+          },
+        });
+      }
+    }
+  }
 }
 
 export const postService = new PostService();

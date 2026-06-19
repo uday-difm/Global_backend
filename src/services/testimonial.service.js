@@ -1,9 +1,10 @@
 import { testimonialRepository } from "@/repositories/testimonial.repository";
 import { BaseService } from "@/core/service";
+import { TestimonialValidationSchema } from "@/lib/validators/testimonial";
 
 export class TestimonialService extends BaseService {
   constructor() {
-    super(testimonialRepository);
+    super(testimonialRepository, TestimonialValidationSchema);
   }
 
   async getTestimonials(siteId, options = {}) {

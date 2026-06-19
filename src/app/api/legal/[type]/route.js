@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { legalPageService } from "@/services/legalPage.service";
 
 export async function GET(req, context) {
   try {
@@ -12,18 +12,17 @@ export async function GET(req, context) {
       return NextResponse.json({ error: "siteId and type parameters are required" }, { status: 400 });
     }
 
-    const legalPage = await prisma.legalPage.findUnique({
-      where: {
-        siteId_type: { siteId, type }
+    try {
+      const legalPage = await legalPageService.getPageByType(siteId, type);
+      if (!legalPage) {
+        return NextResponse.json({ error: "Legal page not found" }, { status: 404 });
       }
-    });
-
-    if (!legalPage) {
-      return NextResponse.json({ error: "Legal page not found" }, { status: 404 });
+      return NextResponse.json({ success: true, legalPage });
+    } catch (err) {
+      return NextResponse.json({ error: "Invalid Parameter", message: err.message }, { status: 400 });
     }
-
-    return NextResponse.json({ success: true, legalPage });
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
 }
+

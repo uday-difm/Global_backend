@@ -40,8 +40,14 @@ export async function GET(req, { params }) {
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        loginHistory: { orderBy: { createdAt: "desc" }, take: 5 },
-        auditLogs: { orderBy: { createdAt: "desc" }, take: 5 },
+        loginHistory: { 
+          orderBy: { createdAt: "desc" }, 
+          take: 20 
+        },
+        auditLogs: { 
+          orderBy: { createdAt: "desc" }, 
+          take: 20 
+        },
       },
     });
 
@@ -51,6 +57,7 @@ export async function GET(req, { params }) {
     const { passwordHash, ...userProfile } = user;
     return NextResponse.json({ user: userProfile });
   } catch (error) {
+    console.error("GET User ID Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
@@ -83,7 +90,7 @@ export async function PATCH(req, { params }) {
     if (c < t) {
       return NextResponse.json(
         { error: "Forbidden: Insufficient privileges to modify this user" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -93,28 +100,60 @@ export async function PATCH(req, { params }) {
       if (c < n) {
         return NextResponse.json(
           { error: "Forbidden: Cannot assign role higher than your own" },
-          { status: 403 }
+          { status: 403 },
         );
+      }
+    }
+
+    const updateData = {};
+    if (body.globalRole !== undefined) updateData.globalRole = body.globalRole;
+    if (body.isActive !== undefined) updateData.isActive = body.isActive;
+
+    let twoFaResetOccurred = false;
+    if (body.twoFAEnabled === false) {
+      updateData.twoFAEnabled = false;
+      twoFaResetOccurred = true;
+      try {
+        await prisma.twoFactor.delete({
+          where: { userId: id },
+        });
+      } catch (err) {
+        // Suppress if the 2FA secret doesn't exist
       }
     }
 
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: { globalRole: body.globalRole, isActive: body.isActive },
+      data: updateData,
     });
 
-    await logAction(null, caller.id, "USER_ROLE_UPDATED", {
-      targetUserId: id,
-      newRole: body.globalRole,
-      isActive: body.isActive,
-    });
+    if (twoFaResetOccurred) {
+      try {
+        await logAction(null, caller.id, "USER_2FA_DISABLED_BY_ADMIN", {
+          targetUserId: id,
+          targetEmail: target.email,
+        });
+      } catch (logErr) {
+        console.error("Failed to write audit log:", logErr);
+      }
+    }
+
+    try {
+      await logAction(null, caller.id, "USER_ROLE_UPDATED", {
+        targetUserId: id,
+        newRole: body.globalRole !== undefined ? body.globalRole : target.globalRole,
+        isActive: body.isActive !== undefined ? body.isActive : target.isActive,
+      });
+    } catch (logErr) {
+      console.error("Failed to write audit log:", logErr);
+    }
 
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
     console.error("PATCH Error:", error);
     return NextResponse.json(
       { error: "Failed to update", message: String(error?.message || error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
