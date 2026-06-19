@@ -1,7 +1,17 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/requireAuth";
+import bcrypt from "bcryptjs";
+import { logAction } from "@/lib/audit";
+
 export async function POST(req) {
   const sessionUser = await requireAuth();
   const isDev = process.env.NODE_ENV === "development";
-  const user = sessionUser || (isDev ? { id: "dev-user" } : null);
+  let user = sessionUser;
+  if (!user && isDev) {
+    // In dev, get the first available user for convenience
+    user = await prisma.user.findFirst();
+  }
 
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

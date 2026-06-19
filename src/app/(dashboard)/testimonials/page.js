@@ -1,0 +1,36 @@
+import prisma from "@/lib/prisma";
+import TestimonialsList from "./TestimonialsList";
+
+export default async function TestimonialsPage() {
+  const site = await prisma.site.findFirst({ where: { isActive: true } });
+
+  if (!site) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold">Testimonials</h1>
+        <p className="mt-4 text-sm text-red-600">No active site found. Please configure a site in the database.</p>
+      </div>
+    );
+  }
+
+  const testimonials = await prisma.testimonial.findMany({
+    where: { siteId: site.id },
+    orderBy: { sortOrder: "asc" },
+  });
+
+  return (
+    <div className="w-full">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Testimonials</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Site: <span className="font-medium text-gray-800">{site.name}</span> ({site.domain || site.id})
+        </p>
+      </div>
+
+      <TestimonialsList
+        siteId={site.id}
+        initialTestimonials={JSON.parse(JSON.stringify(testimonials))}
+      />
+    </div>
+  );
+}

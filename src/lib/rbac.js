@@ -30,3 +30,9 @@ export function canDeleteRole(creatorRole, targetRole) {
   const t = ROLE_LEVEL[targetRole] || 0;
   return c == 4 ? c >= t : c > t; // strict: creator must be higher than target
 }
+
+export function hasRole(userRole, requiredRole) {
+  const u = ROLE_LEVEL[userRole] || 0;
+  const r = ROLE_LEVEL[requiredRole] || 0;
+  return u >= r;
+}

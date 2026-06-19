@@ -1,166 +1,164 @@
 import Link from "next/link";
-
 import prisma from "@/lib/prisma";
 import StatCard from "@/components/dashboard/StatCard";
+import { Inbox, FileText, Newspaper, Quote, AlertCircle, Play } from "lucide-react";
 
 export default async function DashboardPage() {
-  const totalUsers = await prisma.user.count();
-  const totalMedia = await prisma.media.count();
-  const totalSites = await prisma.site.count();
+  // Fetch active site context
+  const site = await prisma.site.findFirst({ where: { isActive: true } });
 
-  const recentMedia = await prisma.media.findMany({
+  if (!site) {
+    return (
+      <div className="p-6 text-center space-y-4">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <div className="p-4 bg-yellow-50 text-yellow-800 border border-yellow-250 rounded-xl text-sm max-w-md mx-auto">
+          No active site configuration found. Please seed a site ID in your database.
+        </div>
+      </div>
+    );
+  }
+
+  // Fetch site-scoped stats
+  const totalPages = await prisma.page.count({ where: { siteId: site.id } });
+  const totalPosts = await prisma.post.count({ where: { siteId: site.id } });
+  const totalLeads = await prisma.lead.count({ where: { siteId: site.id, status: { in: ["new", "contacted"] } } });
+  const totalTestimonials = await prisma.testimonial.count({ where: { siteId: site.id, showHide: true } });
+
+  // Fetch recent items
+  const recentLeads = await prisma.lead.findMany({
+    where: { siteId: site.id },
     take: 5,
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy: { createdAt: "desc" },
   });
 
-  const recentUsers = await prisma.user.findMany({
+  const recentSubmissions = await prisma.contactFormSubmission.findMany({
+    where: { siteId: site.id },
     take: 5,
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy: { createdAt: "desc" },
   });
 
   return (
     <div className="space-y-8 w-full">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold md:text-3xl">Dashboard</h1>
-
-        <p className="text-gray-500">Welcome to Global CMS</p>
+        <h1 className="text-2xl font-bold md:text-3xl text-gray-950">Dashboard</h1>
+        <p className="text-gray-500 text-sm mt-0.5">
+          Overview for: <span className="font-semibold text-gray-800">{site.name}</span> ({site.domain || site.id})
+        </p>
       </div>
 
-      {/* Stats */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Users" value={totalUsers} />
-
-        <StatCard title="Media Files" value={totalMedia} />
-
-        <StatCard title="Sites" value={totalSites} />
-
-        <StatCard title="Storage" value={`${totalMedia} Files`} />
+        <StatCard title="Active Pages" value={totalPages} />
+        <StatCard title="Blog Posts" value={totalPosts} />
+        <StatCard title="Open CRM Leads" value={totalLeads} />
+        <StatCard title="Testimonials (Visible)" value={totalTestimonials} />
       </div>
 
-      {/* Main Grid */}
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Recent Media */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">Recent Media</h2>
-
-          <div className="space-y-3">
-            {recentMedia.length === 0 ? (
-              <p className="text-sm text-gray-500">No media uploaded yet</p>
-            ) : (
-              recentMedia.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col gap-1 border-b pb-2 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <span className="truncate text-sm">{item.fileName}</span>
-
-                  <span className="text-xs text-gray-500">
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-              ))
-            )}
+        {/* Recent Leads */}
+        <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h2 className="mb-4 text-base font-bold text-gray-900 border-b pb-2">Recent CRM Leads</h2>
+            <div className="space-y-3">
+              {recentLeads.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">No leads registered yet.</p>
+              ) : (
+                recentLeads.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between border-b pb-2 text-xs"
+                  >
+                    <div>
+                      <span className="font-semibold text-gray-900">{item.name}</span>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{item.serviceInterest || "General inquiry"}</p>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                      item.status === "new" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-yellow-50 text-yellow-700 border-yellow-250"
+                    }`}>
+                      {item.status}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-
-        {/* System Status */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">System Status</h2>
-
-          <div className="space-y-3">
-            <p>🟢 Database Connected</p>
-            <p>🟢 Cloudinary Connected</p>
-            <p>🟢 Development Environment</p>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">Quick Actions</h2>
-
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <Link
-              href="/media"
-              className="rounded-lg border p-3 transition hover:bg-gray-50"
-            >
-              Upload Media
-            </Link>
-
-            <Link
-              href="/users"
-              className="rounded-lg border p-3 transition hover:bg-gray-50"
-            >
-              Manage Users
-            </Link>
-
-            <Link
-              href="/pages"
-              className="rounded-lg border p-3 transition hover:bg-gray-50"
-            >
-              Create Page
-            </Link>
-
-            <Link
-              href="/blogs"
-              className="rounded-lg border p-3 transition hover:bg-gray-50"
-            >
-              Create Blog
+          <div className="mt-4 pt-3 border-t">
+            <Link href="/leads" className="text-xs text-blue-600 font-semibold hover:underline flex items-center gap-1">
+              View Leads CRM <Play size={10} fill="currentColor" />
             </Link>
           </div>
         </div>
-      </div>
 
-      {/* Recent Users */}
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold">Recent Users</h2>
-
-        {recentUsers.length === 0 ? (
-          <p className="text-sm text-gray-500">No users found</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-20 w-full">
-              <thead>
-                <tr className="border-b text-left">
-                  <th className="pb-3">Email</th>
-                  <th className="pb-3">Role</th>
-                  <th className="pb-3">Status</th>
-                  <th className="pb-3">Created</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {recentUsers.map((user) => (
-                  <tr key={user.id} className="border-b">
-                    <td className="py-3">{user.email}</td>
-
-                    <td className="py-3">{user.globalRole}</td>
-
-                    <td className="py-3">
-                      {user.isActive ? (
-                        <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-red-100 px-2 py-1 text-xs text-red-700">
-                          Disabled
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="py-3">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Recent Submissions */}
+        <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h2 className="mb-4 text-base font-bold text-gray-900 border-b pb-2">Recent Inquiries</h2>
+            <div className="space-y-3">
+              {recentSubmissions.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">No inquiries received yet.</p>
+              ) : (
+                recentSubmissions.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-1 border-b pb-2 text-xs"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-900">{item.name}</span>
+                      <span className="text-[10px] text-gray-400">{new Date(item.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 italic truncate">"{item.message}"</p>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        )}
+          <div className="mt-4 pt-3 border-t">
+            <Link href="/leads" className="text-xs text-blue-600 font-semibold hover:underline flex items-center gap-1">
+              View Inbox Submissions <Play size={10} fill="currentColor" />
+            </Link>
+          </div>
+        </div>
+
+        {/* System & Operations */}
+        <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h2 className="mb-4 text-base font-bold text-gray-900 border-b pb-2">System Integrations</h2>
+            <div className="space-y-3 text-xs text-gray-600">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                <span>PostgreSQL DB Connected</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                <span>Cloudinary Connected</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse" />
+                <span>Local Server: <span className="font-mono bg-gray-100 px-1 rounded">Dev Bypass</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-4 border-t space-y-2">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Operations Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-2 text-xs text-center font-semibold">
+              <Link href="/backup" className="border rounded-lg py-2 hover:bg-gray-50 transition">
+                Backup Data
+              </Link>
+              <Link href="/redirects" className="border rounded-lg py-2 hover:bg-gray-50 transition">
+                Link Auditor
+              </Link>
+              <Link href="/faq" className="border rounded-lg py-2 hover:bg-gray-50 transition">
+                FAQ Editor
+              </Link>
+              <Link href="/testimonials" className="border rounded-lg py-2 hover:bg-gray-50 transition">
+                Reviews Manager
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
