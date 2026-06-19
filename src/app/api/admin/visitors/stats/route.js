@@ -3,7 +3,6 @@ import { analyticsService } from "@/services/analytics.service";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { handleApiError } from "@/core/errors";
 
-// Returns who is online right now (last 2 minutes)
 export async function GET(req) {
   try {
     const auth = await checkSitePermission(req, "VIEWER");
@@ -11,12 +10,17 @@ export async function GET(req) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const [liveVisitors, liveCount] = await Promise.all([
-      analyticsService.getLiveVisitors(auth.siteId),
-      analyticsService.getLiveVisitorsCount(auth.siteId),
+    const { searchParams } = new URL(req.url);
+    const from = searchParams.get("from") || null;
+    const to = searchParams.get("to") || null;
+    const days = parseInt(searchParams.get("days") || "30", 10);
+
+    const [stats, timeSeries] = await Promise.all([
+      analyticsService.getStats(auth.siteId, { from, to }),
+      analyticsService.getTimeSeries(auth.siteId, days),
     ]);
 
-    return NextResponse.json({ success: true, liveCount, liveVisitors });
+    return NextResponse.json({ success: true, stats, timeSeries });
   } catch (err) {
     return handleApiError(err);
   }

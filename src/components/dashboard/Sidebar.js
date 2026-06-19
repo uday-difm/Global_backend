@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Phone,
   Megaphone,
+  BarChart2,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -36,6 +37,11 @@ export default function Sidebar() {
           href: "/leads",
           label: "Leads CRM",
           icon: Inbox,
+        },
+        {
+          href: "/visitors",
+          label: "Visitor Analytics",
+          icon: BarChart2,
         },
         {
           href: "/media",
