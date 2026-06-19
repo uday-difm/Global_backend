@@ -1,49 +1,71 @@
+import React from "react";
 import PostEditor from "../../PostEditor";
+import { requireAuth } from "@/lib/requireAuth";
+import { getSiteForUser } from "@/lib/getSiteForUser";
 import prisma from "@/lib/prisma";
 
-export default async function EditPostPage({ params }) {
-  const { postId } = await params;
+export const metadata = {
+  title: "Edit Post | CMS Admin",
+  description: "Edit an existing blog post, update content, categories, featured image, author, schedule and SEO fields.",
+};
+
+export default async function EditPostPage({ params: rawParams }) {
+  const user = await requireAuth();
+  if (!user) return null;
+
+  const site = await getSiteForUser(user);
+  if (!site) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold text-slate-900">Edit Post</h1>
+        <p className="text-sm text-rose-600">No active site configured for your profile.</p>
+      </div>
+    );
+  }
+
+  const { postId } = await rawParams;
 
   const post = await prisma.post.findUnique({
     where: { id: postId },
     include: {
       categories: true,
       featuredImage: true,
-    }
+      author: { select: { id: true, email: true, name: true } },
+    },
   });
 
-  if (!post) {
+  if (!post || post.siteId !== site.id) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold">Error</h1>
-        <p className="mt-4 text-sm text-red-600">Post not found.</p>
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold text-slate-900">Error</h1>
+        <p className="text-sm text-rose-600">Post not found or you do not have access to it.</p>
       </div>
     );
   }
 
-  // Fetch categories and authors for selection
+  // Categories for all available options
   const categories = await prisma.category.findMany({
-    orderBy: { name: "asc" }
+    orderBy: { name: "asc" },
   });
 
-  const authors = await prisma.user.findMany({
-    select: { id: true, email: true },
-    orderBy: { email: "asc" }
+  // Authors scoped to this site
+  const siteUsers = await prisma.siteUser.findMany({
+    where: { siteId: site.id },
+    include: { user: { select: { id: true, email: true, name: true } } },
   });
-
-  // The siteId is taken from the post itself
-  const siteId = post.siteId;
+  const authors = siteUsers.map((su) => su.user);
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Edit Post</h1>
-        <p className="text-sm text-slate-500 mt-1">Editing: {post.title}</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">Edit Post</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Editing: <span className="font-semibold text-slate-700">{post.title}</span>
+          {" — "}
+          Site: <span className="font-semibold text-slate-700">{site.name}</span>
+        </p>
       </div>
-      <div className="bg-white shadow rounded p-6">
-        {/* We pass the full post object to pre-fill the form */}
-        <PostEditor siteId={siteId} post={post} categories={categories} authors={authors} />
-      </div>
+      <PostEditor siteId={site.id} post={post} categories={categories} authors={authors} />
     </div>
   );
 }

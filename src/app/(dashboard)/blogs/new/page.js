@@ -1,37 +1,49 @@
+import React from "react";
 import PostEditor from "../PostEditor";
+import { requireAuth } from "@/lib/requireAuth";
+import { getSiteForUser } from "@/lib/getSiteForUser";
 import prisma from "@/lib/prisma";
 
-export default async function NewPostPage() {
-  const site = await prisma.site.findFirst({ where: { isActive: true } });
+export const metadata = {
+  title: "Create New Post | CMS Admin",
+  description: "Write and publish a new blog post with categories, featured image, author assignment, scheduling and SEO fields.",
+};
 
+export default async function NewPostPage() {
+  const user = await requireAuth();
+  if (!user) return null;
+
+  const site = await getSiteForUser(user);
   if (!site) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold">Error</h1>
-        <p className="mt-4 text-sm text-red-600">No active site found.</p>
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold text-slate-900">Create New Post</h1>
+        <p className="text-sm text-rose-600">No active site configured for your profile.</p>
       </div>
     );
   }
 
-  // Fetch categories and authors for selection
+  // Categories scoped to this site
   const categories = await prisma.category.findMany({
-    orderBy: { name: "asc" }
+    orderBy: { name: "asc" },
   });
 
-  const authors = await prisma.user.findMany({
-    select: { id: true, email: true },
-    orderBy: { email: "asc" }
+  // Authors scoped to this site via SiteUser memberships
+  const siteUsers = await prisma.siteUser.findMany({
+    where: { siteId: site.id },
+    include: { user: { select: { id: true, email: true, name: true } } },
   });
+  const authors = siteUsers.map((su) => su.user);
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Create New Post</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">Create New Post</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Site: <span className="font-semibold text-slate-700">{site.name}</span>
+        </p>
       </div>
-      <div className="bg-white shadow rounded p-6">
-        {/* We pass the siteId, categories, and authors */}
-        <PostEditor siteId={site.id} categories={categories} authors={authors} />
-      </div>
+      <PostEditor siteId={site.id} categories={categories} authors={authors} />
     </div>
   );
 }

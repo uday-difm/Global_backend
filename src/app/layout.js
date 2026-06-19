@@ -35,7 +35,7 @@ export default async function RootLayout({ children }) {
   const deferScripts = performanceConfig.deferNonEssentialScripts ?? true;
 
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
         {/* The head scripts are now handled by the ClientScripts component below */}
         {analytics.searchConsoleId && (

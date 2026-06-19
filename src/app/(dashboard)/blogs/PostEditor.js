@@ -1,60 +1,66 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import MediaPickerModal from "@/components/media/MediaPickerModal";
+import {
+  Image as ImageIcon,
+  Tag,
+  User,
+  CalendarClock,
+  CheckCircle,
+  Clock,
+  Save,
+  Loader2,
+  AlertCircle,
+  Eye,
+  Search,
+  X,
+  Plus,
+  Sparkles,
+  ExternalLink,
+  ChevronRight,
+} from "lucide-react";
 
 export default function PostEditor({ siteId, post, categories = [], authors = [] }) {
   const router = useRouter();
   const isEditMode = !!post;
 
-  // Form states
+  /* ─────────────── Core form state ─────────────── */
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState("DRAFT");
   const [authorId, setAuthorId] = useState("");
-  
-  // Categories states
+
+  /* ─────────────── Categories ─────────────── */
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
   const [localCategories, setLocalCategories] = useState(categories);
   const [newCatName, setNewCatName] = useState("");
   const [catCreating, setCatCreating] = useState(false);
+  const [catSearch, setCatSearch] = useState("");
 
-  // Scheduling states
+  /* ─────────────── Scheduling ─────────────── */
   const [customPublishDate, setCustomPublishDate] = useState(false);
   const [publishDate, setPublishDate] = useState("");
 
-  // Media Selector states
+  /* ─────────────── Featured image ─────────────── */
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [featuredImageId, setFeaturedImageId] = useState(null);
   const [featuredImageUrl, setFeaturedImageUrl] = useState("");
+  const [featuredImageAlt, setFeaturedImageAlt] = useState("");
 
-  // SEO states
+  /* ─────────────── SEO ─────────────── */
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
+  const [showSeoPreview, setShowSeoPreview] = useState(false);
 
+  /* ─────────────── Submit state ─────────────── */
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Helper: format ISO date to YYYY-MM-DDTHH:MM
-  function formatForDateTimeLocal(dateString) {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "";
-    
-    const pad = (num) => String(num).padStart(2, "0");
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  }
-
-  // Helper to slugify text
+  /* ─────────────── Helpers ─────────────── */
   function slugify(text = "") {
     return text
       .toString()
@@ -65,33 +71,47 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
       .replace(/\-\-+/g, "-");
   }
 
+  function formatForDateTimeLocal(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const readTime = Math.max(1, Math.ceil(wordCount / 200));
+
+  const isScheduled =
+    status === "PUBLISHED" &&
+    customPublishDate &&
+    publishDate &&
+    new Date(publishDate) > new Date();
+
+  /* ─────────────── Load existing post data ─────────────── */
   useEffect(() => {
     if (isEditMode && post) {
       setTitle(post.title || "");
       setSlug(post.slug || "");
       setExcerpt(post.excerpt || "");
-      setContent(post.content || "");
+      setContent(typeof post.content === "string" ? post.content : post.content ? JSON.stringify(post.content, null, 2) : "");
       setStatus(post.status || "DRAFT");
       setAuthorId(post.authorId || "");
-      
-      // SEO
       setSeoTitle(post.seoTitle || "");
       setSeoDescription(post.seoDescription || "");
 
-      // Categories
       if (post.categories) {
         setSelectedCategoryIds(post.categories.map((c) => c.id));
       }
 
-      // Featured Image
       if (post.featuredImage) {
         setFeaturedImageId(post.featuredImage.id);
-        setFeaturedImageUrl(post.featuredImage.secureUrl || post.featuredImage.url);
+        setFeaturedImageUrl(post.featuredImage.secureUrl || post.featuredImage.url || "");
+        setFeaturedImageAlt(post.featuredImage.altText || "");
       } else if (post.featuredImageId) {
         setFeaturedImageId(post.featuredImageId);
       }
 
-      // Scheduling
       if (post.publishedAt) {
         setCustomPublishDate(true);
         setPublishDate(formatForDateTimeLocal(post.publishedAt));
@@ -99,20 +119,22 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
     }
   }, [post, isEditMode]);
 
-  // Handle title changes and auto-slugify if not edited manually
+  /* ─────────────── Event handlers ─────────────── */
   const handleTitleChange = (e) => {
     const val = e.target.value;
     setTitle(val);
-    if (!isEditMode) {
-      setSlug(slugify(val));
-    }
+    if (!isEditMode) setSlug(slugify(val));
   };
 
-  // Inline Category Creator
+  const handleCategoryToggle = (id) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
   const handleCreateCategory = async (e) => {
     e.preventDefault();
     if (!newCatName.trim()) return;
-
     setCatCreating(true);
     try {
       const res = await fetch("/api/admin/categories", {
@@ -120,14 +142,13 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newCatName }),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to create category");
-      }
-
-      // Add to list and select it
-      setLocalCategories((prev) => [...prev, data.category].sort((a, b) => a.name.localeCompare(b.name)));
+      if (!res.ok) throw new Error(data.error || "Failed to create category");
+      setLocalCategories((prev) =>
+        [...prev, { ...data.category, _count: { posts: 0 } }].sort((a, b) =>
+          a.name.localeCompare(b.name)
+        )
+      );
       setSelectedCategoryIds((prev) => [...prev, data.category.id]);
       setNewCatName("");
     } catch (err) {
@@ -137,28 +158,19 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
     }
   };
 
-  // Toggle category checkboxes
-  const handleCategoryToggle = (id) => {
-    setSelectedCategoryIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  // Media Picker Dialog Functions
-  const openMediaPicker = () => setShowMediaPicker(true);
-
   const selectFeaturedImage = (media) => {
     setFeaturedImageId(media.id);
     setFeaturedImageUrl(media.secureUrl || media.url);
+    setFeaturedImageAlt(media.altText || "");
     setShowMediaPicker(false);
   };
 
   const removeFeaturedImage = () => {
     setFeaturedImageId(null);
     setFeaturedImageUrl("");
+    setFeaturedImageAlt("");
   };
 
-  // Handle Form Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -176,7 +188,10 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
       categoryIds: selectedCategoryIds,
       seoTitle: seoTitle || null,
       seoDescription: seoDescription || null,
-      publishedAt: customPublishDate && publishDate ? new Date(publishDate).toISOString() : null,
+      publishedAt:
+        customPublishDate && publishDate
+          ? new Date(publishDate).toISOString()
+          : null,
     };
 
     const url = isEditMode ? `/api/admin/posts/${post.id}` : "/api/admin/posts";
@@ -191,12 +206,8 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
         },
         body: JSON.stringify(postData),
       });
-
       const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || "Failed to save post");
-      }
-
+      if (!res.ok) throw new Error(json.error || "Failed to save post");
       router.push("/blogs");
       router.refresh();
     } catch (err) {
@@ -206,274 +217,157 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
     }
   };
 
+  /* ─────────────── Filtered categories ─────────────── */
+  const filteredCategories = localCategories.filter((c) =>
+    c.name.toLowerCase().includes(catSearch.toLowerCase())
+  );
+
+  const selectedCategories = localCategories.filter((c) =>
+    selectedCategoryIds.includes(c.id)
+  );
+
+  /* ─────────────── Author display ─────────────── */
+  const selectedAuthor =
+    authors.find((a) => a.id === authorId) ||
+    (isEditMode && post?.author ? post.author : null);
+  const authorEmail = selectedAuthor?.email || "Logged-in User";
+  const authorInitials = authorEmail.slice(0, 2).toUpperCase();
+
+  /* ─────────────── SEO preview ─────────────── */
+  const previewTitle = seoTitle || title || "Page Title";
+  const previewDesc =
+    seoDescription || excerpt || "No description set for this page yet.";
+  const previewSlug = slug || "your-post-slug";
+
   return (
-    <div className="relative">
+    <div className="space-y-6">
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded shadow-sm text-sm">
-          <strong>Error:</strong> {error}
+        <div className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold">
+          <AlertCircle size={15} className="shrink-0 text-rose-500 mt-0.5" />
+          <p>{error}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Column: Core Fields */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* ── Left: Content Area ── */}
+        <div className="lg:col-span-2 space-y-5">
+
+          {/* Title & Slug */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-4">
+            <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-100">
+              Post Content
+            </h2>
+
             <div>
-              <label htmlFor="title" className="block text-sm font-semibold text-slate-700">
-                Post Title
+              <label htmlFor="title" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                Title <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 id="title"
                 value={title}
                 onChange={handleTitleChange}
-                placeholder="Enter an engaging title..."
-                className="mt-1.5 block w-full px-3 py-2 text-sm border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter a compelling blog title..."
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-sm font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="slug" className="block text-sm font-semibold text-slate-700">
-                URL Slug
+              <label htmlFor="slug" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                URL Slug <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                id="slug"
-                value={slug}
-                onChange={(e) => setSlug(slugify(e.target.value))}
-                placeholder="url-slug-here"
-                className="mt-1.5 block w-full px-3 py-2 text-sm border border-slate-300 rounded-md bg-slate-50 text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono select-none">/</span>
+                <input
+                  type="text"
+                  id="slug"
+                  value={slug}
+                  onChange={(e) => setSlug(slugify(e.target.value))}
+                  placeholder="url-slug-here"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 pl-6 pr-3.5 py-2.5 text-xs font-mono text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                  required
+                />
+              </div>
             </div>
 
             <div>
-              <label htmlFor="excerpt" className="block text-sm font-semibold text-slate-700">
-                Excerpt
+              <label htmlFor="excerpt" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                Excerpt / Summary
               </label>
               <textarea
                 id="excerpt"
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
-                placeholder="Write a brief, compelling summary for SEO and lists..."
-                rows={3}
-                className="mt-1.5 block w-full px-3 py-2 text-sm border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Brief summary shown in post cards and search results..."
+                rows={2}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 resize-none"
               />
             </div>
 
             <div>
-              <label htmlFor="content" className="block text-sm font-semibold text-slate-700">
-                Content Body
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="content" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Content Body
+                </label>
+                <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                  <span>{wordCount.toLocaleString()} words</span>
+                  <span className="text-slate-200">|</span>
+                  <span>~{readTime} min read</span>
+                </div>
+              </div>
               <textarea
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your article markdown or plain text content here..."
-                rows={14}
-                className="mt-1.5 block w-full px-3 py-2 text-sm border border-slate-300 rounded-md shadow-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Write your article content here (Markdown supported)..."
+                rows={18}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-mono text-slate-700 leading-relaxed outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 resize-y"
               />
             </div>
           </div>
-        </div>
 
-        {/* Right Column: Settings & Meta Panels */}
-        <div className="space-y-6">
-          
-          {/* Status & Publish options Card */}
-          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 border-b pb-2">Publish Settings</h3>
-            
-            <div>
-              <label htmlFor="status" className="block text-xs font-semibold text-slate-700">
-                Status
-              </label>
-              <select
-                id="status"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 text-sm border border-slate-300 bg-white rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="DRAFT">Draft</option>
-                <option value="PUBLISHED">Published / Scheduled</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="authorId" className="block text-xs font-semibold text-slate-700">
-                Author
-              </label>
-              <select
-                id="authorId"
-                value={authorId}
-                onChange={(e) => setAuthorId(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 text-sm border border-slate-300 bg-white rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Logged-in User (Default)</option>
-                {authors.map((auth) => (
-                  <option key={auth.id} value={auth.id}>
-                    {auth.email}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="pt-2">
-              <label className="inline-flex items-center text-xs font-semibold text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={customPublishDate}
-                  onChange={(e) => setCustomPublishDate(e.target.checked)}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2 h-4 w-4"
-                />
-                Schedule / Custom Publish Date
-              </label>
-              
-              {customPublishDate && (
-                <div className="mt-2">
-                  <input
-                    type="datetime-local"
-                    value={publishDate}
-                    onChange={(e) => setPublishDate(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    required
-                  />
-                  <p className="text-3xs text-slate-400 mt-1">
-                    Setting a future date schedules the article.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 pt-4 border-t">
+          {/* SEO Panel */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles size={12} className="text-indigo-500" />
+                SEO & Search Metadata
+              </h2>
               <button
                 type="button"
-                onClick={() => router.push("/blogs")}
-                className="flex-1 py-2 text-sm font-semibold border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 transition-colors"
-                disabled={isSubmitting}
+                onClick={() => setShowSeoPreview((p) => !p)}
+                className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 py-2 text-sm font-semibold bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition-colors shadow-sm"
-              >
-                {isSubmitting ? "Saving..." : isEditMode ? "Update" : "Publish"}
+                <Eye size={11} />
+                {showSeoPreview ? "Hide" : "Preview"}
               </button>
             </div>
-          </div>
 
-          {/* Featured Image Card */}
-          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 border-b pb-2">Featured Image</h3>
-            
-            {featuredImageUrl ? (
-              <div className="space-y-2">
-                <div className="relative group rounded-md overflow-hidden aspect-video border bg-slate-50">
-                  <img
-                    src={featuredImageUrl}
-                    alt="Featured Image Preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      type="button"
-                      onClick={openMediaPicker}
-                      className="px-2.5 py-1 text-2xs bg-white text-slate-800 rounded font-semibold hover:bg-slate-100"
-                    >
-                      Change
-                    </button>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={removeFeaturedImage}
-                  className="w-full py-1 text-2xs border border-red-200 text-red-600 hover:bg-red-50 rounded transition-colors"
-                >
-                  Remove Image
-                </button>
+            {/* Google SERP Preview */}
+            {showSeoPreview && (
+              <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-4 space-y-1">
+                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-2">
+                  Google Search Preview
+                </p>
+                <p className="text-xs text-slate-400 font-mono">
+                  example.com › blog › {previewSlug}
+                </p>
+                <p className="text-sm font-semibold text-blue-700 leading-snug hover:underline cursor-pointer truncate">
+                  {previewTitle.slice(0, 60)}{previewTitle.length > 60 ? "…" : ""}
+                </p>
+                <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
+                  {previewDesc.slice(0, 160)}{previewDesc.length > 160 ? "…" : ""}
+                </p>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={openMediaPicker}
-                className="w-full py-6 border-2 border-dashed border-slate-300 rounded-md text-slate-500 hover:text-slate-800 hover:border-slate-400 transition-colors flex flex-col items-center justify-center gap-1.5"
-              >
-                <svg
-                  className="w-6 h-6 text-slate-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <span className="text-xs font-semibold">Select Featured Image</span>
-              </button>
             )}
-          </div>
 
-          {/* Categories Card */}
-          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 border-b pb-2">Categories</h3>
-            
-            <div className="max-h-40 overflow-y-auto space-y-2 pr-1 border rounded p-2.5 bg-slate-50">
-              {localCategories.length === 0 ? (
-                <p className="text-xs text-slate-500 italic">No categories created yet.</p>
-              ) : (
-                localCategories.map((cat) => (
-                  <label key={cat.id} className="flex items-center text-xs text-slate-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategoryIds.includes(cat.id)}
-                      onChange={() => handleCategoryToggle(cat.id)}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2 h-4 w-4"
-                    />
-                    {cat.name}
-                  </label>
-                ))
-              )}
-            </div>
-
-            {/* Quick Add Category inline */}
-            <div className="pt-2">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="New category..."
-                  value={newCatName}
-                  onChange={(e) => setNewCatName(e.target.value)}
-                  className="flex-1 px-2.5 py-1 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={handleCreateCategory}
-                  disabled={catCreating || !newCatName.trim()}
-                  className="px-3 py-1 bg-slate-800 text-white hover:bg-slate-950 disabled:bg-slate-300 text-2xs font-semibold rounded transition-colors"
-                >
-                  {catCreating ? "..." : "Add"}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* SEO Metadata Card */}
-          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 border-b pb-2">SEO Fields</h3>
-            
             <div>
-              <div className="flex justify-between items-center">
-                <label htmlFor="seoTitle" className="block text-xs font-semibold text-slate-700">
+              <div className="flex justify-between items-center mb-1.5">
+                <label htmlFor="seoTitle" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Meta Title
                 </label>
-                <span className={`text-3xs ${seoTitle.length > 60 ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                <span className={`text-[10px] font-semibold ${seoTitle.length > 60 ? "text-rose-500" : "text-slate-400"}`}>
                   {seoTitle.length}/60
                 </span>
               </div>
@@ -482,17 +376,24 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                 id="seoTitle"
                 value={seoTitle}
                 onChange={(e) => setSeoTitle(e.target.value)}
-                placeholder="Google search listing title..."
-                className="mt-1 block w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Google search listing title (defaults to post title)..."
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
               />
+              {/* Progress bar */}
+              <div className="mt-1.5 h-0.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-200 ${seoTitle.length > 60 ? "bg-rose-400" : "bg-indigo-400"}`}
+                  style={{ width: `${Math.min(100, (seoTitle.length / 60) * 100)}%` }}
+                />
+              </div>
             </div>
 
             <div>
-              <div className="flex justify-between items-center">
-                <label htmlFor="seoDescription" className="block text-xs font-semibold text-slate-700">
+              <div className="flex justify-between items-center mb-1.5">
+                <label htmlFor="seoDescription" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Meta Description
                 </label>
-                <span className={`text-3xs ${seoDescription.length > 160 ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                <span className={`text-[10px] font-semibold ${seoDescription.length > 160 ? "text-rose-500" : "text-slate-400"}`}>
                   {seoDescription.length}/160
                 </span>
               </div>
@@ -500,15 +401,350 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                 id="seoDescription"
                 value={seoDescription}
                 onChange={(e) => setSeoDescription(e.target.value)}
-                placeholder="Google search preview description paragraph..."
+                placeholder="Google search preview description..."
                 rows={3}
-                className="mt-1 block w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 resize-none"
               />
+              <div className="mt-1.5 h-0.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-200 ${seoDescription.length > 160 ? "bg-rose-400" : "bg-indigo-400"}`}
+                  style={{ width: `${Math.min(100, (seoDescription.length / 160) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Right Sidebar ── */}
+        <div className="space-y-5">
+
+          {/* Publish Console */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-4">
+            <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-100">
+              Publishing Console
+            </h2>
+
+            {/* Status selector */}
+            <div>
+              <label htmlFor="status" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                Status
+              </label>
+              <div className="relative">
+                <select
+                  id="status"
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 appearance-none cursor-pointer"
+                >
+                  <option value="DRAFT">Draft</option>
+                  <option value="PUBLISHED">Published</option>
+                </select>
+                <ChevronRight size={13} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 rotate-90" />
+              </div>
+            </div>
+
+            {/* Status pill summary */}
+            <div className="rounded-xl p-3 bg-slate-50 border border-slate-100 flex items-center gap-2">
+              {isScheduled ? (
+                <>
+                  <CalendarClock size={14} className="text-amber-500 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-bold text-amber-700">Scheduled Post</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Will publish on {new Date(publishDate).toLocaleString()}
+                    </p>
+                  </div>
+                </>
+              ) : status === "PUBLISHED" ? (
+                <>
+                  <CheckCircle size={14} className="text-green-500 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-bold text-green-700">Publish Immediately</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Post will go live on save.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Clock size={14} className="text-slate-400 shrink-0" />
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-600">Draft Mode</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Not visible to the public.
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Schedule toggle */}
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${customPublishDate ? "bg-indigo-600" : "bg-slate-200"}`}>
+                <input
+                  type="checkbox"
+                  checked={customPublishDate}
+                  onChange={(e) => setCustomPublishDate(e.target.checked)}
+                  className="sr-only"
+                />
+                <span className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${customPublishDate ? "translate-x-3.5" : "translate-x-0"}`} />
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 group-hover:text-slate-800 transition">
+                Schedule / Custom Date
+              </span>
+            </label>
+
+            {customPublishDate && (
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Publish Date & Time
+                </label>
+                <input
+                  type="datetime-local"
+                  value={publishDate}
+                  onChange={(e) => setPublishDate(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                  required={customPublishDate}
+                />
+                <p className="text-[10px] text-slate-400 mt-1.5">
+                  A future date will schedule the post; a past date publishes immediately.
+                </p>
+              </div>
+            )}
+
+            {/* Author */}
+            <div>
+              <label htmlFor="authorId" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                Author
+              </label>
+              {selectedAuthor ? (
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                    {authorInitials}
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 truncate">
+                    {authorEmail}
+                  </span>
+                </div>
+              ) : null}
+              <div className="relative">
+                <select
+                  id="authorId"
+                  value={authorId}
+                  onChange={(e) => setAuthorId(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 appearance-none cursor-pointer"
+                >
+                  <option value="">Logged-in User (Default)</option>
+                  {authors.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name ? `${a.name} (${a.email})` : a.email}
+                    </option>
+                  ))}
+                </select>
+                <ChevronRight size={13} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 rotate-90" />
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => router.push("/blogs")}
+                disabled={isSubmitting}
+                className="flex-1 py-2.5 text-xs font-bold border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all duration-200 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={12} className="animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save size={12} />
+                    {isEditMode ? "Save Changes" : isScheduled ? "Schedule Post" : status === "PUBLISHED" ? "Publish Post" : "Save Draft"}
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
+          {/* Featured Image */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-3">
+            <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-100">
+              Featured Image
+            </h2>
+
+            {featuredImageUrl ? (
+              <div className="space-y-2">
+                <div className="group relative aspect-video rounded-xl overflow-hidden border border-slate-100 bg-slate-50">
+                  <img
+                    src={featuredImageUrl}
+                    alt={featuredImageAlt || "Featured image"}
+                    className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition duration-200 flex items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaPicker(true)}
+                      className="px-3 py-1.5 bg-white text-slate-800 hover:bg-slate-50 rounded-lg text-[10px] font-bold shadow-sm transition"
+                    >
+                      Change
+                    </button>
+                    <button
+                      type="button"
+                      onClick={removeFeaturedImage}
+                      className="px-3 py-1.5 bg-rose-600 text-white hover:bg-rose-700 rounded-lg text-[10px] font-bold shadow-sm transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Image Alt Text
+                  </label>
+                  <input
+                    type="text"
+                    value={featuredImageAlt}
+                    onChange={(e) => setFeaturedImageAlt(e.target.value)}
+                    placeholder="Describe the image for accessibility..."
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3 py-2 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                  />
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowMediaPicker(true)}
+                className="w-full aspect-video border-2 border-dashed border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/5 rounded-xl flex flex-col items-center justify-center gap-2 text-center p-4 transition-all duration-200 cursor-pointer group"
+              >
+                <div className="p-3 bg-slate-50 group-hover:bg-indigo-50 group-hover:text-indigo-600 text-slate-400 rounded-full transition">
+                  <ImageIcon size={20} />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-slate-700 block">Select Featured Image</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">JPEG, PNG or WebP</span>
+                </div>
+              </button>
+            )}
+          </div>
+
+          {/* Categories */}
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-3">
+            <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-100 flex items-center gap-1.5">
+              <Tag size={11} />
+              Categories
+            </h2>
+
+            {/* Selected chips */}
+            {selectedCategories.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleCategoryToggle(cat.id)}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors group"
+                    title="Click to remove"
+                  >
+                    {cat.name}
+                    <X size={9} className="opacity-60 group-hover:opacity-100" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Category search */}
+            <div className="relative">
+              <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={catSearch}
+                onChange={(e) => setCatSearch(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/30 pl-8 pr-3 py-2 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+              />
+            </div>
+
+            {/* Category list */}
+            <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
+              {filteredCategories.length === 0 ? (
+                <p className="text-[10px] text-slate-400 italic p-2">No categories match.</p>
+              ) : (
+                filteredCategories.map((cat) => (
+                  <label
+                    key={cat.id}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategoryIds.includes(cat.id)}
+                        onChange={() => handleCategoryToggle(cat.id)}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 h-3.5 w-3.5"
+                      />
+                      <span className="text-xs font-semibold text-slate-700">{cat.name}</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400">
+                      {cat._count?.posts ?? 0}
+                    </span>
+                  </label>
+                ))
+              )}
+            </div>
+
+            {/* Quick add */}
+            <div className="pt-1 border-t border-slate-100">
+              <form onSubmit={handleCreateCategory} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="New category..."
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  className="flex-1 rounded-xl border border-slate-200 bg-slate-50/30 px-3 py-2 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                />
+                <button
+                  type="submit"
+                  disabled={catCreating || !newCatName.trim()}
+                  className="inline-flex items-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white disabled:bg-slate-300 text-[10px] font-bold rounded-xl transition-colors"
+                >
+                  {catCreating ? <Loader2 size={10} className="animate-spin" /> : <Plus size={10} />}
+                  Add
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
 
+        {/* Full-width action bar (mobile supplement) */}
+        <div className="lg:hidden flex gap-2 pt-2 border-t border-slate-100 col-span-1">
+          <button
+            type="button"
+            onClick={() => router.push("/blogs")}
+            disabled={isSubmitting}
+            className="flex-1 py-3 text-xs font-bold border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 py-3 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md transition disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <><Loader2 size={12} className="animate-spin" /> Saving...</>
+            ) : (
+              <><Save size={12} /> {isEditMode ? "Save" : "Publish"}</>
+            )}
+          </button>
+        </div>
       </form>
 
       {/* Media Picker Modal */}
