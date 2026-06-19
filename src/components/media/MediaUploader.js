@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Upload } from "lucide-react";
 
-export default function MediaUploader({ onUpload }) {
+export default function MediaUploader({ onUpload, currentFolderId }) {
   const [loading, setLoading] = useState(false);
 
   async function handleUpload(e) {
@@ -16,6 +16,9 @@ export default function MediaUploader({ onUpload }) {
 
       const formData = new FormData();
       formData.append("file", file);
+      if (currentFolderId) {
+        formData.append("folderId", currentFolderId);
+      }
 
       const res = await fetch("/api/media/upload", {
         method: "POST",

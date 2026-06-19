@@ -9,6 +9,7 @@ export async function POST(request) {
     const formData = await request.formData();
 
     const file = formData.get("file");
+    const folderId = formData.get("folderId");
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -22,6 +23,8 @@ export async function POST(request) {
         {
           folder: "global-cms",
           resource_type: "auto",
+          quality: "auto",
+          fetch_format: "auto",
         },
         (error, result) => {
           if (error) reject(error);
@@ -31,6 +34,8 @@ export async function POST(request) {
 
       Readable.from(buffer).pipe(uploadStream);
     });
+
+    const folderIdVal = (folderId === "root" || folderId === "null" || !folderId) ? null : folderId;
 
     const media = await prisma.media.create({
       data: {
@@ -49,6 +54,7 @@ export async function POST(request) {
 
         width: result.width || null,
         height: result.height || null,
+        folderId: folderIdVal,
       },
     });
     console.log(media);
