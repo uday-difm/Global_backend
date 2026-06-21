@@ -19,7 +19,8 @@ import {
   Calendar,
   Layers,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Search
 } from "lucide-react";
 
 export default function DevConsole({

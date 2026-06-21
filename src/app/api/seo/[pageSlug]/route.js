@@ -19,7 +19,7 @@ export async function GET(req, context) {
     // 1. Try to find a Page
     const page = await prisma.page.findUnique({
       where: { siteId_slug: { siteId, slug: formattedSlug } },
-      select: { title: true, seoTitle: true, seoDescription: true, jsonLd: true }
+      select: { title: true, seoTitle: true, seoDescription: true, canonicalUrl: true, ogImage: true, jsonLd: true }
     });
 
     if (page) {
@@ -29,7 +29,8 @@ export async function GET(req, context) {
         seo: {
           title: page.seoTitle || page.title,
           description: page.seoDescription || null,
-          canonical: `${process.env.NEXT_PUBLIC_APP_URL || ""}${formattedSlug}`,
+          canonical: page.canonicalUrl || `${process.env.NEXT_PUBLIC_APP_URL || ""}${formattedSlug}`,
+          ogImage: page.ogImage || null,
           jsonLd: page.jsonLd
         }
       });

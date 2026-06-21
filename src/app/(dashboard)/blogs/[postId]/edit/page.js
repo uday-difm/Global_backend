@@ -30,7 +30,7 @@ export default async function EditPostPage({ params: rawParams }) {
     include: {
       categories: true,
       featuredImage: true,
-      author: { select: { id: true, email: true, name: true } },
+      author: { select: { id: true, email: true } },
     },
   });
 
@@ -51,7 +51,7 @@ export default async function EditPostPage({ params: rawParams }) {
   // Authors scoped to this site
   const siteUsers = await prisma.siteUser.findMany({
     where: { siteId: site.id },
-    include: { user: { select: { id: true, email: true, name: true } } },
+    include: { user: { select: { id: true, email: true } } },
   });
   const authors = siteUsers.map((su) => su.user);
 

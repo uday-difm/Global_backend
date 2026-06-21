@@ -25,7 +25,7 @@ export async function GET(req) {
     }
 
     const sections = await prisma.section.findMany({
-      where: { pageId },
+      where: { pageId, isDeleted: false },
       orderBy: { order: "asc" },
     });
 

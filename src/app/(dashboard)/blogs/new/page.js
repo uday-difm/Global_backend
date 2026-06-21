@@ -31,7 +31,7 @@ export default async function NewPostPage() {
   // Authors scoped to this site via SiteUser memberships
   const siteUsers = await prisma.siteUser.findMany({
     where: { siteId: site.id },
-    include: { user: { select: { id: true, email: true, name: true } } },
+    include: { user: { select: { id: true, email: true } } },
   });
   const authors = siteUsers.map((su) => su.user);
 

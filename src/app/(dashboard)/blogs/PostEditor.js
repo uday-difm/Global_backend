@@ -702,23 +702,30 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
 
             {/* Quick add */}
             <div className="pt-1 border-t border-slate-100">
-              <form onSubmit={handleCreateCategory} className="flex gap-2">
+              <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder="New category..."
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleCreateCategory(e);
+                    }
+                  }}
                   className="flex-1 rounded-xl border border-slate-200 bg-slate-50/30 px-3 py-2 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
                 />
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleCreateCategory}
                   disabled={catCreating || !newCatName.trim()}
-                  className="inline-flex items-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white disabled:bg-slate-300 text-[10px] font-bold rounded-xl transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white disabled:bg-slate-300 text-[10px] font-bold rounded-xl transition-colors cursor-pointer"
                 >
                   {catCreating ? <Loader2 size={10} className="animate-spin" /> : <Plus size={10} />}
                   Add
                 </button>
-              </form>
+              </div>
             </div>
           </div>
         </div>

@@ -159,8 +159,8 @@ export async function PATCH(req, { params }) {
 }
 
 function canDeleteRole(creatorRole, targetRole) {
-  const c = ROLES[creatorRole] || 0;
-  const t = ROLES[targetRole] || 0;
+  const c = ROLE_LEVEL[creatorRole] || 0;
+  const t = ROLE_LEVEL[targetRole] || 0;
   // require that creator's role level is strictly greater than target's
   return c > t;
 }
@@ -194,25 +194,34 @@ export async function DELETE(req, context) {
       return NextResponse.json({ error: "Missing user id" }, { status: 400 });
     }
 
-    // Prevent self-delete
-    if (caller.id === id) {
-      return NextResponse.json(
-        { error: "Cannot delete yourself" },
-        { status: 400 },
-      );
-    }
-
     // Find target user
     const target = await prisma.user.findUnique({ where: { id } });
     if (!target)
       return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    // Authorization: require caller role strictly higher than target role
-    if (!canDeleteRole(caller.globalRole, target.globalRole)) {
-      return NextResponse.json(
-        { error: "Forbidden: insufficient permission to deactivate this user" },
-        { status: 403 },
-      );
+    const isSelfDelete = caller.id === id;
+
+    // Prevent deleting the last active Superadmin
+    if (target.globalRole === "SUPERADMIN") {
+      const superadminCount = await prisma.user.count({
+        where: { globalRole: "SUPERADMIN", isActive: true, deletedAt: null },
+      });
+      if (superadminCount <= 1) {
+        return NextResponse.json(
+          { error: "Forbidden: Cannot delete the last active Superadmin account" },
+          { status: 403 },
+        );
+      }
+    }
+
+    // If not self-deletion, require caller role strictly higher than target role
+    if (!isSelfDelete) {
+      if (!canDeleteRole(caller.globalRole, target.globalRole)) {
+        return NextResponse.json(
+          { error: "Forbidden: insufficient permission to deactivate this user" },
+          { status: 403 },
+        );
+      }
     }
 
     // Delete user
@@ -220,7 +229,7 @@ export async function DELETE(req, context) {
 
     // Audit log
     try {
-      await logAction(null, caller.id, "USER_DELETED", { targetUserId: id });
+      await logAction(null, caller.id, isSelfDelete ? "USER_SELF_DELETED" : "USER_DELETED", { targetUserId: id });
     } catch (logErr) {
       console.error("Failed to write audit log:", logErr);
     }

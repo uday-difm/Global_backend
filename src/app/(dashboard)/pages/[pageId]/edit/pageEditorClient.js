@@ -84,6 +84,8 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
   const [seoDescription, setSeoDescription] = useState("");
   const [status, setStatus] = useState("DRAFT");
   const [jsonLd, setJsonLd] = useState("");
+  const [canonicalUrl, setCanonicalUrl] = useState("");
+  const [ogImage, setOgImage] = useState("");
 
   // Role management (only admins can toggle publish status)
   const [userRole, setUserRole] = useState("EDITOR");
@@ -136,6 +138,8 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
           setSeoDescription(p.seoDescription || "");
           setStatus(p.status || "DRAFT");
           setJsonLd(p.jsonLd ? JSON.stringify(p.jsonLd, null, 2) : "");
+          setCanonicalUrl(p.canonicalUrl || "");
+          setOgImage(p.ogImage || "");
         }
       }
 
@@ -422,6 +426,8 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
       slug,
       seoTitle,
       seoDescription,
+      canonicalUrl,
+      ogImage,
       jsonLd: parsedJsonLd,
     };
 
@@ -483,10 +489,14 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
   const handleSelectMedia = (media) => {
     const url = media.secureUrl || media.url;
-    setVisualFields((prev) => ({
-      ...prev,
-      [pickerTargetField]: url,
-    }));
+    if (pickerTargetField === "ogImage") {
+      setOgImage(url);
+    } else {
+      setVisualFields((prev) => ({
+        ...prev,
+        [pickerTargetField]: url,
+      }));
+    }
     setShowMediaPicker(false);
   };
 
@@ -790,6 +800,39 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                     placeholder="Short description snippet of page contents for google indexing"
                     className="w-full rounded-lg border border-gray-200 p-2.5 text-xs outline-none focus:border-indigo-600 h-20 resize-none"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Canonical URL</label>
+                  <input
+                    type="text"
+                    value={canonicalUrl}
+                    onChange={(e) => setCanonicalUrl(e.target.value)}
+                    placeholder="e.g. https://yourdomain.com/about"
+                    className="w-full rounded-lg border border-gray-200 p-2.5 text-xs outline-none focus:border-indigo-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">OG Image URL</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={ogImage}
+                      onChange={(e) => setOgImage(e.target.value)}
+                      placeholder="e.g. https://yourdomain.com/og.jpg"
+                      className="flex-1 rounded-lg border border-gray-200 p-2.5 text-xs font-mono outline-none focus:border-indigo-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleOpenMediaPicker("ogImage")}
+                      className="px-3.5 py-2 border rounded-lg hover:bg-gray-50 text-xs font-bold text-gray-650 transition flex items-center gap-1"
+                    >
+                      <ImageIcon size={12} />
+                      Library
+                    </button>
+                  </div>
                 </div>
               </div>
 
