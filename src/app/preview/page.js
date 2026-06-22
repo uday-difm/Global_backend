@@ -490,6 +490,181 @@ export default async function PreviewPage({ searchParams }) {
   const headerMenuType = headerSettings.menuType || "main";
   const navigation = settings?.navigation?.[headerMenuType] || [];
 
+  const isSticky = headerSettings.sticky ?? true;
+  const isTransparent = headerSettings.transparent ?? false;
+
+  const paddingYClass = 
+    headerSettings.paddingY === "small" ? "py-2" : 
+    headerSettings.paddingY === "large" ? "py-6" : 
+    "py-4";
+
+  const shadowClass = 
+    headerSettings.shadowSize === "none" ? "shadow-none" : 
+    headerSettings.shadowSize === "medium" ? "shadow" : 
+    "shadow-xs";
+
+  const borderClass = headerSettings.borderBottom !== false ? "border-b" : "";
+
+  const renderLogo = () => {
+    if (headerSettings.logoType === "text") {
+      return (
+        <span className="font-extrabold text-lg text-slate-900">
+          {headerSettings.logoText || site.name}
+        </span>
+      );
+    }
+    const logoSrc = websiteSettings.logoUrl || "/next.svg";
+    return (
+      <img
+        src={logoSrc}
+        alt="Logo"
+        style={{
+          width: headerSettings.logoWidth ? `${headerSettings.logoWidth}px` : "auto",
+          height: headerSettings.logoHeight ? `${headerSettings.logoHeight}px` : "40px",
+          objectFit: "contain"
+        }}
+      />
+    );
+  };
+
+  let leftLinks = [];
+  let rightLinks = [];
+  if (headerSettings.layout === "logo-split") {
+    const mid = Math.ceil(navigation.length / 2);
+    leftLinks = navigation.slice(0, mid);
+    rightLinks = navigation.slice(mid);
+  }
+
+  const ctaButton = headerSettings.ctaText && headerSettings.ctaLink ? (
+    <a
+      href={headerSettings.ctaLink}
+      className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold whitespace-nowrap shadow-sm transition"
+    >
+      {headerSettings.ctaText}
+    </a>
+  ) : null;
+
+  const renderHeaderContent = () => {
+    switch (headerSettings.layout) {
+      case "logo-center":
+        return (
+          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between relative`}>
+            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+              {navigation.map((link, idx) => (
+                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <div className="absolute left-1/2 -translate-x-1/2 shrink-0 flex items-center">
+              {renderLogo()}
+            </div>
+            <div className="flex items-center gap-3 z-10">
+              {ctaButton}
+              <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[9px] font-bold uppercase shrink-0">
+                Draft
+              </span>
+            </div>
+          </div>
+        );
+
+      case "logo-split":
+        return (
+          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}>
+            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+              {leftLinks.map((link, idx) => (
+                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <div className="shrink-0 flex items-center">
+              {renderLogo()}
+            </div>
+            <div className="flex items-center gap-6">
+              <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+                {rightLinks.map((link, idx) => (
+                  <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+              <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[9px] font-bold uppercase shrink-0">
+                Draft
+              </span>
+            </div>
+          </div>
+        );
+
+      case "logo-right":
+        return (
+          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}>
+            <div className="flex items-center gap-3">
+              {ctaButton}
+              <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[9px] font-bold uppercase shrink-0">
+                Draft
+              </span>
+            </div>
+            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+              {navigation.map((link, idx) => (
+                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <div className="shrink-0 flex items-center">
+              {renderLogo()}
+            </div>
+          </div>
+        );
+
+      case "stacked":
+        return (
+          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex flex-col items-center gap-3`}>
+            <div className="shrink-0 flex items-center">
+              {renderLogo()}
+            </div>
+            <div className="w-full flex justify-between items-center pt-2 border-t border-slate-100">
+              <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+                {navigation.map((link, idx) => (
+                  <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+              <div className="flex items-center gap-3">
+                {ctaButton}
+                <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[9px] font-bold uppercase shrink-0">
+                  Draft
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "logo-left":
+      default:
+        return (
+          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}>
+            <div className="flex items-center gap-3">
+              {renderLogo()}
+            </div>
+            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+              {navigation.map((link, idx) => (
+                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  {link.label}
+                </a>
+              ))}
+              {ctaButton}
+              <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[9px] font-bold uppercase shrink-0">
+                Draft
+              </span>
+            </nav>
+          </div>
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950 flex flex-col justify-between">
       {/* Preview Banner */}
@@ -497,35 +672,23 @@ export default async function PreviewPage({ searchParams }) {
         ⚡ Preview Mode &mdash; Viewing Draft Layout for "{page.title || page.slug}"
       </div>
 
+      {/* Announcement Bar */}
+      {headerSettings.announcementBar?.enabled && headerSettings.announcementBar?.text && (
+        <a
+          href={headerSettings.announcementBar.link || "#"}
+          style={{
+            backgroundColor: headerSettings.announcementBar.bgColor || "#2563eb",
+            color: headerSettings.announcementBar.textColor || "#ffffff"
+          }}
+          className="w-full py-1.5 px-4 text-center text-[10px] font-bold tracking-wide truncate block text-decoration-none z-40 relative"
+        >
+          {headerSettings.announcementBar.text}
+        </a>
+      )}
+
       {/* Dynamic Header */}
-      <header className={`bg-white border-b z-40 ${headerSettings.sticky ? "sticky top-16 shadow-xs" : ""}`}>
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {websiteSettings.logoUrl ? (
-              <img
-                src={websiteSettings.logoUrl}
-                alt="Logo"
-                style={{ height: `${headerSettings.logoHeight || 40}px`, objectFit: "contain" }}
-              />
-            ) : (
-              <span className="font-extrabold text-lg text-slate-900">{site.name}</span>
-            )}
-          </div>
-
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
-            {navigation.map((link, idx) => (
-              <a key={idx} href={link.url} className="hover:text-blue-600 transition">
-                {link.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[9px] font-bold uppercase">
-              Draft
-            </span>
-          </div>
-        </div>
+      <header className={`${isTransparent ? "absolute w-full bg-transparent" : "bg-white"} ${borderClass} ${shadowClass} z-40 ${isSticky ? "sticky top-[28px] md:top-[32px]" : "relative"}`}>
+        {renderHeaderContent()}
       </header>
 
       {/* Main Content Area */}

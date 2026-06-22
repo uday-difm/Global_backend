@@ -1,5 +1,5 @@
 import { analyticsService } from "@/services/analytics.service";
-import prisma from "@/lib/prisma";
+
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
 import VisitorDashboardClient from "@/components/dashboard/VisitorDashboardClient";

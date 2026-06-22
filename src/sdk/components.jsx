@@ -138,28 +138,65 @@ export function GlobalAnalytics({ settings }) {
  * Plug-and-Play Navigation Header Component
  */
 export function Header({ logoUrl, siteName, headerSettings = {}, navigationLinks = [] }) {
-  const isSticky = headerSettings.sticky ?? true;
-  const layout = headerSettings.layout || "standard";
-  const logoHeight = headerSettings.logoHeight || 40;
+  // Merge defaults
+  const config = {
+    layout: "logo-left",
+    logoType: "image",
+    logoText: siteName || "MySite",
+    logoUrl: logoUrl || "/next.svg",
+    logoWidth: 120,
+    logoHeight: 40,
+    sticky: true,
+    transparent: false,
+    paddingY: "medium",
+    borderBottom: true,
+    shadowSize: "small",
+    ctaText: "",
+    ctaLink: "",
+    announcementBar: {
+      enabled: false,
+      text: "",
+      link: "",
+      bgColor: "#2563eb",
+      textColor: "#ffffff"
+    },
+    ...headerSettings
+  };
+
+  const isSticky = config.sticky;
+  const isTransparent = config.transparent;
+  
+  // Padding Y style values
+  let paddingYVal = "1rem";
+  if (config.paddingY === "small") paddingYVal = "0.5rem";
+  if (config.paddingY === "large") paddingYVal = "1.5rem";
+
+  // Shadow Size style values
+  let shadowVal = "none";
+  if (config.shadowSize === "small") shadowVal = "0 1px 2px 0 rgba(0, 0, 0, 0.05)";
+  if (config.shadowSize === "medium") shadowVal = "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
 
   const headerStyle = {
-    backgroundColor: "#ffffff",
-    borderBottom: "1px solid #e2e8f0",
+    backgroundColor: isTransparent ? "transparent" : "#ffffff",
+    borderBottom: config.borderBottom ? "1px solid #e2e8f0" : "none",
     width: "100%",
     zIndex: 50,
     position: isSticky ? "sticky" : "relative",
     top: 0,
-    boxShadow: isSticky ? "0 1px 2px 0 rgba(0, 0, 0, 0.05)" : "none",
+    boxShadow: shadowVal,
+    transition: "all 0.3s ease",
   };
 
   const navContainerStyle = {
     maxWidth: "80rem",
     margin: "0 auto",
-    padding: "0 1.5rem",
-    height: "4rem",
+    padding: `${paddingYVal} 1.5rem`,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "1rem",
+    position: "relative",
   };
 
   const navLinksStyle = {
@@ -168,32 +205,192 @@ export function Header({ logoUrl, siteName, headerSettings = {}, navigationLinks
     fontSize: "0.85rem",
     fontWeight: 600,
     color: "#4a5568",
+    alignItems: "center",
+  };
+
+  const renderLogo = () => {
+    if (config.logoType === "text") {
+      return (
+        <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "#1a202c" }}>
+          {config.logoText}
+        </span>
+      );
+    }
+    return (
+      <img
+        src={config.logoUrl}
+        alt="Logo"
+        style={{
+          width: config.logoWidth ? `${config.logoWidth}px` : "auto",
+          height: config.logoHeight ? `${config.logoHeight}px` : "auto",
+          objectFit: "contain",
+        }}
+      />
+    );
+  };
+
+  let leftLinks = [];
+  let rightLinks = [];
+  if (config.layout === "logo-split") {
+    const mid = Math.ceil(navigationLinks.length / 2);
+    leftLinks = navigationLinks.slice(0, mid);
+    rightLinks = navigationLinks.slice(mid);
+  }
+
+  const ctaBtnStyle = {
+    padding: "0.5rem 1rem",
+    backgroundColor: "#4f46e5",
+    color: "#ffffff",
+    borderRadius: "0.375rem",
+    fontSize: "0.85rem",
+    fontWeight: 600,
+    textDecoration: "none",
+    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    display: "inline-block",
+  };
+
+  const announcementBarStyle = {
+    backgroundColor: config.announcementBar?.bgColor || "#2563eb",
+    color: config.announcementBar?.textColor || "#ffffff",
+    padding: "0.5rem 1rem",
+    textAlign: "center",
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    width: "100%",
+    display: "block",
+    textDecoration: "none",
+  };
+
+  const renderHeaderContent = () => {
+    switch (config.layout) {
+      case "logo-center":
+        return (
+          <>
+            <nav style={navLinksStyle}>
+              {navigationLinks.map((link, idx) => (
+                <a key={idx} href={link.url} style={{ textDecoration: "none", color: "inherit" }}>
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
+              {renderLogo()}
+            </div>
+            <div>
+              {config.ctaText && config.ctaLink && (
+                <a href={config.ctaLink} style={ctaBtnStyle}>
+                  {config.ctaText}
+                </a>
+              )}
+            </div>
+          </>
+        );
+
+      case "logo-split":
+        return (
+          <div style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between" }}>
+            <nav style={navLinksStyle}>
+              {leftLinks.map((link, idx) => (
+                <a key={idx} href={link.url} style={{ textDecoration: "none", color: "inherit" }}>
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <div>{renderLogo()}</div>
+            <nav style={navLinksStyle}>
+              {rightLinks.map((link, idx) => (
+                <a key={idx} href={link.url} style={{ textDecoration: "none", color: "inherit" }}>
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+          </div>
+        );
+
+      case "logo-right":
+        return (
+          <>
+            <div>
+              {config.ctaText && config.ctaLink && (
+                <a href={config.ctaLink} style={ctaBtnStyle}>
+                  {config.ctaText}
+                </a>
+              )}
+            </div>
+            <nav style={navLinksStyle}>
+              {navigationLinks.map((link, idx) => (
+                <a key={idx} href={link.url} style={{ textDecoration: "none", color: "inherit" }}>
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <div>{renderLogo()}</div>
+          </>
+        );
+
+      case "stacked":
+        return (
+          <div style={{ display: "flex", flexDirection: "column", width: "100%", alignItems: "center", gap: "1rem" }}>
+            <div>{renderLogo()}</div>
+            <div style={{ display: "flex", width: "100%", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "0.75rem" }}>
+              <nav style={navLinksStyle}>
+                {navigationLinks.map((link, idx) => (
+                  <a key={idx} href={link.url} style={{ textDecoration: "none", color: "inherit" }}>
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+              <div>
+                {config.ctaText && config.ctaLink && (
+                  <a href={config.ctaLink} style={ctaBtnStyle}>
+                    {config.ctaText}
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case "logo-left":
+      default:
+        return (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              {renderLogo()}
+            </div>
+            <nav style={navLinksStyle}>
+              {navigationLinks.map((link, idx) => (
+                <a key={idx} href={link.url} style={{ textDecoration: "none", color: "inherit" }}>
+                  {link.label}
+                </a>
+              ))}
+              {config.ctaText && config.ctaLink && (
+                <a href={config.ctaLink} style={{ ...ctaBtnStyle, marginLeft: "1rem" }}>
+                  {config.ctaText}
+                </a>
+              )}
+            </nav>
+          </>
+        );
+    }
   };
 
   return (
-    <header style={headerStyle}>
-      <div style={navContainerStyle}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          {logoUrl ? (
-            <img src={logoUrl} alt="Logo" style={{ height: `${logoHeight}px`, objectFit: "contain" }} />
-          ) : (
-            <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "#1a202c" }}>{siteName}</span>
-          )}
+    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+      {config.announcementBar?.enabled && config.announcementBar?.text && (
+        <a href={config.announcementBar.link || "#"} style={announcementBarStyle}>
+          {config.announcementBar.text}
+        </a>
+      )}
+      <header style={headerStyle}>
+        <div style={navContainerStyle}>
+          {renderHeaderContent()}
         </div>
-
-        {layout !== "minimal" && (
-          <nav style={navLinksStyle}>
-            {navigationLinks.map((link, idx) => (
-              <a key={idx} href={link.url} style={{ textDecoration: "none", color: "inherit" }}>
-                {link.label}
-              </a>
-            ))}
-          </nav>
-        )}
-      </div>
-    </header>
+      </header>
+    </div>
   );
 }
+
 
 /**
  * Plug-and-Play Footer Component

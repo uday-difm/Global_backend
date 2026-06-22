@@ -738,6 +738,208 @@ function BlogsSection({ content }) {
   );
 }
 
+function PublicHeader({ site, settings }) {
+  const headerSettings = settings?.header || {};
+  const websiteSettings = settings?.websiteSettings || {};
+  const headerMenuType = headerSettings.menuType || "main";
+  const navigation = settings?.navigation?.[headerMenuType] || [];
+
+  const isSticky = headerSettings.sticky ?? true;
+  const isTransparent = headerSettings.transparent ?? false;
+
+  const paddingYClass = 
+    headerSettings.paddingY === "small" ? "py-2" : 
+    headerSettings.paddingY === "large" ? "py-6" : 
+    "py-4";
+
+  const shadowClass = 
+    headerSettings.shadowSize === "none" ? "shadow-none" : 
+    headerSettings.shadowSize === "medium" ? "shadow" : 
+    "shadow-xs";
+
+  const borderClass = headerSettings.borderBottom !== false ? "border-b" : "";
+
+  const renderLogo = () => {
+    if (headerSettings.logoType === "text") {
+      return (
+        <span className="font-extrabold text-lg text-slate-900">
+          {headerSettings.logoText || site.name}
+        </span>
+      );
+    }
+    const logoSrc = websiteSettings.logoUrl || "/next.svg";
+    return (
+      <img
+        src={logoSrc}
+        alt="Logo"
+        style={{
+          width: headerSettings.logoWidth ? `${headerSettings.logoWidth}px` : "auto",
+          height: headerSettings.logoHeight ? `${headerSettings.logoHeight}px` : "40px",
+          objectFit: "contain"
+        }}
+      />
+    );
+  };
+
+  let leftLinks = [];
+  let rightLinks = [];
+  if (headerSettings.layout === "logo-split") {
+    const mid = Math.ceil(navigation.length / 2);
+    leftLinks = navigation.slice(0, mid);
+    rightLinks = navigation.slice(mid);
+  }
+
+  const ctaButton = headerSettings.ctaText && headerSettings.ctaLink ? (
+    <a
+      href={headerSettings.ctaLink}
+      className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold whitespace-nowrap shadow-sm transition"
+    >
+      {headerSettings.ctaText}
+    </a>
+  ) : null;
+
+  const signInBtn = (
+    <a
+      href="/api/auth/signin"
+      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded text-xs font-bold transition whitespace-nowrap shrink-0"
+    >
+      Sign In
+    </a>
+  );
+
+  const renderHeaderContent = () => {
+    switch (headerSettings.layout) {
+      case "logo-center":
+        return (
+          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between relative`}>
+            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+              {navigation.map((link, idx) => (
+                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <div className="absolute left-1/2 -translate-x-1/2 shrink-0 flex items-center">
+              {renderLogo()}
+            </div>
+            <div className="flex items-center gap-3 z-10">
+              {ctaButton}
+              {signInBtn}
+            </div>
+          </div>
+        );
+
+      case "logo-split":
+        return (
+          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}>
+            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+              {leftLinks.map((link, idx) => (
+                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <div className="shrink-0 flex items-center">
+              {renderLogo()}
+            </div>
+            <div className="flex items-center gap-6">
+              <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+                {rightLinks.map((link, idx) => (
+                  <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+              {signInBtn}
+            </div>
+          </div>
+        );
+
+      case "logo-right":
+        return (
+          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}>
+            <div className="flex items-center gap-3">
+              {ctaButton}
+              {signInBtn}
+            </div>
+            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+              {navigation.map((link, idx) => (
+                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <div className="shrink-0 flex items-center">
+              {renderLogo()}
+            </div>
+          </div>
+        );
+
+      case "stacked":
+        return (
+          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex flex-col items-center gap-3`}>
+            <div className="shrink-0 flex items-center">
+              {renderLogo()}
+            </div>
+            <div className="w-full flex justify-between items-center pt-2 border-t border-slate-100">
+              <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+                {navigation.map((link, idx) => (
+                  <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                    {link.label}
+                  </a>
+                ))}
+              </nav>
+              <div className="flex items-center gap-3">
+                {ctaButton}
+                {signInBtn}
+              </div>
+            </div>
+          </div>
+        );
+
+      case "logo-left":
+      default:
+        return (
+          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}>
+            <div className="flex items-center gap-3">
+              {renderLogo()}
+            </div>
+            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+              {navigation.map((link, idx) => (
+                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  {link.label}
+                </a>
+              ))}
+              {ctaButton}
+              {signInBtn}
+            </nav>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="w-full flex flex-col">
+      {headerSettings.announcementBar?.enabled && headerSettings.announcementBar?.text && (
+        <a
+          href={headerSettings.announcementBar.link || "#"}
+          style={{
+            backgroundColor: headerSettings.announcementBar.bgColor || "#2563eb",
+            color: headerSettings.announcementBar.textColor || "#ffffff"
+          }}
+          className="w-full py-1.5 px-4 text-center text-[10px] font-bold tracking-wide truncate block text-decoration-none z-40 relative"
+        >
+          {headerSettings.announcementBar.text}
+        </a>
+      )}
+
+      <header className={`${isTransparent ? "absolute w-full bg-transparent" : "bg-white"} ${borderClass} ${shadowClass} z-40 ${isSticky ? "sticky top-0" : "relative"}`}>
+        {renderHeaderContent()}
+      </header>
+    </div>
+  );
+}
+
 // 4. Main Server Catch-All Page Component
 export default async function CatchAllPage({ params }) {
   const p = await params;
@@ -749,11 +951,7 @@ export default async function CatchAllPage({ params }) {
 
   if (data.isBlog) {
     const { post, site, settings } = data;
-    const headerSettings = settings?.header || {};
     const footerSettings = settings?.footer || {};
-    const websiteSettings = settings?.websiteSettings || {};
-    const headerMenuType = headerSettings.menuType || "main";
-    const navigation = settings?.navigation?.[headerMenuType] || [];
 
     // Generate Blog Article JSON-LD
     const articleJsonLd = {
@@ -779,38 +977,7 @@ export default async function CatchAllPage({ params }) {
         />
 
         {/* Dynamic Header */}
-        <header className={`bg-white border-b z-40 ${headerSettings.sticky ? "sticky top-0 shadow-xs" : ""}`}>
-          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {websiteSettings.logoUrl ? (
-                <img
-                  src={websiteSettings.logoUrl}
-                  alt="Logo"
-                  style={{ height: `${headerSettings.logoHeight || 40}px`, objectFit: "contain" }}
-                />
-              ) : (
-                <span className="font-extrabold text-lg text-slate-900">{site.name}</span>
-              )}
-            </div>
-
-            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
-              {navigation.map((link, idx) => (
-                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
-                  {link.label}
-                </a>
-              ))}
-            </nav>
-
-            <div className="flex items-center gap-3">
-              <a
-                href="/api/auth/signin"
-                className="px-4 py-2 bg-slate-900 text-white rounded text-xs font-bold hover:bg-slate-800 transition"
-              >
-                Sign In
-              </a>
-            </div>
-          </div>
-        </header>
+        <PublicHeader site={site} settings={settings} />
 
         {/* Main Content Area */}
         <main className="grow">
@@ -829,7 +996,7 @@ export default async function CatchAllPage({ params }) {
             <div>
               <h5 className="text-white font-bold text-xs mb-3">Links</h5>
               <div className="flex flex-col gap-2 text-xs">
-                {navigation.slice(0, 4).map((link, idx) => (
+                {((settings?.navigation?.[settings?.header?.menuType || "main"]) || []).slice(0, 4).map((link, idx) => (
                   <a key={idx} href={link.url} className="hover:text-white transition">
                     {link.label}
                   </a>
@@ -856,11 +1023,7 @@ export default async function CatchAllPage({ params }) {
   }
 
   const { page, sections, site, settings } = data;
-  const headerSettings = settings?.header || {};
   const footerSettings = settings?.footer || {};
-  const websiteSettings = settings?.websiteSettings || {};
-  const headerMenuType = headerSettings.menuType || "main";
-  const navigation = settings?.navigation?.[headerMenuType] || [];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950 flex flex-col justify-between">
@@ -873,38 +1036,7 @@ export default async function CatchAllPage({ params }) {
       )}
 
       {/* Dynamic Header */}
-      <header className={`bg-white border-b z-40 ${headerSettings.sticky ? "sticky top-0 shadow-xs" : ""}`}>
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {websiteSettings.logoUrl ? (
-              <img
-                src={websiteSettings.logoUrl}
-                alt="Logo"
-                style={{ height: `${headerSettings.logoHeight || 40}px`, objectFit: "contain" }}
-              />
-            ) : (
-              <span className="font-extrabold text-lg text-slate-900">{site.name}</span>
-            )}
-          </div>
-
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
-            {navigation.map((link, idx) => (
-              <a key={idx} href={link.url} className="hover:text-blue-600 transition">
-                {link.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <a
-              href="/api/auth/signin"
-              className="px-4 py-2 bg-slate-900 text-white rounded text-xs font-bold hover:bg-slate-800 transition"
-            >
-              Sign In
-            </a>
-          </div>
-        </div>
-      </header>
+      <PublicHeader site={site} settings={settings} />
 
       {/* Main Content Area */}
       <main className="grow">
