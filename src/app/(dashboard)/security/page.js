@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import SecurityConsole from "./SecurityConsole";
 import { requireAuth } from "@/lib/requireAuth";
+import { getSiteForUser } from "@/lib/getSiteForUser";
 import { redirect } from "next/navigation";
 
 export default async function SecurityPage() {
@@ -11,7 +12,7 @@ export default async function SecurityPage() {
   }
 
   // Get active site configuration
-  const site = await prisma.site.findFirst({ where: { isActive: true } });
+  const site = await getSiteForUser(sessionUser);
   const siteId = site ? site.id : null;
 
   return (

@@ -1,9 +1,10 @@
 import prisma from "@/lib/prisma";
 
+import { cookies } from "next/headers";
+
 /**
  * Resolves the active site for a given authenticated user.
- * - SUPERADMIN/ADMIN get the first site (oldest by createdAt)
- * - Other roles get the first site they're a member of via SiteUser
+ * Supporting cookie-based workspace selection switcher.
  *
  * @param {object} user - User object from requireAuth()
  * @returns {Promise<object|null>} Prisma Site record or null
@@ -11,18 +12,40 @@ import prisma from "@/lib/prisma";
 export async function getSiteForUser(user) {
   if (!user) return null;
 
-  if (user.globalRole === "SUPERADMIN" || user.globalRole === "ADMIN") {
-    return prisma.site.findFirst({ orderBy: { createdAt: "asc" } });
+  const cookieStore = await cookies();
+  const selectedSiteId = cookieStore.get("active_site_id")?.value;
+
+  if (selectedSiteId) {
+    // 1. Verify if user is SUPERADMIN/ADMIN, or has SiteUser access to the selected site
+    const isSuper = user.globalRole === "SUPERADMIN" || user.globalRole === "ADMIN";
+    const membership = isSuper
+      ? true
+      : await prisma.siteUser.findFirst({
+          where: { userId: user.id, siteId: selectedSiteId },
+        });
+
+    if (membership) {
+      const site = await prisma.site.findUnique({
+        where: { id: selectedSiteId },
+      });
+      if (site && site.isActive && !site.deletedAt) {
+        return site;
+      }
+    }
   }
 
-  // For EDITOR / AUTHOR / VIEWER: look up their SiteUser membership
-  const membership = await prisma.siteUser.findFirst({
-    where: { userId: user.id },
+  // Fallback to default site selection (oldest site or first membership)
+  if (user.globalRole === "SUPERADMIN" || user.globalRole === "ADMIN") {
+    return prisma.site.findFirst({ where: { isActive: true, deletedAt: null }, orderBy: { createdAt: "asc" } });
+  }
+
+  const defaultMembership = await prisma.siteUser.findFirst({
+    where: { userId: user.id, site: { isActive: true, deletedAt: null } },
     orderBy: { createdAt: "asc" },
     include: { site: true },
   });
 
-  return membership?.site || null;
+  return defaultMembership?.site || null;
 }
 
 /**

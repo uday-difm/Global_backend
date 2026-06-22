@@ -142,12 +142,12 @@ async function runTests() {
 
     // 4. CTA configs
     console.log("\nTesting CTA Toggles...");
-    const ctaBody = { mainCta: { text: "Click Here", link: "/apply" }, newsletter: { enabled: true } };
+    const ctaBody = { ctaConfig: { main: { text: "Click Here", link: "/apply" } } };
     const putCta = await request("PUT", "/api/admin/cta", ctaBody, { "x-site-id": SITE_A });
     assert(putCta.status === 200 && putCta.data.success, "PUT /api/admin/cta success");
 
     const getCta = await request("GET", `/api/cta?siteId=${SITE_A}`);
-    assert(getCta.status === 200 && getCta.data.ctaConfig.mainCta.text === "Click Here", "GET /api/cta retrieves config");
+    assert(getCta.status === 200 && getCta.data.ctaConfig?.main?.text === "Click Here", "GET /api/cta retrieves config");
 
     // 5. Analytics
     console.log("\nTesting Analytics Config...");

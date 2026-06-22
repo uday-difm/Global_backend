@@ -10,6 +10,26 @@ Install the package directly into your Next.js project root:
 npm install @yourcompany/global-backend-next
 ```
 
+## Workspace Setup & Site Provisioning
+
+Before configuring the client SDK, you must provision a site workspace in the CMS backend database. Two helper scripts are available in the backend workspace for this purpose:
+
+### Option 1: Interactive Wizard (Recommended)
+Runs an interactive questionnaire in the terminal that guides you through site creation:
+```bash
+node --env-file=.env scratch/provision-wizard.mjs
+```
+
+### Option 2: CLI Command
+Instantly creates a site workspace with a single CLI command:
+```bash
+node --env-file=.env scratch/create-site.mjs "My New Site" "mynewsite.local" "my_custom_site_id"
+```
+*(Only the first argument, Site Name, is required).*
+
+### Automatic Manifest & Draft Page Generation
+Both setup scripts automatically initialize the site workspace with a default `IntegrationManifest`, 5 core draft pages (`Home`, `About`, `Services`, `Blog`, `Contact`), and their registered `SyncedRoute` mapping entries in the database.
+
 ## Configuration
 
 Set the following environment variables in your frontend project's `.env.local`:
@@ -141,7 +161,7 @@ export default async function CMSPage({ params }) {
 
 ### 4. Dynamic XML Sitemap Serving
 
-Expose sitemaps automatically in Next.js by adding `app/sitemap.js`:
+Expose sitemaps automatically in Next.js by adding `app/sitemap.js`. The `getSitemap()` method accepts an optional domain URL string to automatically resolve relative paths into absolute URLs as required by search engines:
 
 ```javascript
 import { CMSClient } from "@yourcompany/global-backend-next";
@@ -152,7 +172,8 @@ const cms = new CMSClient({
 });
 
 export default async function sitemap() {
-  const sitemapItems = await cms.getSitemap();
+  const domain = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const sitemapItems = await cms.getSitemap(domain);
   return sitemapItems.map(item => ({
     url: item.url,
     lastModified: new Date(item.lastModified)

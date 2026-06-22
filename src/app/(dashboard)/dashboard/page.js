@@ -1,11 +1,14 @@
 import Link from "next/link";
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/requireAuth";
+import { getSiteForUser } from "@/lib/getSiteForUser";
 import StatCard from "@/components/dashboard/StatCard";
 import { Inbox, FileText, Newspaper, Quote, AlertCircle, Play } from "lucide-react";
 
 export default async function DashboardPage() {
   // Fetch active site context
-  const site = await prisma.site.findFirst({ where: { isActive: true } });
+  const user = await requireAuth();
+  const site = await getSiteForUser(user);
 
   if (!site) {
     return (

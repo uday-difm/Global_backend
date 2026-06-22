@@ -108,7 +108,6 @@ export async function POST(req) {
             name: "Auto-detected (legacy)",
             framework: "next",
             apiKey: `auto_${crypto.randomBytes(16).toString("hex")}`,
-            source: parsed.source || "legacy-integration-key",
             baseUrl: null,
             syncStatus: "connected",
           },

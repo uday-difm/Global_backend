@@ -40,17 +40,16 @@ export class CMSClient {
 
   // --- Services ---
   async getServices() {
-    // Falls back to content route or returns services list
-    return this._request("/api/admin/services"); // in future public endpoints can be custom mapped
+    return this._request("/api/services");
   }
 
   // --- Blog / Posts ---
   async getPosts() {
-    return this._request("/api/admin/posts");
+    return this._request("/api/posts");
   }
 
   async getPost(postId) {
-    return this._request(`/api/admin/posts/${postId}`);
+    return this._request(`/api/posts/${postId}`);
   }
 
   // --- Testimonials ---
@@ -151,8 +150,14 @@ export class CMSClient {
   }
 
   // --- Dynamic XML Sitemap ---
-  async getSitemap() {
-    return this._request("/api/sitemap");
+  async getSitemap(domain = null) {
+    const items = await this._request("/api/sitemap");
+    if (!domain) return items;
+    const cleanDomain = domain.endsWith("/") ? domain.slice(0, -1) : domain;
+    return items.map(item => ({
+      ...item,
+      url: item.url.startsWith("http") ? item.url : `${cleanDomain}${item.url.startsWith("/") ? "" : "/"}${item.url}`
+    }));
   }
 
   // --- Next.js Sync Manifest ---

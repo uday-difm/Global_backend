@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import PerformanceConsole from "./PerformanceConsole";
 import { requireAuth } from "@/lib/requireAuth";
+import { getSiteForUser } from "@/lib/getSiteForUser";
 import { redirect } from "next/navigation";
 
 export default async function PerformancePage() {
@@ -15,7 +16,7 @@ export default async function PerformancePage() {
     redirect("/dashboard");
   }
 
-  const site = await prisma.site.findFirst({ where: { isActive: true } });
+  const site = await getSiteForUser(sessionUser);
   const siteId = site ? site.id : null;
 
   return (

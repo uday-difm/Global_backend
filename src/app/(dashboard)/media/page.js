@@ -1,8 +1,11 @@
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/requireAuth";
+import { getSiteForUser } from "@/lib/getSiteForUser";
 import MediaLibraryClient from "./MediaLibraryClient";
 
 export default async function MediaPage() {
-  const site = await prisma.site.findFirst({ where: { isActive: true } });
+  const user = await requireAuth();
+  const site = await getSiteForUser(user);
 
   if (!site) {
     return (

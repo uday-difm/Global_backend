@@ -19,7 +19,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 
-export default function Topbar({ siteId }) {
+export default function Topbar({ siteId, sites = [] }) {
   const [showSearch, setShowSearch] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -193,6 +193,40 @@ export default function Topbar({ siteId }) {
               <h1 className="text-lg font-semibold text-gray-900 md:text-xl">Admin Panel</h1>
               <p className="hidden text-sm text-gray-500 sm:block">Manage your website content</p>
             </div>
+
+            {sites.length > 1 && (
+              <div className="relative ml-2">
+                <select
+                  value={siteId || ""}
+                  onChange={async (e) => {
+                    const newSiteId = e.target.value;
+                    if (!newSiteId || newSiteId === siteId) return;
+                    try {
+                      const res = await fetch("/api/admin/switch-site", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ siteId: newSiteId })
+                      });
+                      if (res.ok) {
+                        window.location.reload();
+                      } else {
+                        const err = await res.json();
+                        alert(err.error || "Failed to switch site");
+                      }
+                    } catch (err) {
+                      console.error(err);
+                    }
+                  }}
+                  className="bg-gray-50 border border-gray-200 text-gray-900 text-[11px] font-bold rounded-lg focus:ring-black focus:border-black block p-1.5 px-2.5 outline-none cursor-pointer hover:bg-gray-100 transition-colors"
+                >
+                  {sites.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      🌐 {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Right */}
