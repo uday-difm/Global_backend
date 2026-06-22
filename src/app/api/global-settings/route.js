@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getSiteId } from "@/lib/siteGuard";
+import { validateIntegrationKey } from "@/lib/apiAuth";
 
 export async function GET(request) {
   try {
@@ -12,6 +13,11 @@ export async function GET(request) {
         { error: e.message || "Missing siteId" },
         { status: 400 },
       );
+    }
+
+    const auth = await validateIntegrationKey(request, siteId);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const settings = await prisma.globalSettings.findFirst({
@@ -31,6 +37,10 @@ export async function GET(request) {
       },
     });
 
+    const responseHeaders = {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+    };
+
     if (!settings) {
       return NextResponse.json({
         ok: true,
@@ -40,10 +50,14 @@ export async function GET(request) {
           analytics: null,
           scripts: null,
         },
+      }, {
+        headers: responseHeaders,
       });
     }
 
-    return NextResponse.json({ ok: true, settings });
+    return NextResponse.json({ ok: true, settings }, {
+      headers: responseHeaders,
+    });
   } catch (err) {
     console.error("GET /api/global-settings error:", err);
     return NextResponse.json(
@@ -52,3 +66,4 @@ export async function GET(request) {
     );
   }
 }
+

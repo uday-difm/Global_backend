@@ -7,10 +7,10 @@ export class SeoService extends BaseService {
     super({ modelName: "globalSettings" });
   }
 
-  async getSitemapItems(siteId) {
+  async getSitemapItems(siteId, domain = null) {
     const pages = await prisma.page.findMany({
       where: { siteId, status: "PUBLISHED", deletedAt: null },
-      select: { slug: true, updatedAt: true },
+      select: { slug: true, updatedAt: true, changeFreq: true, priority: true },
       orderBy: { updatedAt: "desc" },
     });
 
@@ -26,23 +26,37 @@ export class SeoService extends BaseService {
       orderBy: { updatedAt: "desc" },
     });
 
+    const cleanDomain = domain ? (domain.endsWith("/") ? domain.slice(0, -1) : domain) : "";
+
+    const formatUrl = (path) => {
+      const formattedPath = path.startsWith("/") ? path : `/${path}`;
+      return cleanDomain ? `${cleanDomain}${formattedPath}` : formattedPath;
+    };
+
     const items = [
       ...pages.map(p => ({
-        url: p.slug.startsWith("/") ? p.slug : `/${p.slug}`,
+        url: formatUrl(p.slug),
         lastModified: p.updatedAt.toISOString(),
+        changeFrequency: p.changeFreq || "monthly",
+        priority: p.priority || 0.5,
       })),
       ...posts.map(p => ({
-        url: `/blogs/${p.slug}`,
+        url: formatUrl(`/blogs/${p.slug}`),
         lastModified: p.updatedAt.toISOString(),
+        changeFrequency: "weekly",
+        priority: 0.6,
       })),
       ...legalPages.map(lp => ({
-        url: `/legal/${lp.type}`,
+        url: formatUrl(`/legal/${lp.type}`),
         lastModified: lp.updatedAt.toISOString(),
+        changeFrequency: "monthly",
+        priority: 0.3,
       })),
     ];
 
     return items;
   }
+
 
   async getRobotsTxt(siteId) {
     const settings = await prisma.globalSettings.findUnique({

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { pageService } from "@/services/page.service";
 import prisma from "@/lib/prisma";
 import { handleApiError } from "@/core/errors";
+import { validateIntegrationKey } from "@/lib/apiAuth";
 
 export async function GET(req) {
   try {
@@ -16,7 +17,13 @@ export async function GET(req) {
       );
     }
 
+    const auth = await validateIntegrationKey(req, siteId);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const page = await pageService.getPageWithSections(siteId, slug);
+
 
     // Resolve referenced media ids -> URLs in content
     const mediaIds = new Set();

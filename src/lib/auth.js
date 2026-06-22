@@ -27,6 +27,10 @@ export const authOptions = {
           label: "reCAPTCHA Token",
           type: "text",
         },
+        totpCode: {
+          label: "2FA Token",
+          type: "text",
+        },
       },
 
       async authorize(credentials, req) {
@@ -68,6 +72,37 @@ export const authOptions = {
             credentials.password,
             req.headers || {}
           );
+
+          // Enforce 2FA verification if enabled for the user
+          if (user.twoFAEnabled) {
+            const totpCode = credentials?.totpCode;
+            if (!totpCode) {
+              throw new Error("2FA_REQUIRED");
+            }
+
+            // Retrieve TOTP secret from DB
+            const tf = await prisma.twoFactor.findUnique({
+              where: { userId: user.id }
+            });
+            if (!tf) {
+              throw new Error("2FA setup error. Please contact system admin.");
+            }
+
+            // Verify TOTP token using speakeasy
+            const speakeasyModule = await import("speakeasy");
+            const speakeasy = speakeasyModule.default || speakeasyModule;
+            const verified = speakeasy.totp.verify({
+              secret: tf.secret.trim(),
+              encoding: "base32",
+              token: totpCode.toString().trim(),
+              window: 2,
+            });
+
+            if (!verified) {
+              throw new Error("Invalid verification code");
+            }
+          }
+
           return user;
         } catch (err) {
           throw new Error(err.message || "Invalid credentials");

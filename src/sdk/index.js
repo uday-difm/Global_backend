@@ -160,9 +160,9 @@ export class CMSClient {
     }));
   }
 
-  // --- Next.js Sync Manifest ---
-  async syncRoutes(routes, integrationKey) {
-    const url = `${this.baseUrl}/api/integrations/next-sync/manifest`;
+  // --- Framework-Agnostic Route Synchronization ---
+  async syncRoutes(routes, integrationKey, framework = "next") {
+    const url = `${this.baseUrl}/api/integrations/sync-routes`;
     const options = {
       method: "POST",
       headers: {
@@ -171,7 +171,8 @@ export class CMSClient {
       },
       body: JSON.stringify({
         siteId: this.siteId,
-        source: "client-sync-script",
+        framework,
+        source: "client-sdk-wrapper",
         generatedAt: new Date().toISOString(),
         routes
       })
@@ -185,4 +186,5 @@ export class CMSClient {
     return result;
   }
 }
+
 

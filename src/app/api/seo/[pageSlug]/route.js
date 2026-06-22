@@ -61,7 +61,18 @@ export async function GET(req, context) {
           { slug: targetPostSlug }
         ]
       },
-      select: { title: true, seoTitle: true, seoDescription: true, excerpt: true }
+      select: {
+        title: true,
+        seoTitle: true,
+        seoDescription: true,
+        excerpt: true,
+        featuredImage: {
+          select: {
+            secureUrl: true,
+            url: true
+          }
+        }
+      }
     });
 
     if (post) {
@@ -71,10 +82,12 @@ export async function GET(req, context) {
         seo: {
           title: post.seoTitle || post.title,
           description: post.seoDescription || post.excerpt || null,
-          canonical: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blogs/${targetPostSlug}`
+          canonical: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blogs/${targetPostSlug}`,
+          ogImage: post.featuredImage?.secureUrl || post.featuredImage?.url || null
         }
       });
     }
+
 
     return NextResponse.json({ error: "Content not found" }, { status: 404 });
   } catch (err) {

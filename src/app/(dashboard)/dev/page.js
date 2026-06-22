@@ -23,8 +23,8 @@ export default async function DevPage() {
     );
   }
 
-  // Pre-load API keys, integration key, and errors log
-  const [dbSite, apiKeys, errorLogs] = await Promise.all([
+  // Pre-load API keys, integration key, errors log, and sync status
+  const [dbSite, apiKeys, errorLogs, project] = await Promise.all([
     prisma.site.findUnique({
       where: { id: site.id },
       select: { integrationKey: true }
@@ -37,8 +37,39 @@ export default async function DevPage() {
       where: { siteId: site.id },
       orderBy: { createdAt: "desc" },
       take: 50
+    }),
+    prisma.frontendProject.findFirst({
+      where: { siteId: site.id, isActive: true },
+      include: {
+        syncedRoutes: {
+          include: {
+            page: {
+              select: {
+                title: true,
+                status: true
+              }
+            }
+          },
+          orderBy: { route: "asc" }
+        }
+      },
+      orderBy: { createdAt: "asc" }
     })
   ]);
+
+  const initialSyncStatus = project ? {
+    lastSyncAt: project.lastSyncAt ? project.lastSyncAt.toISOString() : null,
+    lastManifestHash: project.lastManifestHash || null,
+    framework: project.framework,
+    apiKey: project.apiKey,
+    syncedRoutes: project.syncedRoutes.map(sr => ({
+      route: sr.route,
+      source: sr.source,
+      discoveredAt: sr.discoveredAt.toISOString(),
+      pageTitle: sr.page?.title || "Untitled",
+      pageStatus: sr.page?.status || "UNKNOWN"
+    }))
+  } : null;
 
   // Masked Env list (server side)
   const env = {
@@ -71,7 +102,9 @@ export default async function DevPage() {
         initialErrorLogs={JSON.parse(JSON.stringify(errorLogs))}
         initialEnv={env}
         initialVersionInfo={initialVersionInfo}
+        initialSyncStatus={initialSyncStatus}
       />
     </div>
   );
 }
+

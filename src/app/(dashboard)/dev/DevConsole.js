@@ -29,10 +29,12 @@ export default function DevConsole({
   initialApiKeys,
   initialErrorLogs,
   initialEnv,
-  initialVersionInfo
+  initialVersionInfo,
+  initialSyncStatus
 }) {
-  // Navigation Tabs State: "api-keys" | "integration-key" | "env" | "version" | "error-logs"
+  // Navigation Tabs State: "api-keys" | "integration-key" | "sync-status" | "env" | "version" | "error-logs"
   const [activeTab, setActiveTab] = useState("api-keys");
+
 
   // API Keys States
   const [apiKeys, setApiKeys] = useState(initialApiKeys || []);
@@ -261,6 +263,19 @@ export default function DevConsole({
         </button>
 
         <button
+          onClick={() => { setActiveTab("sync-status"); setErrorMessage(""); }}
+          className={`px-4 py-2 border-b-2 transition text-xs font-bold uppercase tracking-wider ${
+            activeTab === "sync-status"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300"
+          } flex items-center gap-1.5`}
+        >
+          <Layers size={16} />
+          Sync Status
+        </button>
+
+
+        <button
           onClick={() => { setActiveTab("env"); setErrorMessage(""); }}
           className={`px-4 py-2 border-b-2 transition text-xs font-bold uppercase tracking-wider ${
             activeTab === "env"
@@ -467,7 +482,113 @@ export default function DevConsole({
         </div>
       )}
 
+      {activeTab === "sync-status" && (
+        <div className="space-y-6">
+          <div className="border bg-white rounded-xl shadow-sm p-6 space-y-4">
+            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider border-b pb-2.5 flex items-center gap-1.5">
+              <Layers size={16} className="text-indigo-600" />
+              Content Sync & Auto-Discovery Metrics
+            </h3>
+
+            {initialSyncStatus ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 border rounded-xl bg-gray-50/50 space-y-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Last Synced At</span>
+                  <span className="text-xs font-bold text-gray-800">
+                    {initialSyncStatus.lastSyncAt ? new Date(initialSyncStatus.lastSyncAt).toLocaleString() : "Never"}
+                  </span>
+                </div>
+
+                <div className="p-4 border rounded-xl bg-gray-50/50 space-y-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Last Manifest Hash</span>
+                  <span className="text-xs font-mono font-semibold text-gray-800 block truncate" title={initialSyncStatus.lastManifestHash}>
+                    {initialSyncStatus.lastManifestHash || "N/A"}
+                  </span>
+                </div>
+
+                <div className="p-4 border rounded-xl bg-gray-50/50 space-y-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block">Detected Tech Stack</span>
+                  <span className="text-xs font-bold text-indigo-600 uppercase">
+                    {initialSyncStatus.framework || "other"}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 border border-dashed rounded-xl text-center text-gray-400 py-8">
+                No active frontend project detected syncing to this site.
+              </div>
+            )}
+          </div>
+
+          {initialSyncStatus && (
+            <div className="border bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="border-b px-6 py-4 bg-gray-50/50">
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                  Discovered & Synchronized Routes
+                </h3>
+              </div>
+
+              <div className="overflow-x-auto text-xs text-left">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
+                      <th className="px-6 py-3">Route Slug</th>
+                      <th className="px-6 py-3">Discovered Title</th>
+                      <th className="px-6 py-3">Source File</th>
+                      <th className="px-6 py-3">Sync Status</th>
+                      <th className="px-6 py-3">Registered At</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {initialSyncStatus.syncedRoutes.map((route, index) => (
+                      <tr key={index} className="hover:bg-gray-50/30">
+                        <td className="px-6 py-3 font-mono font-semibold text-gray-900">{route.route}</td>
+                        <td className="px-6 py-3 text-gray-800">{route.pageTitle}</td>
+                        <td className="px-6 py-3 font-mono text-gray-500">{route.source || "—"}</td>
+                        <td className="px-6 py-3">
+                          {route.pageStatus === "PUBLISHED" ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 text-[9px] font-bold text-green-700 border border-green-200 uppercase tracking-wider">
+                              Published
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-0.5 text-[9px] font-bold text-slate-700 border border-slate-200 uppercase tracking-wider">
+                              Draft
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3 text-gray-400">
+                          {new Date(route.discoveredAt).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {initialSyncStatus.syncedRoutes.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-16 text-center text-gray-450 italic">
+                          No page routes synced. Run the CLI tool to register local app paths.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          <div className="border bg-white rounded-xl p-6 shadow-sm space-y-4">
+            <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Trigger Manual Synchronization</h4>
+            <p className="text-xs text-gray-500 leading-normal">
+              Execute route discovery manually from your workspace CLI. Run the following command in your client project root directory:
+            </p>
+            <pre className="bg-slate-900 text-indigo-300 p-4 rounded-xl text-xs font-mono select-all overflow-x-auto break-all whitespace-pre-wrap">
+              {`node node_modules/@yourcompany/global-backend-next/sync-cli.js --siteId=${siteId} --key=${integrationKey || "YOUR_SYNC_KEY"}`}
+            </pre>
+          </div>
+        </div>
+      )}
+
       {activeTab === "env" && (
+
         <div className="border bg-white rounded-xl shadow-sm p-6 space-y-6">
           <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider border-b pb-2.5 flex items-center gap-1.5">
             <Database size={16} className="text-gray-500" />

@@ -1,0 +1,12 @@
+{
+  "cmsBaseUrl": "http://localhost:3000",
+  "siteId": "test_site_123",
+  "key": "my_super_secret_integration_key",
+  "framework": "sveltekit",
+  "routesDir": "./scratch/mock-sveltekit-routes",
+  "extensions": [".svelte"],
+  "exclude": ["**/+layout.svelte", "**/+error.svelte"],
+  "staticRoutes": [
+    { "slug": "/manual-landing", "path": "scratch/manual-pages/landing.svelte", "title": "Manual Landing Page" }
+  ]
+}

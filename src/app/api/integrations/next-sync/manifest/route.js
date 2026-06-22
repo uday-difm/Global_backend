@@ -241,3 +241,50 @@ export async function POST(req) {
     );
   }
 }
+
+export async function GET(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const siteId = searchParams.get("siteId");
+
+    if (!siteId) {
+      return NextResponse.json({ error: "siteId is required" }, { status: 400 });
+    }
+
+    const apiKey = req.headers.get("x-integration-key") || searchParams.get("integrationKey") || searchParams.get("integration_key");
+    const auth = await resolveAuth(apiKey, siteId);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const lastManifest = await prisma.integrationManifest.findFirst({
+      where: { siteId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!lastManifest) {
+      return NextResponse.json({
+        success: true,
+        lastSync: null,
+        manifestHash: null,
+        pageCount: 0,
+        source: null,
+      });
+    }
+
+    const rawJson = lastManifest.rawJson || {};
+    const routesCount = Array.isArray(rawJson.routes) ? rawJson.routes.length : 0;
+
+    return NextResponse.json({
+      success: true,
+      lastSync: lastManifest.createdAt,
+      manifestHash: lastManifest.manifestHash,
+      pageCount: routesCount,
+      source: lastManifest.source,
+    });
+  } catch (err) {
+    console.error("GET next-sync/manifest error:", err);
+    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+  }
+}
+

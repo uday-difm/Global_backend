@@ -29,6 +29,8 @@ function LoginAndProjectLanding() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isTwoFaStep, setIsTwoFaStep] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
 
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   const recaptchaContainerRef = useRef(null);
@@ -100,6 +102,10 @@ function LoginAndProjectLanding() {
     if (!email.trim()) return setError("Email is required.");
     if (!password) return setError("Password is required.");
 
+    if (isTwoFaStep && !totpCode.trim()) {
+      return setError("Verification code is required.");
+    }
+
     // Check reCAPTCHA if site key is configured
     let recaptchaToken = undefined;
     if (recaptchaSiteKey) {
@@ -135,11 +141,48 @@ function LoginAndProjectLanding() {
 
     setLoading(true);
     try {
+      // Step 1: Pre-verify credentials and fetch if 2FA is active
+      if (!isTwoFaStep) {
+        const checkRes = await fetch("/api/auth/2fa/check", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const checkJson = await checkRes.json();
+
+        if (!checkRes.ok) {
+          setError(checkJson.error || "Invalid email or password.");
+          // Safe reset after failed attempt
+          if (recaptchaSiteKey && window.grecaptcha) {
+            try {
+              if (widgetIdRef.current !== null) {
+                window.grecaptcha.reset(widgetIdRef.current);
+              } else {
+                window.grecaptcha.reset();
+              }
+            } catch (_) {}
+          }
+          setLoading(false);
+          return;
+        }
+
+        if (checkJson.twoFaRequired) {
+          setIsTwoFaStep(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Step 2: NextAuth Authentication Call
       const res = await signIn("credentials", {
         redirect: false,
         email,
         password,
         recaptchaToken,
+        totpCode: isTwoFaStep ? totpCode : undefined,
       });
 
       if (!res || res.error) {
@@ -163,7 +206,8 @@ function LoginAndProjectLanding() {
 
       const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
       router.replace(callbackUrl);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setError("Something went wrong. Please try again.");
       // Safe reset after error
       if (recaptchaSiteKey && window.grecaptcha) {
@@ -289,58 +333,90 @@ function LoginAndProjectLanding() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-                  {/* Email */}
-                  <div>
-                    <label htmlFor="email" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                      Email Address
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setError("");
-                      }}
-                      placeholder="admin@example.com"
-                      className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-xs text-white outline-none hover:border-slate-700 focus:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
-                    />
-                  </div>
+                  {!isTwoFaStep ? (
+                    <>
+                      {/* Email */}
+                      <div>
+                        <label htmlFor="email" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                          Email Address
+                        </label>
+                        <input
+                          id="email"
+                          type="email"
+                          required
+                          autoComplete="email"
+                          value={email}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            setError("");
+                          }}
+                          placeholder="admin@example.com"
+                          className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-xs text-white outline-none hover:border-slate-700 focus:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                        />
+                      </div>
 
-                  {/* Password */}
-                  <div>
-                    <label htmlFor="password" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        required
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          setError("");
-                        }}
-                        placeholder="••••••••"
-                        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 pr-11 text-xs text-white outline-none hover:border-slate-700 focus:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
+                      {/* Password */}
+                      <div>
+                        <label htmlFor="password" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                          Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            required
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => {
+                              setPassword(e.target.value);
+                              setError("");
+                            }}
+                            placeholder="••••••••"
+                            className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 pr-11 text-xs text-white outline-none hover:border-slate-700 focus:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword((v) => !v)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+                            tabIndex={-1}
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* 2FA OTP Code Verification */
+                    <div className="space-y-4">
+                      <div>
+                        <label htmlFor="totpCode" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                          Verification Code (2FA)
+                        </label>
+                        <input
+                          id="totpCode"
+                          type="text"
+                          required
+                          pattern="[0-9]*"
+                          inputMode="numeric"
+                          maxLength={6}
+                          autoComplete="one-time-code"
+                          value={totpCode}
+                          onChange={(e) => {
+                            setTotpCode(e.target.value.replace(/[^0-9]/g, ""));
+                            setError("");
+                          }}
+                          placeholder="123456"
+                          className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-xs text-white outline-none hover:border-slate-700 focus:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 text-center font-bold tracking-widest text-base"
+                        />
+                        <p className="text-[10px] text-slate-500 mt-2 text-center">
+                          Open the authenticator app on your device to view your security code.
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* reCAPTCHA — explicitly rendered into this ref container */}
-                  {recaptchaSiteKey && (
+                  {recaptchaSiteKey && !isTwoFaStep && (
                     <div className="flex justify-center my-4 rounded-lg overflow-hidden">
                       <div ref={recaptchaContainerRef} />
                     </div>
@@ -364,12 +440,28 @@ function LoginAndProjectLanding() {
                     {loading ? (
                       <>
                         <Loader2 size={14} className="animate-spin" />
-                        Verifying Credentials…
+                        {isTwoFaStep ? "Verifying Code…" : "Verifying Credentials…"}
                       </>
                     ) : (
-                      "Sign In to Dashboard"
+                      isTwoFaStep ? "Confirm Code & Sign In" : "Sign In to Dashboard"
                     )}
                   </button>
+
+                  {isTwoFaStep && (
+                    <div className="text-center pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsTwoFaStep(false);
+                          setTotpCode("");
+                          setError("");
+                        }}
+                        className="text-[11px] font-semibold text-indigo-400 hover:text-indigo-300 transition"
+                      >
+                        ← Back to credentials login
+                      </button>
+                    </div>
+                  )}
                 </form>
 
                 <p className="mt-5 text-center text-[10px] text-slate-500">

@@ -61,3 +61,41 @@ export async function checkSitePermission(req, requiredRole) {
 
   return { user, siteId };
 }
+
+export async function validateIntegrationKey(req, siteId) {
+  const apiKey = req.headers.get("x-integration-key") || req.nextUrl?.searchParams?.get("integrationKey") || req.nextUrl?.searchParams?.get("integration_key");
+  
+  if (apiKey) {
+    const frontendProject = await prisma.frontendProject.findUnique({
+      where: { apiKey }
+    });
+    if (frontendProject) {
+      if (!frontendProject.isActive) {
+        return { error: "Frontend project is inactive", status: 401 };
+      }
+      if (frontendProject.siteId !== siteId) {
+        return { error: "Frontend project does not belong to this site", status: 401 };
+      }
+      return { authenticated: true, type: "project", project: frontendProject };
+    }
+  }
+
+  const site = await prisma.site.findUnique({ where: { id: siteId } });
+  if (!site) {
+    return { error: "Site not found", status: 404 };
+  }
+
+  if (site.integrationKey) {
+    if (!apiKey || apiKey !== site.integrationKey) {
+      return { error: "Invalid integration key", status: 401 };
+    }
+    return { authenticated: true, type: "site", site };
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return { error: "Site integration not configured", status: 401 };
+  }
+
+  return { authenticated: true, type: "site", site };
+}
+
