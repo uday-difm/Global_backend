@@ -22,6 +22,11 @@ export async function GET(request) {
         footer: true,
         analytics: true,
         scripts: true,
+        websiteSettings: true,
+        navigation: true,
+        contactDetails: true,
+        compliance: true,
+        performanceConfig: true,
         updatedAt: true,
       },
     });

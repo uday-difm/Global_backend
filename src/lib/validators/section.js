@@ -17,9 +17,9 @@ const CtaSchema = z
   .partial({ url: false });
 
 const UrlOrRelative = z.string().refine(
-  (val) => val.startsWith("/") || val.startsWith(".") || /^(https?:)?\/\//.test(val),
+  (val) => val === "" || val.startsWith("/") || val.startsWith(".") || /^(https?:)?\/\//.test(val),
   {
-    message: "Must be a valid absolute URL or relative path",
+    message: "Must be a valid absolute URL, relative path, or empty",
   }
 );
 

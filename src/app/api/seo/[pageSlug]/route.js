@@ -16,9 +16,16 @@ export async function GET(req, context) {
     // Standardize slug format (prefixed with /)
     const formattedSlug = decodedSlug.startsWith("/") ? decodedSlug : `/${decodedSlug}`;
 
+    const slugWithSlash = formattedSlug;
+    const slugWithoutSlash = formattedSlug.startsWith("/") ? formattedSlug.substring(1) : formattedSlug;
+
     // 1. Try to find a Page
-    const page = await prisma.page.findUnique({
-      where: { siteId_slug: { siteId, slug: formattedSlug } },
+    const page = await prisma.page.findFirst({
+      where: {
+        siteId,
+        slug: { in: [slugWithSlash, slugWithoutSlash] },
+        deletedAt: null
+      },
       select: { title: true, seoTitle: true, seoDescription: true, canonicalUrl: true, ogImage: true, jsonLd: true }
     });
 
@@ -38,12 +45,20 @@ export async function GET(req, context) {
 
     // 2. Try to find a blog Post (without leading / for blog slugs in some databases, so let's check both formats)
     const postSlug = formattedSlug.startsWith("/") ? formattedSlug.substring(1) : formattedSlug;
+    let targetPostSlug = postSlug;
+    if (postSlug.startsWith("blog/")) {
+      targetPostSlug = postSlug.substring(5);
+    } else if (postSlug.startsWith("blogs/")) {
+      targetPostSlug = postSlug.substring(6);
+    }
+
     const post = await prisma.post.findFirst({
       where: {
         siteId,
         OR: [
           { slug: postSlug },
-          { slug: formattedSlug }
+          { slug: formattedSlug },
+          { slug: targetPostSlug }
         ]
       },
       select: { title: true, seoTitle: true, seoDescription: true, excerpt: true }
@@ -56,7 +71,7 @@ export async function GET(req, context) {
         seo: {
           title: post.seoTitle || post.title,
           description: post.seoDescription || post.excerpt || null,
-          canonical: `${process.env.NEXT_PUBLIC_APP_URL || ""}/blog/${postSlug}`
+          canonical: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blogs/${targetPostSlug}`
         }
       });
     }

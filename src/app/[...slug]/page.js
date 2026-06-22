@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import prisma from "@/lib/prisma";
 import { pageService } from "@/services/page.service";
+import ContactFormSection from "@/components/ContactFormSection";
 
 // SafeImage helper to support Next.js Image caching or fallback <img>
 function SafeImage({ src, alt, ...props }) {
@@ -37,6 +38,188 @@ function SafeImage({ src, alt, ...props }) {
   return <img src={src} alt={alt} style={style} {...rest} />;
 }
 
+// Simple client-safe markdown-to-HTML parser function
+function renderMarkdown(markdownText) {
+  if (!markdownText) return "";
+
+  // Escape HTML tags to prevent XSS if necessary, but keep formatting
+  let html = markdownText
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // 1. Code blocks: ```lang ... ```
+  html = html.replace(/```([\s\S]*?)```/g, (match, p1) => {
+    return `<pre class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs my-6 overflow-x-auto"><code>${p1.trim()}</code></pre>`;
+  });
+
+  // 2. Headings
+  html = html.replace(/^# (.*?)$/gm, '<h1 class="text-3xl font-extrabold text-slate-900 mt-8 mb-4">$1</h1>');
+  html = html.replace(/^## (.*?)$/gm, '<h2 class="text-2xl font-extrabold text-slate-900 mt-8 mb-4">$1</h2>');
+  html = html.replace(/^### (.*?)$/gm, '<h3 class="text-xl font-bold text-slate-900 mt-6 mb-3">$1</h3>');
+  html = html.replace(/^#### (.*?)$/gm, '<h4 class="text-lg font-bold text-slate-900 mt-4 mb-2">$1</h4>');
+
+  // 3. Blockquotes: > quote
+  html = html.replace(/^&gt; (.*?)$/gm, '<blockquote class="border-l-4 border-indigo-500 pl-4 py-1 italic text-slate-650 my-6 bg-slate-50 rounded-r-lg">$1</blockquote>');
+
+  // 4. Unordered Lists: * item or - item
+  html = html.replace(/^(?:\*|-)\s+(.*?)$/gm, '<li class="list-disc ml-6 mb-2">$1</li>');
+
+  // 5. Ordered Lists: 1. item
+  html = html.replace(/^(\d+)\.\s+(.*?)$/gm, '<li class="list-decimal ml-6 mb-2">$2</li>');
+
+  // 6. Bold: **text** or __text__
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+  // 7. Italic: *text* or _text_
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+
+  // 8. Inline Code: `code`
+  html = html.replace(/`(.*?)`/g, '<code class="bg-slate-100 text-pink-600 px-1.5 py-0.5 rounded font-mono text-[0.9em]">$1</code>');
+
+  // 9. Images: ![alt](url)
+  html = html.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" class="my-8 rounded-xl max-w-full h-auto mx-auto shadow-md" />');
+
+  // 10. Links: [text](url)
+  html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-indigo-600 hover:text-indigo-800 underline font-semibold transition" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  // 11. Paragraphs (lines that aren't tags)
+  const blocks = html.split(/\n\n+/);
+  const formattedBlocks = blocks.map(block => {
+    const trimmed = block.trim();
+    if (!trimmed) return "";
+    
+    const isBlockTag = /^(<h[1-6]|<pre|<blockquote|<ul|<ol|<li|<img|<p)/i.test(trimmed);
+    if (isBlockTag) {
+      return trimmed;
+    }
+    
+    const paragraphs = trimmed.split('\n').join('<br />');
+    return `<p class="text-slate-650 leading-relaxed mb-5">${paragraphs}</p>`;
+  });
+
+  let parsed = formattedBlocks.join('\n');
+
+  // Group consecutive list items
+  parsed = parsed.replace(/(<li class="list-disc.*<\/li>\n?)+/g, (match) => {
+    return `<ul class="my-6 space-y-1">${match}</ul>`;
+  });
+  parsed = parsed.replace(/(<li class="list-decimal.*<\/li>\n?)+/g, (match) => {
+    return `<ol class="my-6 space-y-1">${match}</ol>`;
+  });
+
+  return parsed;
+}
+
+// Reusable detailed blog post UI component
+function BlogPostDetail({ post, site, settings }) {
+  const categories = post.categories || [];
+  
+  let rawContent = "";
+  if (typeof post.content === "string") {
+    rawContent = post.content;
+  } else if (post.content) {
+    try {
+      rawContent = typeof post.content === "object" ? JSON.stringify(post.content) : String(post.content);
+      if (rawContent.startsWith('"') && rawContent.endsWith('"')) {
+        rawContent = JSON.parse(rawContent);
+      }
+    } catch (_) {
+      rawContent = String(post.content);
+    }
+  }
+
+  const contentHtml = renderMarkdown(rawContent);
+
+  return (
+    <article className="max-w-4xl mx-auto px-6 py-12">
+      {/* Breadcrumbs Navigation */}
+      <nav className="flex items-center gap-2 text-[10px] font-bold text-slate-400 mb-6 uppercase tracking-wider">
+        <a href="/" className="hover:text-indigo-600 transition">Home</a>
+        <span>/</span>
+        <a href="/blog" className="hover:text-indigo-600 transition">Blog</a>
+        <span>/</span>
+        <span className="text-slate-600 truncate max-w-xs">{post.title}</span>
+      </nav>
+
+      {/* Header Info */}
+      <header className="mb-8">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {categories.map((c) => (
+            <span key={c.id} className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-650 border border-indigo-100">
+              {c.name}
+            </span>
+          ))}
+        </div>
+        <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 leading-tight">
+          {post.title}
+        </h1>
+        <div className="flex items-center gap-3 pb-6 border-b border-slate-200">
+          <div className="w-10 h-10 rounded-full bg-linear-to-tr from-indigo-500 to-blue-500 flex items-center justify-center text-white font-extrabold shadow-xs">
+            {post.author ? post.author.email.charAt(0).toUpperCase() : "A"}
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-800">
+              {post.author ? post.author.email.split("@")[0] : "Author"}
+            </p>
+            <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+              {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }) : new Date(post.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      {/* Featured Image */}
+      {post.featuredImage && (
+        <div className="relative w-full aspect-16/10 md:aspect-21/9 rounded-2xl overflow-hidden shadow-xs mb-10 border border-slate-100">
+          <SafeImage
+            src={post.featuredImage.secureUrl || post.featuredImage.url}
+            alt={post.title}
+            fill
+            style={{ objectFit: "cover" }}
+            priority
+          />
+        </div>
+      )}
+
+      {/* Excerpt */}
+      {post.excerpt && (
+        <p className="text-lg md:text-xl font-light text-slate-500 leading-relaxed mb-8 italic pl-4 border-l-4 border-slate-350">
+          {post.excerpt}
+        </p>
+      )}
+
+      {/* Body Content */}
+      <div 
+        className="blog-prose"
+        dangerouslySetInnerHTML={{ __html: contentHtml }}
+      />
+
+      {/* Category Footer */}
+      {categories.length > 0 && (
+        <div className="mt-12 pt-8 border-t border-slate-200 flex flex-wrap items-center gap-3">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filed Under:</span>
+          {categories.map((c) => (
+            <span key={c.id} className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-650 transition cursor-pointer">
+              {c.name}
+            </span>
+          ))}
+        </div>
+      )}
+    </article>
+  );
+}
+
 // 1. Fetch Page and its Data Helper
 async function getPageData(slugSegments) {
   const rawSlug = (slugSegments || []).join("/");
@@ -48,6 +231,33 @@ async function getPageData(slugSegments) {
     where: { isActive: true, deletedAt: null },
   });
   if (!site) return null;
+
+  // Detect detailed blog post path, e.g. /blogs/[slug] or /blog/[slug]
+  const isBlogPath = slugSegments.length === 2 && (slugSegments[0] === "blogs" || slugSegments[0] === "blog");
+
+  if (isBlogPath) {
+    const postSlug = slugSegments[1];
+    const post = await prisma.post.findFirst({
+      where: {
+        siteId: site.id,
+        slug: postSlug,
+        status: "PUBLISHED",
+        deletedAt: null,
+      },
+      include: {
+        author: { select: { id: true, email: true } },
+        featuredImage: true,
+        categories: true,
+      },
+    });
+
+    if (post) {
+      const settings = await prisma.globalSettings.findUnique({
+        where: { siteId: site.id },
+      });
+      return { isBlog: true, post, site, settings };
+    }
+  }
 
   // Find page by slug and site
   const page = await prisma.page.findFirst({
@@ -120,6 +330,17 @@ async function getPageData(slugSegments) {
           where: { siteId: site.id, showHide: true, deletedAt: null },
           orderBy: { sortOrder: "asc" },
         });
+      } else if (type === "BLOGS") {
+        content.items = await prisma.post.findMany({
+          where: { siteId: site.id, status: "PUBLISHED", deletedAt: null },
+          orderBy: { publishedAt: "desc" },
+          take: 6,
+          include: {
+            featuredImage: true,
+            categories: true,
+            author: { select: { email: true } },
+          },
+        });
       }
 
       return { ...s, content };
@@ -139,6 +360,27 @@ export async function generateMetadata({ params }) {
   const p = await params;
   const data = await getPageData(p.slug);
   if (!data) return {};
+
+  if (data.isBlog) {
+    const { post } = data;
+    const title = post.seoTitle || post.title;
+    const desc = post.seoDescription || post.excerpt || "";
+    const canonical = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blogs/${post.slug}`;
+    const ogImg = post.featuredImage?.secureUrl || post.featuredImage?.url || undefined;
+
+    return {
+      title,
+      description: desc,
+      alternates: {
+        canonical,
+      },
+      openGraph: {
+        title,
+        description: desc,
+        images: ogImg ? [{ url: ogImg }] : [],
+      },
+    };
+  }
 
   const { page } = data;
   const title = page.seoTitle || page.title;
@@ -423,6 +665,74 @@ function CtaSection({ content }) {
   );
 }
 
+function BlogsSection({ content }) {
+  const items = content?.items || [];
+  return (
+    <section className="py-16 bg-white text-slate-800 border-t border-b animate-fade-in">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+            {content?.title || "Latest Articles"}
+          </h2>
+          <p className="text-slate-500 mt-2 text-sm">
+            {content?.description || "Stay updated with our latest news and corporate insights."}
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {items.map((post) => (
+            <a
+              key={post.id}
+              href={`/blogs/${post.slug}`}
+              className="group block bg-white rounded-xl shadow-xs border hover:shadow-md transition-all duration-200 overflow-hidden"
+            >
+              {post.featuredImage && (
+                <div className="relative w-full aspect-16/10">
+                  <SafeImage
+                    src={post.featuredImage.secureUrl || post.featuredImage.url}
+                    alt={post.title}
+                    fill
+                    style={{ objectFit: "cover" }}
+                  />
+                </div>
+              )}
+              <div className="p-6">
+                <div className="flex gap-2 mb-2 flex-wrap">
+                  {post.categories.map((c) => (
+                    <span
+                      key={c.id}
+                      className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-650"
+                    >
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
+                <h3 className="text-base font-bold text-slate-900 mb-group-hover:text-indigo-600 transition truncate">
+                  {post.title}
+                </h3>
+                {post.excerpt && (
+                  <p className="text-xs text-slate-505 leading-relaxed line-clamp-2 mb-4 mt-1">
+                    {post.excerpt}
+                  </p>
+                )}
+                <div className="text-[10px] text-slate-400 font-semibold mt-4 pt-4 border-t flex justify-between">
+                  <span>By {post.author ? post.author.email.split("@")[0] : "Author"}</span>
+                  <span>
+                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // 4. Main Server Catch-All Page Component
 export default async function CatchAllPage({ params }) {
   const p = await params;
@@ -432,11 +742,120 @@ export default async function CatchAllPage({ params }) {
     return notFound();
   }
 
+  if (data.isBlog) {
+    const { post, site, settings } = data;
+    const headerSettings = settings?.header || {};
+    const footerSettings = settings?.footer || {};
+    const websiteSettings = settings?.websiteSettings || {};
+    const headerMenuType = headerSettings.menuType || "main";
+    const navigation = settings?.navigation?.[headerMenuType] || [];
+
+    // Generate Blog Article JSON-LD
+    const articleJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": post.title,
+      "description": post.excerpt || post.seoDescription || "",
+      "datePublished": post.publishedAt || post.createdAt,
+      "dateModified": post.updatedAt,
+      "author": post.author ? {
+        "@type": "Person",
+        "name": post.author.email.split("@")[0],
+      } : undefined,
+      "image": post.featuredImage ? (post.featuredImage.secureUrl || post.featuredImage.url) : undefined,
+    };
+
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-950 flex flex-col justify-between">
+        {/* JSON-LD Schema Markup Injection */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+        />
+
+        {/* Dynamic Header */}
+        <header className={`bg-white border-b z-40 ${headerSettings.sticky ? "sticky top-0 shadow-xs" : ""}`}>
+          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {websiteSettings.logoUrl ? (
+                <img
+                  src={websiteSettings.logoUrl}
+                  alt="Logo"
+                  style={{ height: `${headerSettings.logoHeight || 40}px`, objectFit: "contain" }}
+                />
+              ) : (
+                <span className="font-extrabold text-lg text-slate-900">{site.name}</span>
+              )}
+            </div>
+
+            <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+              {navigation.map((link, idx) => (
+                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+
+            <div className="flex items-center gap-3">
+              <a
+                href="/api/auth/signin"
+                className="px-4 py-2 bg-slate-900 text-white rounded text-xs font-bold hover:bg-slate-800 transition"
+              >
+                Sign In
+              </a>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="grow">
+          <BlogPostDetail post={post} site={site} settings={settings} />
+        </main>
+
+        {/* Dynamic Footer */}
+        <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h4 className="text-white font-bold text-sm mb-4">{site.name}</h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Powered by the Global Backend Headless CMS. High performance modular setups.
+              </p>
+            </div>
+            <div>
+              <h5 className="text-white font-bold text-xs mb-3">Links</h5>
+              <div className="flex flex-col gap-2 text-xs">
+                {navigation.slice(0, 4).map((link, idx) => (
+                  <a key={idx} href={link.url} className="hover:text-white transition">
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h5 className="text-white font-bold text-xs mb-3 font-mono">Status</h5>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-green-950 px-2 py-0.5 text-[9px] font-bold text-green-400 border border-green-900 uppercase tracking-wider">
+                <span className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
+                Live & Synced
+              </span>
+            </div>
+            <div>
+              <h5 className="text-white font-bold text-xs mb-3">Copyright</h5>
+              <p className="text-[10px] text-slate-550 leading-relaxed">
+                {footerSettings.copyright || `© ${new Date().getFullYear()} ${site.name}. All rights reserved.`}
+              </p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
   const { page, sections, site, settings } = data;
   const headerSettings = settings?.header || {};
   const footerSettings = settings?.footer || {};
   const websiteSettings = settings?.websiteSettings || {};
-  const navigation = settings?.navigation?.links || [];
+  const headerMenuType = headerSettings.menuType || "main";
+  const navigation = settings?.navigation?.[headerMenuType] || [];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950 flex flex-col justify-between">
@@ -493,6 +912,17 @@ export default async function CatchAllPage({ params }) {
           if (type === "TESTIMONIALS") return <TestimonialsSection key={s.id} content={s.content} />;
           if (type === "FAQ") return <FaqSection key={s.id} content={s.content} />;
           if (type === "CTA") return <CtaSection key={s.id} content={s.content} />;
+          if (type === "BLOGS") return <BlogsSection key={s.id} content={s.content} />;
+          if (type === "CONTACT_FORM") {
+            return (
+              <ContactFormSection
+                key={s.id}
+                siteId={site.id}
+                content={s.content}
+                recaptchaSiteKey={settings?.securityControls?.recaptchaSiteKey || process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+              />
+            );
+          }
 
           return (
             <section key={s.id} className="py-8 max-w-7xl mx-auto px-6">

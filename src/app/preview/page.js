@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import React from "react";
 import Image from "next/image";
 import prisma from "@/lib/prisma";
+import ContactFormSection from "@/components/ContactFormSection";
 
 function SafeImage({ src, alt, ...props }) {
   if (!src) return null;
@@ -288,6 +289,74 @@ function CtaSection({ content }) {
   );
 }
 
+function BlogsSection({ content }) {
+  const items = content?.items || [];
+  return (
+    <section className="py-16 bg-white text-slate-800 border-t border-b">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+            {content?.title || "Latest Articles"}
+          </h2>
+          <p className="text-slate-500 mt-2 text-sm">
+            {content?.description || "Stay updated with our latest news and corporate insights."}
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {items.map((post) => (
+            <a
+              key={post.id}
+              href={`/blogs/${post.slug}`}
+              className="group block bg-white rounded-xl shadow-xs border hover:shadow-md transition-all duration-200 overflow-hidden"
+            >
+              {post.featuredImage && (
+                <div className="relative w-full aspect-16/10">
+                  <SafeImage
+                    src={post.featuredImage.secureUrl || post.featuredImage.url}
+                    alt={post.title}
+                    fill
+                    style={{ objectFit: "cover" }}
+                  />
+                </div>
+              )}
+              <div className="p-6">
+                <div className="flex gap-2 mb-2 flex-wrap">
+                  {post.categories.map((c) => (
+                    <span
+                      key={c.id}
+                      className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-650"
+                    >
+                      {c.name}
+                    </span>
+                  ))}
+                </div>
+                <h3 className="text-base font-bold text-slate-900 mb-group-hover:text-indigo-600 transition truncate">
+                  {post.title}
+                </h3>
+                {post.excerpt && (
+                  <p className="text-xs text-slate-505 leading-relaxed line-clamp-2 mb-4 mt-1">
+                    {post.excerpt}
+                  </p>
+                )}
+                <div className="text-[10px] text-slate-400 font-semibold mt-4 pt-4 border-t flex justify-between">
+                  <span>By {post.author ? post.author.email.split("@")[0] : "Author"}</span>
+                  <span>
+                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default async function PreviewPage({ searchParams }) {
   // Unwrap searchParams if it's a promise-like in this runtime
   const sp = await searchParams;
@@ -306,7 +375,7 @@ export default async function PreviewPage({ searchParams }) {
     );
   }
 
-  // Fetch page and sections directly with Prisma
+  // Fetch page directly with Prisma
   const page = await prisma.page.findUnique({
     where: { id: pageId },
     select: { id: true, title: true, slug: true, status: true, siteId: true },
@@ -322,6 +391,16 @@ export default async function PreviewPage({ searchParams }) {
       </div>
     );
   }
+
+  // Fetch Site and settings
+  const site = await prisma.site.findUnique({
+    where: { id: siteId },
+    select: { name: true }
+  }) || { name: "Default Website" };
+
+  const settings = await prisma.globalSettings.findUnique({
+    where: { siteId },
+  });
 
   let sections = await prisma.section.findMany({
     where: { pageId: page.id, isDeleted: false },
@@ -384,34 +463,68 @@ export default async function PreviewPage({ searchParams }) {
           where: { siteId, showHide: true, deletedAt: null },
           orderBy: { sortOrder: "asc" },
         });
+      } else if (type === "BLOGS") {
+        content.items = await prisma.post.findMany({
+          where: { siteId, status: "PUBLISHED", deletedAt: null },
+          orderBy: { publishedAt: "desc" },
+          take: 6,
+          include: {
+            featuredImage: true,
+            categories: true,
+            author: { select: { email: true } },
+          },
+        });
       }
 
       return { ...s, content };
     })
   );
+  const headerSettings = settings?.header || {};
+  const footerSettings = settings?.footer || {};
+  const websiteSettings = settings?.websiteSettings || {};
+  const headerMenuType = headerSettings.menuType || "main";
+  const navigation = settings?.navigation?.[headerMenuType] || [];
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <div className="text-sm text-slate-500">Previewing</div>
-            <div className="text-lg font-semibold">
-              {page.title || page.slug}
-            </div>
-            <div className="text-xs text-slate-400">
-              {page.status || "unknown status"}
-            </div>
+    <div className="min-h-screen bg-slate-50 text-slate-950 flex flex-col justify-between">
+      {/* Preview Banner */}
+      <div className="bg-amber-500 text-white text-center py-1.5 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-50 shadow-sm">
+        ⚡ Preview Mode &mdash; Viewing Draft Layout for "{page.title || page.slug}"
+      </div>
+
+      {/* Dynamic Header */}
+      <header className={`bg-white border-b z-40 ${headerSettings.sticky ? "sticky top-16 shadow-xs" : ""}`}>
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {websiteSettings.logoUrl ? (
+              <img
+                src={websiteSettings.logoUrl}
+                alt="Logo"
+                style={{ height: `${headerSettings.logoHeight || 40}px`, objectFit: "contain" }}
+              />
+            ) : (
+              <span className="font-extrabold text-lg text-slate-900">{site.name}</span>
+            )}
           </div>
-          <div>
-            <a href="/" className="text-sm text-blue-600">
-              Open site
-            </a>
+
+          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
+            {navigation.map((link, idx) => (
+              <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[9px] font-bold uppercase">
+              Draft
+            </span>
           </div>
         </div>
       </header>
 
-      <main>
+      {/* Main Content Area */}
+      <main className="grow">
         {sections
           .filter((s) => s.isVisible !== false)
           .map((s) => {
@@ -423,10 +536,24 @@ export default async function PreviewPage({ searchParams }) {
             if (type === "TESTIMONIALS") return <TestimonialsSection key={s.id} content={s.content} />;
             if (type === "FAQ") return <FaqSection key={s.id} content={s.content} />;
             if (type === "CTA") return <CtaSection key={s.id} content={s.content} />;
+            if (type === "BLOGS") return <BlogsSection key={s.id} content={s.content} />;
+            if (type === "CONTACT_FORM") {
+              return (
+                <ContactFormSection
+                  key={s.id}
+                  siteId={siteId}
+                  content={s.content}
+                  recaptchaSiteKey={settings?.securityControls?.recaptchaSiteKey || process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                />
+              );
+            }
+
             return (
-              <section key={s.id} className="container mx-auto px-6 py-8">
-                <h3 className="font-medium mb-2">{s.type}</h3>
-                <pre className="bg-gray-50 p-4 rounded text-sm overflow-auto">
+              <section key={s.id} className="py-8 max-w-7xl mx-auto px-6">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                  Fallback: {s.type} Section
+                </span>
+                <pre className="p-4 bg-white border rounded text-xs font-mono overflow-auto">
                   {JSON.stringify(s.content, null, 2)}
                 </pre>
               </section>
@@ -434,9 +561,38 @@ export default async function PreviewPage({ searchParams }) {
           })}
       </main>
 
-      <footer className="border-t py-6 mt-12">
-        <div className="container mx-auto px-6 text-sm text-slate-500">
-          Preview mode — draft content may be shown
+      {/* Dynamic Footer */}
+      <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div>
+            <h4 className="text-white font-bold text-sm mb-4">{site.name}</h4>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Powered by the Global Backend Headless CMS. High performance modular setups.
+            </p>
+          </div>
+          <div>
+            <h5 className="text-white font-bold text-xs mb-3">Links</h5>
+            <div className="flex flex-col gap-2 text-xs">
+              {navigation.slice(0, 4).map((link, idx) => (
+                <a key={idx} href={link.url} className="hover:text-white transition">
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h5 className="text-white font-bold text-xs mb-3 font-mono">Status</h5>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-950 px-2 py-0.5 text-[9px] font-bold text-amber-400 border border-amber-900 uppercase tracking-wider">
+              <span className="h-1 w-1 rounded-full bg-amber-500 animate-pulse" />
+              Previewing Draft
+            </span>
+          </div>
+          <div>
+            <h5 className="text-white font-bold text-xs mb-3">Copyright</h5>
+            <p className="text-[10px] text-slate-550 leading-relaxed">
+              {footerSettings.copyright || `© ${new Date().getFullYear()} ${site.name}. All rights reserved.`}
+            </p>
+          </div>
         </div>
       </footer>
     </div>

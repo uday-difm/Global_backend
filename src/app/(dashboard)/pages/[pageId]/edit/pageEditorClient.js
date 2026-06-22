@@ -207,6 +207,22 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
       } else if (type === "TEXT_BLOCK") {
         defaultContent.title = "Our Story";
         defaultContent.body = "We build systems using clean principles, pure Javascript components, and high-performance databases.";
+      } else if (type === "SERVICES") {
+        defaultContent.title = "Our Services";
+        defaultContent.description = "Professional services tailored to help your brand grow.";
+      } else if (type === "TESTIMONIALS") {
+        defaultContent.title = "Client Feedback";
+        defaultContent.description = "Hear directly from our global partners.";
+      } else if (type === "FAQ") {
+        defaultContent.title = "Frequently Asked Questions";
+        defaultContent.description = "Common questions and detailed answers.";
+      } else if (type === "BLOGS") {
+        defaultContent.title = "Latest Articles & News";
+        defaultContent.description = "Read our fresh updates, guides, and corporate blog posts.";
+      } else if (type === "CONTACT_FORM") {
+        defaultContent.title = "Get In Touch";
+        defaultContent.description = "Fill out the form below and we will get back to you shortly.";
+        defaultContent.buttonText = "Send Message";
       }
 
       const res = await fetchWithAuth(`/api/admin/pages/${pageId}/sections`, {
@@ -410,6 +426,15 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
   const handleSavePageSettings = async (overrideStatus = null) => {
     setActionLoading(true);
 
+    if (selectedSection) {
+      try {
+        // Sync/save current active section content first
+        await handleSaveSection();
+      } catch (err) {
+        console.error("Section auto-save failed during page settings save:", err);
+      }
+    }
+
     let parsedJsonLd = null;
     if (jsonLd && jsonLd.trim()) {
       try {
@@ -536,6 +561,8 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
             <option value="TESTIMONIALS">Customer Testimonials List</option>
             <option value="FAQ">Frequently Asked Questions</option>
             <option value="CTA">Call-To-Action Button Row</option>
+            <option value="BLOGS">Latest Articles & Blogs</option>
+            <option value="CONTACT_FORM">Interactive Contact Form</option>
           </select>
 
           <button
@@ -545,7 +572,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
             className="flex items-center gap-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow transition disabled:opacity-50"
           >
             <Save size={14} />
-            Save Meta
+            Save Page
           </button>
 
           {/* Draft/Publish Toggle Button */}
@@ -565,7 +592,14 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
+              if (selectedSection) {
+                try {
+                  await handleSaveSection();
+                } catch (e) {
+                  console.error("Auto-saving active section failed during preview redirect:", e);
+                }
+              }
               const url = `/preview?pageId=${encodeURIComponent(pageId)}&siteId=${encodeURIComponent(siteId)}`;
               window.open(url, "_blank");
             }}
@@ -1101,6 +1135,18 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                         placeholder="Subheading explanation"
                       />
                     </div>
+                    {selectedSection.type === "CONTACT_FORM" && (
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Button Submit Text</label>
+                        <input
+                          type="text"
+                          value={visualFields.buttonText || ""}
+                          onChange={(e) => setVisualFields(prev => ({ ...prev, buttonText: e.target.value }))}
+                          className="w-full rounded-lg border border-gray-200 p-2.5 text-xs outline-none focus:border-indigo-600 font-semibold"
+                          placeholder="Send Message"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1341,6 +1387,51 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                           />
                         </div>
                       )}
+                    </div>
+                  );
+                }
+
+                // CONTACT_FORM Render
+                if (sec.type === "CONTACT_FORM") {
+                  const isCurrent = selectedSection?.id === sec.id;
+                  const displayTitle = isCurrent ? visualFields.title : sec.content?.title;
+                  const displayDescription = isCurrent ? visualFields.description : sec.content?.description;
+                  const displayButtonText = isCurrent ? visualFields.buttonText : sec.content?.buttonText;
+
+                  return (
+                    <div 
+                      key={sec.id}
+                      className={`bg-white px-6 py-8 border-b flex flex-col gap-4 text-xs ${
+                        selectedSection?.id === sec.id ? "ring-2 ring-indigo-500" : ""
+                      }`}
+                    >
+                      <div className="text-center max-w-sm mx-auto">
+                        <h3 className="font-bold text-slate-900 text-sm">
+                          {displayTitle || "Get In Touch"}
+                        </h3>
+                        {displayDescription && (
+                          <p className="text-[10px] text-slate-505 mt-1 leading-relaxed">
+                            {displayDescription}
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2.5 max-w-xs mx-auto w-full">
+                        <div>
+                          <label className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Full Name</label>
+                          <input type="text" disabled placeholder="Jane Doe" className="w-full rounded border px-2 py-1 text-[10px] bg-slate-50 border-slate-200 cursor-not-allowed" />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Email Address</label>
+                          <input type="text" disabled placeholder="jane@company.com" className="w-full rounded border px-2 py-1 text-[10px] bg-slate-50 border-slate-200 cursor-not-allowed" />
+                        </div>
+                        <div>
+                          <label className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Your Message</label>
+                          <textarea disabled placeholder="Tell us about your project..." className="w-full rounded border px-2 py-1 text-[10px] bg-slate-50 border-slate-200 cursor-not-allowed h-10 resize-none" />
+                        </div>
+                        <button disabled className="w-full bg-indigo-600 text-white rounded py-2 text-[10px] font-bold opacity-80 cursor-not-allowed">
+                          {displayButtonText || "Send Message"}
+                        </button>
+                      </div>
                     </div>
                   );
                 }

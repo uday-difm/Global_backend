@@ -6,8 +6,13 @@ export class PageRepository extends BaseRepository {
   }
 
   async findBySlug(siteId, slug) {
+    const slugWithSlash = slug.startsWith("/") ? slug : `/${slug}`;
+    const slugWithoutSlash = slug.startsWith("/") ? slug.substring(1) : slug;
+
     return this.findFirst(siteId, {
-      where: { slug },
+      where: {
+        slug: { in: [slugWithSlash, slugWithoutSlash] }
+      },
       include: { sections: { where: { isDeleted: false }, orderBy: { order: "asc" } } },
     });
   }

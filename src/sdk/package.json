@@ -9,6 +9,11 @@
     "next": ">=13.0.0",
     "react": ">=18.0.0"
   },
+  "exports": {
+    ".": "./index.js",
+    "./components": "./components.jsx",
+    "./sync": "./sync.js"
+  },
   "keywords": [
     "cms",
     "headless",

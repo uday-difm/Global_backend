@@ -15,10 +15,18 @@ export async function POST(req) {
   });
 
   const emailSettings = settings?.emailSettings || {};
-  const { host, port, username, password, formEmail } = emailSettings;
+  let { host, port, username, password, formEmail } = emailSettings;
 
   if (!host || !port || !username || !password) {
-    return NextResponse.json({ error: "SMTP is not fully configured" }, { status: 400 });
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      host = process.env.SMTP_HOST;
+      port = process.env.SMTP_PORT || "587";
+      username = process.env.SMTP_USER;
+      password = process.env.SMTP_PASS;
+      formEmail = process.env.FORM_EMAIL || process.env.SMTP_USER;
+    } else {
+      return NextResponse.json({ error: "SMTP is not fully configured in settings or env" }, { status: 400 });
+    }
   }
 
   try {
