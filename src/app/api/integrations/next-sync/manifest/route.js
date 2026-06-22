@@ -6,7 +6,7 @@ import { z } from "zod";
 /*
   POST /api/integrations/next-sync/manifest
   Headers:
-    x-integration-key: <site.integrationKey>
+    x-integration-key: <FrontendProject.apiKey or Site.integrationKey>
 
   Body:
     {
@@ -33,57 +33,97 @@ const ManifestSchema = z.object({
   ),
 });
 
+async function resolveAuth(apiKey, siteId) {
+  if (apiKey) {
+    const frontendProject = await prisma.frontendProject.findUnique({
+      where: { apiKey },
+    });
+
+    if (frontendProject) {
+      if (!frontendProject.isActive) {
+        return { error: "Frontend project is inactive", status: 401 };
+      }
+      if (frontendProject.siteId !== siteId) {
+        return {
+          error: "Frontend project does not belong to this site",
+          status: 401,
+        };
+      }
+      return { frontendProject };
+    }
+  }
+
+  const site = await prisma.site.findUnique({ where: { id: siteId } });
+  if (!site) {
+    return { error: "Site not found", status: 404 };
+  }
+
+  if (site.integrationKey) {
+    if (!apiKey || apiKey !== site.integrationKey) {
+      return { error: "Invalid integration key", status: 401 };
+    }
+    return { site };
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return { error: "Site integration not configured", status: 401 };
+  }
+
+  return { site };
+}
+
 export async function POST(req) {
   try {
-    // read request
     const apiKey = req.headers.get("x-integration-key");
     const body = await req.json();
-
-    // validate manifest shape
     const parsed = ManifestSchema.parse(body);
 
-    // validate site exists
-    const site = await prisma.site.findUnique({ where: { id: parsed.siteId } });
-    if (!site) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    const auth = await resolveAuth(apiKey, parsed.siteId);
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // if site.integrationKey set, validate header
-    if (site.integrationKey) {
-      if (!apiKey || apiKey !== site.integrationKey) {
-        return NextResponse.json(
-          { error: "Invalid integration key" },
-          { status: 401 },
-        );
-      }
-    } else {
-      // in production require the key; allow in dev if you prefer
-      if (process.env.NODE_ENV === "production") {
-        return NextResponse.json(
-          { error: "Site integration not configured" },
-          { status: 401 },
-        );
-      }
-    }
-
-    // compute a simple manifest hash for reference
     const crypto = await import("crypto");
     const manifestHash = crypto
       .createHash("sha256")
       .update(JSON.stringify(parsed.routes))
       .digest("hex");
-    console.log("Prisma keys:", Object.keys(prisma || {}));
-    if (!prisma || typeof prisma.integrationManifest === "undefined") {
-      console.error(
-        "PRISMA MISSING integrationManifest!",
-        prisma && Object.keys(prisma),
-      );
+
+    // Determine frontendProjectId — must exist for SyncedRoute
+    let frontendProjectId = auth.frontendProject?.id || null;
+
+    // If auth is via site integrationKey, get or create a default FrontendProject
+    if (!frontendProjectId && auth.site) {
+      const defaultProject = await prisma.frontendProject.findFirst({
+        where: { siteId: parsed.siteId, isActive: true },
+        orderBy: { createdAt: "asc" },
+      });
+      if (defaultProject) {
+        frontendProjectId = defaultProject.id;
+      } else {
+        // Create an auto-detected project entry
+        const newProject = await prisma.frontendProject.create({
+          data: {
+            siteId: parsed.siteId,
+            name: "Auto-detected (legacy)",
+            framework: "next",
+            apiKey: `auto_${crypto.randomBytes(16).toString("hex")}`,
+            source: parsed.source || "legacy-integration-key",
+            baseUrl: null,
+            syncStatus: "connected",
+          },
+        });
+        frontendProjectId = newProject.id;
+      }
+    }
+
+    if (!frontendProjectId) {
       return NextResponse.json(
-        { error: "Server misconfiguration: Prisma client missing model" },
-        { status: 500 },
+        { error: "No frontend project found. Create one first." },
+        { status: 400 },
       );
     }
-    // store the raw manifest for audit
+
     await prisma.integrationManifest.create({
       data: {
         siteId: parsed.siteId,
@@ -93,45 +133,100 @@ export async function POST(req) {
       },
     });
 
-    // upsert pages for each route (siteId + slug is unique)
     const created = [];
     const updated = [];
+    const syncedRoutes = [];
 
     for (const r of parsed.routes) {
       const slug = r.slug.startsWith("/") ? r.slug : `/${r.slug}`;
 
-      // try find existing by composite unique siteId+slug
-      const existing = await prisma.page
-        .findUnique({
-          where: { siteId_slug: { siteId: parsed.siteId, slug } },
-        })
-        .catch(() => null);
+      const existing = await prisma.page.findUnique({
+        where: { siteId_slug: { siteId: parsed.siteId, slug } },
+      });
+
+      let pageId = existing?.id ?? null;
 
       if (!existing) {
         const newPage = await prisma.page.create({
           data: {
             siteId: parsed.siteId,
-            title: r.title ?? null,
+            title: r.title ?? slug,
             slug,
             status: "DRAFT",
+            isDiscovered: true,
+            isManagedBySync: true,
+            sourceRoute: slug,
           },
         });
+        pageId = newPage.id;
         created.push({ slug, pageId: newPage.id });
       } else {
-        // update title if provided, keep status (don't auto-publish)
         await prisma.page.update({
           where: { id: existing.id },
-          data: { title: r.title ?? existing.title },
+          data: {
+            title: r.title ?? existing.title,
+            isDiscovered: true,
+            sourceRoute: existing.sourceRoute || slug,
+          },
         });
         updated.push({ slug, pageId: existing.id });
       }
+
+      // Upsert syncedRoute with frontendProjectId instead of siteId
+      const syncedRoute = await prisma.syncedRoute.upsert({
+        where: {
+          frontendProjectId_route: {
+            frontendProjectId,
+            route: slug,
+          },
+        },
+        create: {
+          frontendProjectId,
+          route: slug,
+          source: r.path ?? parsed.source ?? null,
+          pageId,
+        },
+        update: {
+          source: r.path ?? parsed.source ?? null,
+          pageId,
+          discoveredAt: new Date(),
+        },
+      });
+
+      syncedRoutes.push({
+        route: syncedRoute.route,
+        pageId: syncedRoute.pageId,
+        source: syncedRoute.source,
+      });
+    }
+
+    if (auth.frontendProject) {
+      await prisma.frontendProject.update({
+        where: { id: auth.frontendProject.id },
+        data: {
+          lastSyncAt: new Date(),
+          lastManifestHash: manifestHash,
+          syncStatus: "connected",
+        },
+      });
+    } else if (frontendProjectId) {
+      await prisma.frontendProject.update({
+        where: { id: frontendProjectId },
+        data: {
+          lastSyncAt: new Date(),
+          lastManifestHash: manifestHash,
+          syncStatus: "connected",
+        },
+      });
     }
 
     return NextResponse.json({
       success: true,
       created,
       updated,
+      syncedRoutes,
       manifestHash,
+      frontendProjectId,
     });
   } catch (err) {
     console.error("Manifest POST error:", err);
@@ -147,16 +242,3 @@ export async function POST(req) {
     );
   }
 }
-
-// curl -i -X POST "http://localhost:3000/api/integrations/next-sync/manifest" \
-//   -H "Content-Type: application/json" \
-//   -H "x-integration-key: c6637fed3e24621db2ac776cf982a2e8fb8ed4fe70ab61e0048bc9238e672716" \
-//   -d '{
-//     "siteId": "cmqho1vz20000ucuhlpd88k4x",
-//     "source": "local-next",
-//     "generatedAt": "2026-06-18T00:00:00.000Z",
-//     "routes": [
-//       { "slug": "/", "path": "app/page.tsx", "type": "static", "title": "Home" },
-//       { "slug": "/about", "path": "app/about/page.tsx", "type": "static", "title": "About" }
-//     ]
-//   }'

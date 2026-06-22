@@ -87,10 +87,9 @@ export default function ServiceEditor({ siteId, service }) {
       });
       const json = await res.json();
       if (res.ok) {
-        const filtered = (json.faqs || []).filter(
-          (f) => f.page === `/services/${service.id}`
-        );
-        setFaqs(filtered.sort((a, b) => a.sortOrder - b.sortOrder));
+        // Service-scoped FAQ linking will use join tables (see schema roadmap).
+        // Legacy slug assignment via Faq.page was replaced by Faq.pageId.
+        setFaqs([]);
       }
     } catch (err) {
       console.error("Fetch FAQs error:", err);
@@ -162,7 +161,7 @@ export default function ServiceEditor({ siteId, service }) {
     const payload = {
       question: faqQuestion,
       answer: faqAnswer,
-      page: `/services/${service.id}`,
+      pageId: null,
       sortOrder: Number(faqSortOrder),
       showHide: faqShowHide,
       schemaMarkup: faqSchemaMarkup,

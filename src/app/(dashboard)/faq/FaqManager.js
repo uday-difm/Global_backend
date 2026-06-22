@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { Plus, Edit2, Trash2, X, ChevronDown, ChevronUp } from "lucide-react";
 
-export default function FaqManager({ siteId, initialFaqs }) {
+export default function FaqManager({ siteId, initialFaqs, pages = [] }) {
   const [faqs, setFaqs] = useState(initialFaqs);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null); // Null for create, object for edit
 
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [page, setPage] = useState("");
+  const [pageId, setPageId] = useState("");
   const [sortOrder, setSortOrder] = useState(0);
   const [showHide, setShowHide] = useState(true);
   const [schemaMarkup, setSchemaMarkup] = useState(false);
@@ -23,7 +23,7 @@ export default function FaqManager({ siteId, initialFaqs }) {
     setSelectedItem(null);
     setQuestion("");
     setAnswer("");
-    setPage("");
+    setPageId("");
     setSortOrder(0);
     setShowHide(true);
     setSchemaMarkup(false);
@@ -35,7 +35,7 @@ export default function FaqManager({ siteId, initialFaqs }) {
     setSelectedItem(item);
     setQuestion(item.question);
     setAnswer(item.answer);
-    setPage(item.page || "");
+    setPageId(item.pageId || item.page?.id || "");
     setSortOrder(item.sortOrder);
     setShowHide(item.showHide);
     setSchemaMarkup(item.schemaMarkup);
@@ -60,7 +60,7 @@ export default function FaqManager({ siteId, initialFaqs }) {
     const payload = {
       question,
       answer,
-      page: page || null,
+      pageId: pageId || null,
       sortOrder: Number(sortOrder),
       showHide,
       schemaMarkup
@@ -193,7 +193,7 @@ export default function FaqManager({ siteId, initialFaqs }) {
                     <td className="px-6 py-4 text-gray-500 whitespace-nowrap">
                       {item.page ? (
                         <span className="font-mono bg-slate-100 text-slate-800 text-xs px-2 py-0.5 rounded border">
-                          {item.page}
+                          {item.page.slug}
                         </span>
                       ) : (
                         <span className="text-xs text-gray-400 italic">Global / All Pages</span>
@@ -293,15 +293,20 @@ export default function FaqManager({ siteId, initialFaqs }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Assign to Page (Slug)
+                    Assign to Page
                   </label>
-                  <input
-                    type="text"
-                    value={page}
-                    onChange={(e) => setPage(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm font-mono"
-                    placeholder="e.g. /pricing (empty for all)"
-                  />
+                  <select
+                    value={pageId}
+                    onChange={(e) => setPageId(e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm bg-white"
+                  >
+                    <option value="">Global / All Pages</option>
+                    {pages.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.title} ({p.slug})
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

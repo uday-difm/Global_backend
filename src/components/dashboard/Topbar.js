@@ -16,16 +16,20 @@ import {
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 
 export default function Topbar({ siteId }) {
   const [showSearch, setShowSearch] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const menuRef = useRef(null);
   const notificationsRef = useRef(null);
+  const searchRef = useRef(null);
   const { data: session } = useSession();
-
+  const router = useRouter();
   const [alerts, setAlerts] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -67,6 +71,12 @@ export default function Topbar({ siteId }) {
       }
       if (notificationsRef.current && !notificationsRef.current.contains(e.target)) {
         setNotificationsOpen(false);
+      }
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(e.target)
+      ) {
+        setSearchOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -127,6 +137,46 @@ export default function Topbar({ siteId }) {
     }
   };
 
+  const searchItems = [
+    { name: "Dashboard", href: "/dashboard" },
+    { name: "Pages", href: "/pages" },
+    { name: "Blogs", href: "/blogs" },
+    { name: "Services", href: "/services" },
+    { name: "Media Library", href: "/media" },
+    { name: "Leads CRM", href: "/leads" },
+    { name: "Visitor Analytics", href: "/visitors" },
+    { name: "Users", href: "/users" },
+    { name: "Settings", href: "/settings" },
+    { name: "Testimonials", href: "/testimonials" },
+    { name: "FAQs", href: "/faq" },
+    { name: "Team Members", href: "/team" },
+    { name: "Contact Details", href: "/contact" },
+    { name: "Legal Pages", href: "/legal" },
+    { name: "Navigation Menus", href: "/navigation" },
+    { name: "Header Builder", href: "/header" },
+    { name: "Footer Builder", href: "/footer" },
+    { name: "CTA & Popups", href: "/cta" },
+    { name: "Notifications", href: "/notifications" },
+    { name: "Security Center", href: "/security" },
+  ];
+
+  const filteredItems = searchQuery
+    ? searchItems.filter((item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    : searchItems;
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        document.querySelector("#cms-search")?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
   return (
     <>
       {/* Top Bar */}
@@ -148,13 +198,51 @@ export default function Topbar({ siteId }) {
           {/* Right */}
           <div className="flex items-center gap-2 md:gap-4">
             {/* Desktop Search */}
-            <div className="relative hidden md:block">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <div
+              ref={searchRef}
+              className="relative hidden md:block"
+            >
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+
               <input
                 type="text"
-                placeholder="Search..."
+                id="cms-search"
+                value={searchQuery}
+                onFocus={() => setSearchOpen(true)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchOpen(true);
+                }}
+                placeholder="Search modules..."
                 className="w-64 rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm outline-none transition focus:border-black"
               />
+
+              {searchOpen && searchQuery && (
+                <div className="absolute left-0 right-0 top-full mt-2 overflow-hidden rounded-xl border bg-white shadow-xl z-50">
+                  {filteredItems.length === 0 ? (
+                    <div className="p-3 text-sm text-gray-500">
+                      No results found
+                    </div>
+                  ) : (
+                    filteredItems.slice(0, 8).map((item) => (
+                      <button
+                        key={item.href}
+                        onClick={() => {
+                          router.push(item.href);
+                          setSearchQuery("");
+                          setSearchOpen(false);
+                        }}
+                        className="flex w-full items-center px-4 py-3 text-left text-sm hover:bg-gray-50"
+                      >
+                        {item.name}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Mobile Search Toggle */}
@@ -216,9 +304,8 @@ export default function Topbar({ siteId }) {
                     {alerts.map((alert) => (
                       <div
                         key={alert.id}
-                        className={`p-3 transition-colors ${
-                          alert.isRead ? "bg-white" : "bg-blue-50/30 hover:bg-blue-50/50"
-                        }`}
+                        className={`p-3 transition-colors ${alert.isRead ? "bg-white" : "bg-blue-50/30 hover:bg-blue-50/50"
+                          }`}
                       >
                         <div className="flex gap-2.5 items-start">
                           <div className="mt-0.5 shrink-0">{getAlertIcon(alert.type)}</div>
@@ -277,9 +364,8 @@ export default function Topbar({ siteId }) {
 
                 <ChevronDown
                   size={14}
-                  className={`hidden lg:block text-gray-400 transition-transform ${
-                    menuOpen ? "rotate-180" : ""
-                  }`}
+                  className={`hidden lg:block text-gray-400 transition-transform ${menuOpen ? "rotate-180" : ""
+                    }`}
                 />
               </button>
 
@@ -316,14 +402,49 @@ export default function Topbar({ siteId }) {
 
         {/* Mobile Search Bar */}
         {showSearch && (
-          <div className="border-t bg-white p-3 md:hidden">
+          <div ref={searchRef} className="border-t bg-white p-3 md:hidden">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search
+                size={16}
+                className="absolute left-3 top-3 text-gray-400"
+              />
+
               <input
                 type="text"
-                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setSearchOpen(true);
+                }}
+                onFocus={() => setSearchOpen(true)}
+                placeholder="Search modules..."
                 className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-black"
               />
+
+              {searchOpen && searchQuery && (
+                <div className="mt-2 overflow-hidden rounded-xl border bg-white shadow-lg">
+                  {filteredItems.length === 0 ? (
+                    <div className="p-3 text-sm text-gray-500">
+                      No results found
+                    </div>
+                  ) : (
+                    filteredItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => {
+                          setSearchQuery("");
+                          setSearchOpen(false);
+                          setShowSearch(false);
+                        }}
+                        className="flex w-full items-center px-4 py-3 text-sm hover:bg-gray-50 border-b last:border-b-0"
+                      >
+                        {item.name}
+                      </Link>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

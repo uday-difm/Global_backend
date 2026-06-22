@@ -16,6 +16,15 @@ export default async function FaqPage() {
   const faqs = await prisma.faq.findMany({
     where: { siteId: site.id },
     orderBy: { sortOrder: "asc" },
+    include: {
+      page: { select: { id: true, title: true, slug: true } },
+    },
+  });
+
+  const pages = await prisma.page.findMany({
+    where: { siteId: site.id, deletedAt: null },
+    select: { id: true, title: true, slug: true },
+    orderBy: { title: "asc" },
   });
 
   return (
@@ -30,6 +39,7 @@ export default async function FaqPage() {
       <FaqManager
         siteId={site.id}
         initialFaqs={JSON.parse(JSON.stringify(faqs))}
+        pages={JSON.parse(JSON.stringify(pages))}
       />
     </div>
   );

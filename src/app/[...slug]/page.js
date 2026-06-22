@@ -327,7 +327,12 @@ async function getPageData(slugSegments) {
         });
       } else if (type === "FAQ") {
         content.items = await prisma.faq.findMany({
-          where: { siteId: site.id, showHide: true, deletedAt: null },
+          where: {
+            siteId: site.id,
+            showHide: true,
+            deletedAt: null,
+            OR: [{ pageId: null }, { pageId: page.id }],
+          },
           orderBy: { sortOrder: "asc" },
         });
       } else if (type === "BLOGS") {

@@ -10,7 +10,7 @@ export async function GET(req) {
       return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    const faqs = await faqService.getFaqs(auth.siteId);
+    const faqs = await faqService.getFaqs(auth.siteId, { includePage: true });
     return NextResponse.json({ success: true, faqs });
   } catch (err) {
     return handleApiError(err);

@@ -460,7 +460,12 @@ export default async function PreviewPage({ searchParams }) {
         });
       } else if (type === "FAQ") {
         content.items = await prisma.faq.findMany({
-          where: { siteId, showHide: true, deletedAt: null },
+          where: {
+            siteId,
+            showHide: true,
+            deletedAt: null,
+            OR: [{ pageId: null }, { pageId: page.id }],
+          },
           orderBy: { sortOrder: "asc" },
         });
       } else if (type === "BLOGS") {

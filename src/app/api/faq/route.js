@@ -9,7 +9,11 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const page = searchParams.get("page") || undefined;
 
-    const faqs = await faqService.getFaqs(siteId, { page, showHide: true });
+    const faqs = await faqService.getFaqs(siteId, {
+      pageSlug: page,
+      showHide: true,
+      includePage: true,
+    });
     return NextResponse.json({ success: true, faqs });
   } catch (err) {
     return handleApiError(err);

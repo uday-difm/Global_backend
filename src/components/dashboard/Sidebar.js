@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useState } from "react";
+
 import {
   LayoutDashboard,
   ImageIcon,
@@ -30,10 +32,10 @@ import {
   Bell,
   Fingerprint,
   Terminal,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
-
-// Role hierarchy: higher number = more access
 const ROLE_LEVEL = {
   SUPERADMIN: 5,
   ADMIN: 4,
@@ -42,54 +44,160 @@ const ROLE_LEVEL = {
   VIEWER: 1,
 };
 
-/**
- * minRole: the minimum globalRole level required to see this link.
- *   "VIEWER" (1)  = everyone
- *   "AUTHOR" (2)  = AUTHOR, EDITOR, ADMIN, SUPERADMIN
- *   "EDITOR" (3)  = EDITOR, ADMIN, SUPERADMIN
- *   "ADMIN"  (4)  = ADMIN, SUPERADMIN only
- *   "SUPERADMIN" (5) = SUPERADMIN only
- */
 const sections = [
   {
     title: "Overview",
     links: [
-      { href: "/dashboard",  label: "Dashboard",         icon: LayoutDashboard, minRole: "VIEWER"     },
-      { href: "/leads",      label: "Leads CRM",         icon: Inbox,           minRole: "EDITOR"     },
-      { href: "/visitors",   label: "Visitor Analytics", icon: BarChart2,       minRole: "VIEWER"     },
-      { href: "/media",      label: "Media Library",     icon: ImageIcon,       minRole: "AUTHOR"     },
+      {
+        href: "/dashboard",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        minRole: "VIEWER",
+      },
+      {
+        href: "/leads",
+        label: "Leads CRM",
+        icon: Inbox,
+        minRole: "EDITOR",
+      },
+      {
+        href: "/visitors",
+        label: "Analytics",
+        icon: BarChart2,
+        minRole: "VIEWER",
+      },
     ],
   },
+
   {
     title: "Content",
     links: [
-      { href: "/pages",        label: "Pages",           icon: FileText,      minRole: "EDITOR" },
-      { href: "/blogs",        label: "Blogs",           icon: Newspaper,     minRole: "AUTHOR" },
-      { href: "/services",     label: "Services",        icon: Briefcase,     minRole: "EDITOR" },
-      { href: "/testimonials", label: "Testimonials",    icon: Quote,         minRole: "EDITOR" },
-      { href: "/faq",          label: "FAQs",            icon: HelpCircle,    minRole: "EDITOR" },
-      { href: "/team",         label: "Team Members",    icon: UsersRound,    minRole: "EDITOR" },
-      { href: "/contact",      label: "Contact Details", icon: Phone,         minRole: "EDITOR" },
-      { href: "/legal",        label: "Legal Pages",     icon: Scale,         minRole: "EDITOR" },
-      { href: "/navigation",   label: "Navigation Menus",icon: Menu,          minRole: "EDITOR" },
-      { href: "/header",       label: "Header Builder",  icon: PanelTop,      minRole: "ADMIN"  },
-      { href: "/footer",       label: "Footer Builder",  icon: PanelBottom,   minRole: "ADMIN"  },
-      { href: "/cta",          label: "CTA & Popups",    icon: Megaphone,     minRole: "ADMIN"  },
+      {
+        href: "/pages",
+        label: "Pages",
+        icon: FileText,
+        minRole: "EDITOR",
+      },
+      {
+        href: "/blogs",
+        label: "Blogs",
+        icon: Newspaper,
+        minRole: "AUTHOR",
+      },
+      {
+        href: "/services",
+        label: "Services",
+        icon: Briefcase,
+        minRole: "EDITOR",
+      },
+      {
+        href: "/media",
+        label: "Media",
+        icon: ImageIcon,
+        minRole: "AUTHOR",
+      },
     ],
   },
+
   {
-    title: "System Config",
+    title: "Website",
     links: [
-      { href: "/redirects", label: "Redirect Rules",   icon: ArrowLeftRight, minRole: "ADMIN"      },
-      { href: "/backup",    label: "Backup & Restore",  icon: Database,       minRole: "SUPERADMIN" },
-      { href: "/security",  label: "Security Center",   icon: ShieldCheck,    minRole: "ADMIN"      },
-      { href: "/compliance", label: "Compliance & GDPR", icon: Fingerprint,   minRole: "ADMIN"      },
-      { href: "/dev",        label: "Developer Tools",   icon: Terminal,      minRole: "ADMIN"      },
-      { href: "/performance", label: "Performance & Logs", icon: Activity, minRole: "ADMIN"      },
-      { href: "/notifications", label: "Notifications", icon: Bell,           minRole: "ADMIN"      },
-      { href: "/email",     label: "Email Settings",    icon: Mail,           minRole: "ADMIN"      },
-      { href: "/settings",  label: "Settings",          icon: Settings,       minRole: "ADMIN"      },
-      { href: "/users",     label: "Users",             icon: Users,          minRole: "ADMIN"      },
+      {
+        href: "/navigation",
+        label: "Navigation",
+        icon: Menu,
+        minRole: "EDITOR",
+      },
+      {
+        href: "/header",
+        label: "Header Builder",
+        icon: PanelTop,
+        minRole: "ADMIN",
+      },
+      {
+        href: "/footer",
+        label: "Footer Builder",
+        icon: PanelBottom,
+        minRole: "ADMIN",
+      },
+      {
+        href: "/cta",
+        label: "CTA & Popups",
+        icon: Megaphone,
+        minRole: "ADMIN",
+      },
+      {
+        href: "/contact",
+        label: "Contact",
+        icon: Phone,
+        minRole: "EDITOR",
+      },
+      {
+        href: "/legal",
+        label: "Legal Pages",
+        icon: Scale,
+        minRole: "EDITOR",
+      },
+    ],
+  },
+
+  {
+    title: "People",
+    links: [
+      {
+        href: "/team",
+        label: "Team",
+        icon: UsersRound,
+        minRole: "EDITOR",
+      },
+      {
+        href: "/testimonials",
+        label: "Testimonials",
+        icon: Quote,
+        minRole: "EDITOR",
+      },
+      {
+        href: "/faq",
+        label: "FAQs",
+        icon: HelpCircle,
+        minRole: "EDITOR",
+      },
+    ],
+  },
+
+  {
+    title: "System",
+    links: [
+      {
+        href: "/users",
+        label: "Users",
+        icon: Users,
+        minRole: "ADMIN",
+      },
+      {
+        href: "/email",
+        label: "Email",
+        icon: Mail,
+        minRole: "ADMIN",
+      },
+      {
+        href: "/security",
+        label: "Security",
+        icon: ShieldCheck,
+        minRole: "ADMIN",
+      },
+      {
+        href: "/redirects",
+        label: "Redirects",
+        icon: ArrowLeftRight,
+        minRole: "ADMIN",
+      },
+      {
+        href: "/notifications",
+        label: "Notifications",
+        icon: Bell,
+        minRole: "ADMIN",
+      },
     ],
   },
 ];
@@ -98,71 +206,139 @@ function canSee(userRole, minRole) {
   return (ROLE_LEVEL[userRole] || 0) >= (ROLE_LEVEL[minRole] || 0);
 }
 
+function SidebarLink({ href, label, icon: Icon, pathname }) {
+  const isActive =
+    pathname === href ||
+    (href !== "/dashboard" && pathname.startsWith(href));
+
+  return (
+    <Link
+      href={href}
+      className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all ${isActive
+        ? "bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm"
+        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+        }`}
+    >
+      <Icon
+        size={14}
+        className={isActive ? "text-indigo-600" : "text-gray-400"}
+      />
+      <span className="truncate">{label}</span>
+    </Link>
+  );
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+
   const userRole = session?.user?.globalRole || "VIEWER";
 
   return (
-    <aside className="hidden md:flex md:w-60 md:flex-col md:border-r md:bg-white">
-      {/* Sidebar Header */}
-      <div className="border-b px-5 py-4">
-        <h1 className="text-lg font-bold text-gray-950 tracking-tight">Global CMS</h1>
-        <p className="text-xs text-gray-500 font-medium">Administration Console</p>
+    <aside className="hidden md:flex md:w-56 md:flex-col border-r bg-white">
+      {/* Header */}
+      <div className="border-b px-4 py-3">
+        <h1 className="text-base font-bold tracking-tight text-gray-900">
+          Global CMS
+        </h1>
       </div>
 
-      {/* Navigation Groups */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-3">
         {sections.map((section) => {
           const visibleLinks = section.links.filter((link) =>
             canSee(userRole, link.minRole)
           );
-          if (visibleLinks.length === 0) return null;
+
+          if (!visibleLinks.length) return null;
 
           return (
-            <div key={section.title} className="space-y-1">
-              <h5 className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+            <div key={section.title}>
+              <h5 className="px-2.5 mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-gray-400">
                 {section.title}
               </h5>
-              <ul className="space-y-0.5">
-                {visibleLinks.map((link) => {
-                  const Icon = link.icon;
-                  const isActive =
-                    pathname === link.href ||
-                    (link.href !== "/dashboard" && pathname.startsWith(link.href));
-                  return (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                          isActive
-                            ? "bg-gray-100 text-gray-950"
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-950"
-                        }`}
-                      >
-                        <Icon
-                          size={15}
-                          className={`shrink-0 ${isActive ? "text-gray-950" : "text-gray-400"}`}
-                        />
-                        <span className="truncate">{link.label}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
+
+              <div className="space-y-0.5">
+                {visibleLinks.map((link) => (
+                  <SidebarLink
+                    key={link.href}
+                    {...link}
+                    pathname={pathname}
+                  />
+                ))}
+              </div>
             </div>
           );
         })}
+
+        {/* Advanced */}
+        {canSee(userRole, "ADMIN") && (
+          <div>
+            <button
+              onClick={() => setAdvancedOpen(!advancedOpen)}
+              className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+            >
+              <span>Advanced</span>
+
+              {advancedOpen ? (
+                <ChevronDown size={14} />
+              ) : (
+                <ChevronRight size={14} />
+              )}
+            </button>
+
+            {advancedOpen && (
+              <div className="mt-1 space-y-0.5">
+                <SidebarLink
+                  href="/backup"
+                  label="Backup & Restore"
+                  icon={Database}
+                  pathname={pathname}
+                />
+
+                <SidebarLink
+                  href="/compliance"
+                  label="Compliance"
+                  icon={Fingerprint}
+                  pathname={pathname}
+                />
+
+                <SidebarLink
+                  href="/performance"
+                  label="Performance"
+                  icon={Activity}
+                  pathname={pathname}
+                />
+
+                <SidebarLink
+                  href="/dev"
+                  label="Developer Tools"
+                  icon={Terminal}
+                  pathname={pathname}
+                />
+
+                <SidebarLink
+                  href="/settings"
+                  label="Settings"
+                  icon={Settings}
+                  pathname={pathname}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </nav>
 
       {/* Footer */}
-      <div className="border-t px-5 py-3.5 bg-gray-50/50">
+      <div className="border-t px-4 py-2.5 bg-gray-50">
         <div className="flex items-center justify-between">
-          <p className="text-[10px] text-gray-400 font-mono tracking-tight">
-            V1.0.2 • Multi-Site
-          </p>
-          {/* Role badge */}
-          <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-100 text-indigo-600 uppercase tracking-wide">
+          <span className="text-[9px] text-gray-400 font-medium">
+            CMS v1.0
+          </span>
+
+          <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-indigo-700">
             {userRole}
           </span>
         </div>

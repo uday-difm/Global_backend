@@ -67,7 +67,12 @@ export async function GET(req) {
           });
         } else if (type === "FAQ") {
           content.items = await prisma.faq.findMany({
-            where: { siteId, showHide: true, deletedAt: null },
+            where: {
+              siteId,
+              showHide: true,
+              deletedAt: null,
+              OR: [{ pageId: null }, { pageId: page.id }],
+            },
             orderBy: { sortOrder: "asc" },
           });
         }
