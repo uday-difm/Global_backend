@@ -1,25 +1,36 @@
 import prisma from "@/lib/prisma";
 import HeaderEditor from "./HeaderEditor";
+import { requireAuth } from "@/lib/requireAuth";
+import { getSiteForUser } from "@/lib/getSiteForUser";
+
+export const metadata = {
+  title: "Header Builder | CMS Admin",
+  description: "Customize layout, logo, sticky behaviour, and mobile navigation headers",
+};
 
 export default async function HeaderPage() {
-  const site = await prisma.site.findFirst({ where: { isActive: true } });
+  const user = await requireAuth();
+  if (!user) return null;
+
+  const site = await getSiteForUser(user);
 
   if (!site) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold">Header Builder</h1>
-        <p className="mt-4 text-sm text-red-600">No active site found. Please configure a site in the database.</p>
+        <p className="mt-4 text-sm text-red-600">No active site found. Please configure a site first.</p>
       </div>
     );
   }
 
-  // Retrieve current header configuration
+  // Retrieve current header configuration and navigation menus
   const settings = await prisma.globalSettings.findUnique({
     where: { siteId: site.id },
-    select: { header: true }
+    select: { header: true, navigation: true }
   });
 
   const headerConfig = settings?.header || null;
+  const menuTypes = Object.keys(settings?.navigation || { main: [], footer: [] });
 
   return (
     <div className="w-full">
@@ -33,6 +44,7 @@ export default async function HeaderPage() {
       <HeaderEditor
         siteId={site.id}
         initialConfig={headerConfig}
+        menuTypes={menuTypes}
       />
     </div>
   );

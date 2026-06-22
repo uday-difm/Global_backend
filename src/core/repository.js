@@ -30,13 +30,44 @@ export class BaseRepository {
     ].includes(modelName);
   }
 
+  applySoftDelete(where) {
+    const hasSoftDelete = [
+      "site",
+      "user",
+      "siteUser",
+      "media",
+      "mediaFolder",
+      "page",
+      "section",
+      "globalSettings",
+      "webhookSubscription",
+      "category",
+      "tag",
+      "post",
+      "service",
+      "testimonial",
+      "faq",
+      "teamMember",
+      "legalPage",
+      "redirect",
+      "contactFormSubmission",
+      "lead",
+      "apiKey",
+    ].includes(this.modelName);
+
+    if (hasSoftDelete) {
+      return { deletedAt: null, ...where };
+    }
+    return where;
+  }
+
   async findMany(siteId, options = {}) {
     const where = (this.isSiteScoped && siteId !== null && siteId !== undefined)
       ? { siteId, ...options.where }
       : { ...options.where };
     return this.db.findMany({
       ...options,
-      where,
+      where: this.applySoftDelete(where),
     });
   }
 
@@ -45,14 +76,14 @@ export class BaseRepository {
       ? { id, siteId, ...options.where }
       : { id, ...options.where };
     if (!this.isSiteScoped) {
-      return this.db.findUnique({
+      return this.db.findFirst({
         ...options,
-        where: { id },
+        where: this.applySoftDelete({ id }),
       });
     }
     return this.db.findFirst({
       ...options,
-      where,
+      where: this.applySoftDelete(where),
     });
   }
 
@@ -62,10 +93,9 @@ export class BaseRepository {
       : { ...options.where };
     return this.db.findFirst({
       ...options,
-      where,
+      where: this.applySoftDelete(where),
     });
   }
-
 
   async create(siteId, data, options = {}) {
     const createData = (this.isSiteScoped && siteId !== null && siteId !== undefined)
@@ -98,6 +128,52 @@ export class BaseRepository {
         throw new Error(`Record not found or access denied in ${this.modelName}: ${id}`);
       }
     }
+
+    const hasSoftDelete = [
+      "site",
+      "user",
+      "siteUser",
+      "media",
+      "mediaFolder",
+      "page",
+      "section",
+      "globalSettings",
+      "webhookSubscription",
+      "category",
+      "tag",
+      "post",
+      "service",
+      "testimonial",
+      "faq",
+      "teamMember",
+      "legalPage",
+      "redirect",
+      "contactFormSubmission",
+      "lead",
+      "apiKey",
+    ].includes(this.modelName);
+
+    if (hasSoftDelete) {
+      return this.db.update({
+        ...options,
+        where: { id },
+        data: { deletedAt: new Date() },
+      });
+    }
+
+    return this.db.delete({
+      ...options,
+      where: { id },
+    });
+  }
+
+  async hardDelete(siteId, id, options = {}) {
+    if (this.isSiteScoped) {
+      const record = await this.findUnique(siteId, id);
+      if (!record) {
+        throw new Error(`Record not found or access denied in ${this.modelName}: ${id}`);
+      }
+    }
     return this.db.delete({
       ...options,
       where: { id },
@@ -108,7 +184,8 @@ export class BaseRepository {
     const where = (this.isSiteScoped && siteId !== null && siteId !== undefined)
       ? { siteId, ...whereClause }
       : whereClause;
-    return this.db.count({ where });
+    return this.db.count({
+      where: this.applySoftDelete(where),
+    });
   }
 }
-

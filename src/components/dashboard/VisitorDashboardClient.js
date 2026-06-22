@@ -351,6 +351,7 @@ export default function VisitorDashboardClient({
   const [loading, setLoading] = useState(false);
   const [liveLoading, setLiveLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [mounted, setMounted] = useState(false);
   const [connected, setConnected] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [dateRange, setDateRange] = useState("30");
@@ -414,6 +415,7 @@ export default function VisitorDashboardClient({
 
   // Initial fetch of live data + log polling
   useEffect(() => {
+    setMounted(true);
     refreshLive();
     refreshLogs();
     // Poll live every 30 seconds
@@ -556,7 +558,7 @@ export default function VisitorDashboardClient({
               Page Views — Last {dateRange} Days
             </h2>
             <span className="text-xs text-gray-400">
-              Last updated: {lastRefresh.toLocaleTimeString()}
+              Last updated: {mounted ? lastRefresh.toLocaleTimeString() : ""}
             </span>
           </div>
           <div className="overflow-x-auto">

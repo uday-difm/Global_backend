@@ -3,13 +3,15 @@ import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
 import nodemailer from "nodemailer";
 import { z } from "zod";
+import { EventBus } from "@/core/events";
 
 const FormSubmitSchema = z.object({
   siteId: z.string().min(1),
   name: z.string().min(1, "Name is required"),
-  email: z.email("Valid email is required"),
+  email: z.string().email("Valid email is required"),
   phone: z.string().optional(),
   message: z.string().min(1, "Message is required"),
+  recaptchaToken: z.string().optional(),
   // Honeypot field — must be empty
   _hp: z.string().optional(),
 });
@@ -19,6 +21,20 @@ export async function POST(req) {
     const body = await req.json();
     const parsed = FormSubmitSchema.safeParse(body);
     if (!parsed.success) {
+      const siteId = (body && typeof body.siteId === "string") ? body.siteId : "unknown";
+      if (siteId !== "unknown") {
+        try {
+          EventBus.emit("form.failed", {
+            siteId,
+            data: {
+              message: "Validation failed: " + parsed.error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", "),
+              payload: body
+            }
+          });
+        } catch (e) {
+          console.error("Failed to emit form.failed event:", e);
+        }
+      }
       return NextResponse.json(
         {
           success: false,
@@ -29,7 +45,7 @@ export async function POST(req) {
       );
     }
 
-    const { siteId, name, email, phone, message, _hp } = parsed.data;
+    const { siteId, name, email, phone, message, recaptchaToken, _hp } = parsed.data;
 
     // ── Honeypot check ─────────────────────────────────────────────────────────
     // Bots fill in all fields; real users leave honeypot blank
@@ -50,6 +66,44 @@ export async function POST(req) {
       );
     }
 
+    // Check if IP is blocked & Rate limiting
+    try {
+      const ip = req.headers.get("x-forwarded-for") || "unknown";
+      const { securityService } = await import("@/services/security.service");
+      const isBlocked = await securityService.isIpBlocked(siteId, ip);
+      if (isBlocked) {
+        try {
+          EventBus.emit("form.failed", {
+            siteId,
+            data: {
+              message: `Blocked IP (${ip}) attempted form submission`,
+              payload: { name, email, ip }
+            }
+          });
+        } catch (e) {}
+        return NextResponse.json({ success: false, error: "Access Denied: Your IP is blocked" }, { status: 403 });
+      }
+
+      const controls = await securityService.getSecurityControls(siteId);
+      const limitRps = controls.rateLimitRps || 60;
+      const { checkRateLimit } = await import("@/lib/rateLimiter");
+      const allowed = checkRateLimit(ip, limitRps);
+      if (!allowed) {
+        try {
+          EventBus.emit("form.failed", {
+            siteId,
+            data: {
+              message: `IP rate limit exceeded (${ip})`,
+              payload: { name, email, ip }
+            }
+          });
+        } catch (e) {}
+        return NextResponse.json({ success: false, error: "Too Many Requests: Rate limit exceeded" }, { status: 429 });
+      }
+    } catch (e) {
+      console.error("IP check / Rate limit failed in form submission:", e);
+    }
+
     // ── Load settings ──────────────────────────────────────────────────────────
     const settings = await prisma.globalSettings.findUnique({
       where: { siteId },
@@ -57,7 +111,69 @@ export async function POST(req) {
     });
 
     const secControls = settings?.securityControls || {};
-    const emailSettings = settings?.emailSettings || {};
+
+    // ── Google reCAPTCHA check ──────────────────────────────────────────────────
+    if (secControls.recaptchaSecretKey) {
+      if (!recaptchaToken) {
+        try {
+          EventBus.emit("form.failed", {
+            siteId,
+            data: {
+              message: "reCAPTCHA verification token missing",
+              payload: { name, email }
+            }
+          });
+        } catch (e) {}
+        return NextResponse.json(
+          { success: false, error: "reCAPTCHA verification is required" },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const verifyUrl = "https://www.google.com/recaptcha/api/siteverify";
+        const queryParams = new URLSearchParams({
+          secret: secControls.recaptchaSecretKey,
+          response: recaptchaToken,
+        });
+
+        const verifyRes = await fetch(`${verifyUrl}?${queryParams.toString()}`, {
+          method: "POST",
+        });
+
+        const verifyJson = await verifyRes.json();
+        if (!verifyJson.success) {
+          try {
+            EventBus.emit("form.failed", {
+              siteId,
+              data: {
+                message: "reCAPTCHA verification failed",
+                payload: { name, email }
+              }
+            });
+          } catch (e) {}
+          return NextResponse.json(
+            { success: false, error: "reCAPTCHA verification failed" },
+            { status: 400 }
+          );
+        }
+      } catch (captchaErr) {
+        console.error("Google reCAPTCHA validation failed:", captchaErr.message);
+        try {
+          EventBus.emit("form.failed", {
+            siteId,
+            data: {
+              message: `reCAPTCHA validation service error: ${captchaErr.message}`,
+              payload: { name, email }
+            }
+          });
+        } catch (e) {}
+        return NextResponse.json(
+          { success: false, error: "Security check validation service temporarily unavailable" },
+          { status: 400 }
+        );
+      }
+    }
 
     // ── Spam keyword filter ────────────────────────────────────────────────────
     if (secControls.spamFilterEnabled) {
@@ -72,6 +188,15 @@ export async function POST(req) {
         combined.includes(kw.toLowerCase()),
       );
       if (isSpam) {
+        try {
+          EventBus.emit("form.failed", {
+            siteId,
+            data: {
+              message: "Submission blocked by spam keyword filter",
+              payload: { name, email, message }
+            }
+          });
+        } catch (e) {}
         return NextResponse.json(
           { success: false, error: "Submission blocked as spam" },
           { status: 400 },
@@ -85,6 +210,15 @@ export async function POST(req) {
       where: { siteId, email, createdAt: { gte: oneHourAgo } },
     });
     if (recentCount >= 5) {
+      try {
+        EventBus.emit("form.failed", {
+          siteId,
+          data: {
+            message: "Submission frequency limit reached (max 5 per hour)",
+            payload: { name, email }
+          }
+        });
+      } catch (e) {}
       return NextResponse.json(
         {
           success: false,
@@ -112,75 +246,12 @@ export async function POST(req) {
       }),
     ]);
 
-    // ── Send emails via SMTP ───────────────────────────────────────────────────
-    const {
-      host,
-      port,
-      username,
-      password,
-      formEmail,
-      autoReplyTemplate,
-      adminAlerts,
-    } = emailSettings;
-
-    if (host && port && username && password) {
-      try {
-        const transporter = nodemailer.createTransport({
-          host,
-          port: parseInt(port, 10),
-          secure: parseInt(port, 10) === 465,
-          auth: { user: username, pass: password },
-          connectionTimeout: 10000,
-        });
-
-        // 1. Auto-reply to the user
-        if (autoReplyTemplate?.enabled !== false) {
-          const replySubject =
-            autoReplyTemplate?.subject || `Thanks for reaching out, ${name}!`;
-          const replyBody =
-            autoReplyTemplate?.body ||
-            `Hi ${name},\n\nThank you for contacting us. We received your message and will get back to you within 24 hours.\n\nBest regards,\n${site.name}`;
-
-          await transporter.sendMail({
-            from: formEmail || username,
-            to: email,
-            subject: replySubject,
-            text: replyBody,
-          });
-        }
-
-        // 2. Admin notification
-        const adminEmail = adminAlerts?.email || formEmail || username;
-        if (adminAlerts?.enabled !== false) {
-          await transporter.sendMail({
-            from: formEmail || username,
-            to: adminEmail,
-            subject: `[${site.name}] New Contact Form Submission from ${name}`,
-            text: `New contact form submission:\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone || "N/A"}\n\nMessage:\n${message}\n\nView in CMS: /leads`,
-          });
-        }
-      } catch (emailErr) {
-        // Log email failure but don't fail the submission
-        console.error("[Form Submit] Email send failed:", emailErr.message);
-        try {
-          const currentEmailSettings = settings.emailSettings || {};
-          const failedLogs = currentEmailSettings.failedLogs || [];
-          failedLogs.unshift({
-            error: emailErr.message,
-            timestamp: new Date().toISOString(),
-            context: "form-submit",
-          });
-          await prisma.globalSettings.update({
-            where: { siteId },
-            data: {
-              emailSettings: {
-                ...currentEmailSettings,
-                failedLogs: failedLogs.slice(0, 50),
-              },
-            },
-          });
-        } catch {}
-      }
+    // ── Emit events for asynchronous processing (emails & dashboard notifications) ──
+    try {
+      EventBus.emit("contact_form.submitted", { submission, lead, site });
+      EventBus.emit("lead.created", { siteId, data: lead });
+    } catch (err) {
+      console.error("Failed to emit submission events:", err);
     }
 
     return NextResponse.json({

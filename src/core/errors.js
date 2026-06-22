@@ -37,7 +37,7 @@ export class ForbiddenError extends AppError {
 
 export function handleApiError(err) {
   console.error("API Error encountered:", err);
-  
+
   if (err instanceof AppError) {
     return Response.json(
       {
@@ -46,7 +46,7 @@ export function handleApiError(err) {
         code: err.code,
         details: err.details,
       },
-      { status: err.status }
+      { status: err.status },
     );
   }
 
@@ -58,7 +58,7 @@ export function handleApiError(err) {
         code: "VALIDATION_ERROR",
         details: err.errors,
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -69,6 +69,6 @@ export function handleApiError(err) {
       code: "SERVER_ERROR",
       message: err.message || String(err),
     },
-    { status: 500 }
+    { status: 500 },
   );
 }

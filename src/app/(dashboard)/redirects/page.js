@@ -19,6 +19,12 @@ export default async function RedirectsPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const settings = await prisma.globalSettings.findUnique({
+    where: { siteId: site.id },
+    select: { websiteSettings: true }
+  });
+  const initialCustom404 = settings?.websiteSettings?.custom404 || null;
+
   return (
     <div className="w-full">
       <div className="mb-6">
@@ -31,6 +37,7 @@ export default async function RedirectsPage() {
       <RedirectsManager
         siteId={site.id}
         initialRedirects={JSON.parse(JSON.stringify(redirects))}
+        initialCustom404={initialCustom404}
       />
     </div>
   );

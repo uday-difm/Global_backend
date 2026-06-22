@@ -1,17 +1,8 @@
-// global_backend/src/app/(dashboard)/pages/CreatePageForm.js
+// src/app/(dashboard)/pages/CreatePageForm.js
 "use client";
 
 import { useState } from "react";
-
-/*
- Simple Create Page form (client).
- Props:
-  - siteId: the current site id
- Behavior:
-  - Opens a small form to create a page (title + slug optional)
-  - Calls POST /api/admin/pages
-  - On success, reloads the page to show the new page in the list
-*/
+import { Plus, X, FilePlus, Globe, AlertTriangle } from "lucide-react";
 
 export default function CreatePageForm({ siteId }) {
   const [show, setShow] = useState(false);
@@ -20,12 +11,21 @@ export default function CreatePageForm({ siteId }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  async function handleCreate() {
+  const resetForm = () => {
+    setTitle("");
+    setSlug("");
     setError(null);
+  };
+
+  async function handleCreate(e) {
+    e.preventDefault();
+    setError(null);
+
     if (!title.trim()) {
-      setError("Title is required");
+      setError("Page title is required.");
       return;
     }
+
     setSaving(true);
     try {
       const res = await fetch("/api/admin/pages", {
@@ -40,17 +40,17 @@ export default function CreatePageForm({ siteId }) {
           slug: slug.trim() || undefined,
         }),
       });
+
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error || "Failed to create page");
-        setSaving(false);
-        return;
+        throw new Error(json.error || "Failed to create page");
       }
-      // success — reload to show the new page
+
+      // Success: reload the page to display the new record
       window.location.reload();
     } catch (err) {
-      console.error("create page error", err);
-      setError("Network error");
+      setError(err.message);
+    } finally {
       setSaving(false);
     }
   }
@@ -58,64 +58,105 @@ export default function CreatePageForm({ siteId }) {
   return (
     <>
       <button
-        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-        onClick={() => setShow(true)}
+        type="button"
+        className="flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-green-700 transition"
+        onClick={() => {
+          resetForm();
+          setShow(true);
+        }}
       >
+        <Plus size={14} />
         Create Page
       </button>
 
       {show && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 md:pt-20">
+          {/* Modal Backdrop screen */}
           <div
-            className="absolute inset-0 bg-black opacity-30"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             onClick={() => setShow(false)}
           />
-          <div className="relative bg-white rounded shadow p-6 w-full max-w-md z-10">
-            <h3 className="text-lg font-medium mb-4">Create Page</h3>
 
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium">Title</label>
-                <input
-                  className="mt-1 block w-full border rounded p-2"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                />
+          {/* Modal box */}
+          <div className="relative z-10 w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden flex flex-col border">
+            {/* Header */}
+            <div className="px-6 py-4 bg-gray-50 border-b flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FilePlus className="text-green-600" size={18} />
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Create New Page</h3>
               </div>
+              <button
+                className="p-1 rounded-lg hover:bg-gray-250 text-gray-400 hover:text-gray-700 transition"
+                onClick={() => setShow(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium">
-                  Slug (optional)
-                </label>
-                <input
-                  className="mt-1 block w-full border rounded p-2"
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  Leave empty to auto-generate from title
+            {/* Form */}
+            <form onSubmit={handleCreate}>
+              <div className="p-6 space-y-4">
+                {error && (
+                  <div className="flex gap-2.5 p-3.5 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs font-semibold">
+                    <AlertTriangle className="shrink-0 text-red-600" size={16} />
+                    <p>{error}</p>
+                  </div>
+                )}
+
+                {/* Title */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                    Page Title
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. About Our Mission"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-xs outline-none focus:border-blue-600 font-semibold"
+                  />
+                </div>
+
+                {/* Slug (Optional) */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                    Route Slug Path (Optional)
+                  </label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-3 text-gray-400" size={14} />
+                    <input
+                      type="text"
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value)}
+                      placeholder="e.g. about-us"
+                      className="w-full rounded-lg border border-gray-200 pl-9 pr-3 py-2.5 text-xs font-mono outline-none focus:border-blue-600"
+                    />
+                  </div>
+                  <p className="text-[9px] text-gray-400 mt-1.5 leading-relaxed">
+                    Leave blank to automatically construct a search-engine-friendly slug path directly from your title label (e.g. "/about-our-mission").
+                  </p>
                 </div>
               </div>
 
-              {error && <div className="text-sm text-red-600">{error}</div>}
-
-              <div className="flex justify-end gap-2 mt-4">
+              {/* Actions Footer */}
+              <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-2 text-xs font-bold">
                 <button
-                  className="px-3 py-1 bg-gray-200 rounded"
+                  type="button"
+                  className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-50 text-gray-700 transition"
                   onClick={() => setShow(false)}
-                  disabled={saving}
                 >
                   Cancel
                 </button>
                 <button
-                  className="px-3 py-1 bg-blue-600 text-white rounded"
-                  onClick={handleCreate}
-                  disabled={saving}
+                  type="submit"
+                  disabled={saving || !title.trim()}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition disabled:opacity-50"
                 >
-                  {saving ? "Creating..." : "Create"}
+                  {saving ? "Creating Page..." : "Create Page"}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

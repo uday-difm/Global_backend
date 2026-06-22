@@ -38,22 +38,49 @@ export async function GET(req) {
       }, {});
     }
 
-    const sectionsWithUrls = page.sections.map((s) => {
-      const content = { ...(s.content || {}) };
-      if (content.bannerMediaId && mediaMap[content.bannerMediaId]) {
-        content.bannerUrl = mediaMap[content.bannerMediaId];
-      }
-      if (content.imageMediaId && mediaMap[content.imageMediaId]) {
-        content.imageUrl = mediaMap[content.imageMediaId];
-      }
-      return { ...s, content };
-    });
+    const sectionsWithUrls = await Promise.all(
+      page.sections.map(async (s) => {
+        const content = { ...(s.content || {}) };
+        if (content.bannerMediaId && mediaMap[content.bannerMediaId]) {
+          content.bannerUrl = mediaMap[content.bannerMediaId];
+        }
+        if (content.imageMediaId && mediaMap[content.imageMediaId]) {
+          content.imageUrl = mediaMap[content.imageMediaId];
+        }
+
+        // Dynamically fetch items for component-specific lists
+        const type = String(s.type || "").toUpperCase();
+        if (type === "SERVICES") {
+          content.items = await prisma.service.findMany({
+            where: { siteId, status: "ACTIVE", deletedAt: null },
+            orderBy: { sortOrder: "asc" },
+          });
+        } else if (type === "TEAM") {
+          content.items = await prisma.teamMember.findMany({
+            where: { siteId, deletedAt: null },
+            orderBy: { sortOrder: "asc" },
+          });
+        } else if (type === "TESTIMONIALS") {
+          content.items = await prisma.testimonial.findMany({
+            where: { siteId, showHide: true, deletedAt: null },
+            orderBy: { sortOrder: "asc" },
+          });
+        } else if (type === "FAQ") {
+          content.items = await prisma.faq.findMany({
+            where: { siteId, showHide: true, deletedAt: null },
+            orderBy: { sortOrder: "asc" },
+          });
+        }
+
+        return { ...s, content };
+      })
+    );
 
     const seo = {
       title: page.seoTitle || page.title,
       description: page.seoDescription || null,
-      canonical: null,
-      ogImage: null,
+      canonical: page.canonicalUrl || null,
+      ogImage: page.ogImage || null,
     };
 
     const { sections, ...pageData } = page;

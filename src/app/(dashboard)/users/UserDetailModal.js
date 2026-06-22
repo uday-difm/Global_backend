@@ -2,13 +2,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-/*
- UserDetailModal
- Props:
-  - userId: id string
- Renders a button "Edit" that opens a modal. Modal fetches user details and allows updating role/isActive and resetting password.
-*/
+import { 
+  User, 
+  KeyRound, 
+  Activity, 
+  History, 
+  Lock, 
+  Unlock, 
+  Copy, 
+  Check, 
+  RefreshCw, 
+  AlertTriangle,
+  Save,
+  X
+} from "lucide-react";
 
 export default function UserDetailModal({ userId }) {
   const [open, setOpen] = useState(false);
@@ -16,12 +23,26 @@ export default function UserDetailModal({ userId }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  // Form states
   const [role, setRole] = useState("EDITOR");
   const [isActive, setIsActive] = useState(true);
+  const [twoFaEnabled, setTwoFaEnabled] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
+  // Password reset states
+  const [newPassword, setNewPassword] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState(null);
+
+  // Active tab: "profile" | "password" | "activity" | "login"
+  const [activeTab, setActiveTab] = useState("profile");
+
+  // Fetch user details
+  const fetchUserDetails = () => {
     setLoading(true);
+    setError(null);
+    setSuccess(null);
     fetch(`/api/admin/users/${userId}`)
       .then((r) => r.json())
       .then((json) => {
@@ -32,18 +53,29 @@ export default function UserDetailModal({ userId }) {
           setUser(json.user || null);
           setRole(json.user?.globalRole || "EDITOR");
           setIsActive(Boolean(json.user?.isActive));
+          setTwoFaEnabled(Boolean(json.user?.twoFAEnabled));
         }
       })
       .catch((e) => {
         console.error(e);
-        setError("Failed to load user");
+        setError("Failed to load user details");
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    fetchUserDetails();
+    setActiveTab("profile");
+    setNewPassword("");
+    setResetSuccessMessage(null);
   }, [open, userId]);
 
-  async function handleSave() {
+  // Save profile and roles
+  const handleSaveProfile = async () => {
     setSaving(true);
     setError(null);
+    setSuccess(null);
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
@@ -52,139 +84,492 @@ export default function UserDetailModal({ userId }) {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error || "Failed to save");
-        setSaving(false);
-        return;
+        throw new Error(json.error || "Failed to update profile settings");
       }
-      // reload page to update list (simple)
-      window.location.reload();
+      setSuccess("Profile settings updated successfully!");
+      setTimeout(() => {
+        setSuccess(null);
+        // reload the list view page to show the changes
+        window.location.reload();
+      }, 1500);
     } catch (e) {
-      console.error(e);
-      setError("Network error");
-      setSaving(false);
-    }
-  }
-
-  async function handleResetPassword() {
-    if (
-      !confirm(
-        "Reset this user's password to 'Temp@123' ? (you can change the default)",
-      )
-    )
-      return;
-    setSaving(true);
-    try {
-      // If you have a dedicated admin reset endpoint, use it; otherwise use reset-password by email
-      const res = await fetch(`/api/admin/users/${userId}/reset-password`, {
-        method: "POST",
-      });
-      if (res.ok) {
-        alert("Password reset. (Check email or see API behavior)");
-      } else {
-        const json = await res.json();
-        alert(json.error || "Failed to reset password");
-      }
-    } catch (e) {
-      console.error(e);
-      alert("Network error");
+      setError(e.message);
     } finally {
       setSaving(false);
     }
-  }
+  };
+
+  // Administrative override to force disable 2FA
+  const handleDisable2Fa = async () => {
+    if (!confirm("Are you sure you want to FORCE DISABLE 2FA for this user? This will delete their authentication secret.")) {
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ twoFAEnabled: false }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to disable 2FA");
+      }
+      setTwoFaEnabled(false);
+      setSuccess("Two-Factor Authentication has been disabled for this user.");
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Generate random strong password
+  const handleGeneratePassword = () => {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~";
+    let generated = "";
+    for (let i = 0; i < 12; i++) {
+      generated += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewPassword(generated);
+    setResetSuccessMessage(null);
+  };
+
+  // Custom password reset save handler
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    setResetSuccessMessage(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to reset password");
+      }
+      setResetSuccessMessage(`Password has been successfully changed to:`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Copy password to clipboard helper
+  const handleCopy = () => {
+    navigator.clipboard.writeText(newPassword);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <>
       <button
-        className="px-2 py-1 bg-yellow-500 text-white rounded text-xs"
+        className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded text-xs font-semibold shadow-sm transition"
         onClick={() => setOpen(true)}
       >
-        Edit
+        Manage
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 md:pt-20">
+          {/* Backdrop screen */}
           <div
-            className="absolute inset-0 bg-black opacity-30"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
-          <div className="relative z-10 w-full max-w-lg bg-white rounded shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium">Edit User</h3>
+
+          {/* Modal Container */}
+          <div className="relative z-10 w-full max-w-2xl bg-white rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[85vh] border">
+            {/* Header info */}
+            <div className="px-6 py-4 bg-gray-50 border-b flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">User Console</h3>
+                <p className="text-[11px] text-gray-500 font-medium mt-0.5">
+                  {user ? user.email : "Loading details..."}
+                </p>
+              </div>
               <button
-                className="text-sm text-gray-600"
+                className="p-1 rounded-lg hover:bg-gray-250 text-gray-400 hover:text-gray-700 transition"
                 onClick={() => setOpen(false)}
               >
-                Close
+                <X size={16} />
               </button>
             </div>
 
-            {loading ? (
-              <div>Loading...</div>
-            ) : error ? (
-              <div className="text-red-600">{error}</div>
-            ) : user ? (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium">Email</label>
-                  <div className="mt-1">{user.email}</div>
-                </div>
+            {/* Tab layout controls */}
+            <div className="flex bg-gray-50/50 border-b px-4 text-xs font-bold text-gray-500 overflow-x-auto">
+              <button
+                onClick={() => setActiveTab("profile")}
+                className={`py-3 px-3 border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTab === "profile"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent hover:text-gray-800"
+                }`}
+              >
+                <User size={14} />
+                Access & Roles
+              </button>
+              <button
+                onClick={() => setActiveTab("password")}
+                className={`py-3 px-3 border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTab === "password"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent hover:text-gray-800"
+                }`}
+              >
+                <KeyRound size={14} />
+                Credentials Reset
+              </button>
+              <button
+                onClick={() => setActiveTab("activity")}
+                className={`py-3 px-3 border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTab === "activity"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent hover:text-gray-800"
+                }`}
+              >
+                <Activity size={14} />
+                Activity Log
+              </button>
+              <button
+                onClick={() => setActiveTab("login")}
+                className={`py-3 px-3 border-b-2 transition flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTab === "login"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent hover:text-gray-800"
+                }`}
+              >
+                <History size={14} />
+                Login History
+              </button>
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium">
-                    Global role
-                  </label>
-                  <select
-                    className="mt-1 block w-full border rounded p-2"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                  >
-                    <option value="SUPERADMIN">SUPERADMIN</option>
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="EDITOR">EDITOR</option>
-                    <option value="AUTHOR">AUTHOR</option>
-                    <option value="VIEWER">VIEWER</option>
-                  </select>
+            {/* Modal Scrollable Body */}
+            <div className="p-6 overflow-y-auto flex-1 min-h-[300px]">
+              {loading ? (
+                <div className="py-20 text-center text-xs text-gray-400 flex flex-col items-center justify-center gap-2">
+                  <RefreshCw size={24} className="animate-spin text-gray-300" />
+                  Loading user records...
                 </div>
+              ) : error ? (
+                <div className="flex gap-3 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs font-semibold">
+                  <AlertTriangle className="shrink-0" size={16} />
+                  <p>{error}</p>
+                </div>
+              ) : user ? (
+                <div className="space-y-4">
+                  {success && (
+                    <div className="flex gap-3 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-xs font-semibold">
+                      <Check className="shrink-0" size={16} />
+                      <p>{success}</p>
+                    </div>
+                  )}
 
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={isActive}
-                      onChange={(e) => setIsActive(e.target.checked)}
-                      className="mr-2"
-                    />
-                    Active
-                  </label>
-                </div>
+                  {/* TAB 1: Profile and Roles */}
+                  {activeTab === "profile" && (
+                    <div className="space-y-5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                            Email Identifier
+                          </label>
+                          <input
+                            type="text"
+                            disabled
+                            value={user.email}
+                            className="w-full rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-xs font-semibold text-gray-500 outline-none"
+                          />
+                        </div>
 
-                <div className="flex items-center gap-2 mt-4">
-                  <button
-                    className="px-3 py-1 bg-gray-200 rounded"
-                    onClick={() => setOpen(false)}
-                    disabled={saving}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="px-3 py-1 bg-blue-600 text-white rounded"
-                    onClick={handleSave}
-                    disabled={saving}
-                  >
-                    Save
-                  </button>
-                  <button
-                    className="px-3 py-1 bg-red-600 text-white rounded"
-                    onClick={handleResetPassword}
-                    disabled={saving}
-                  >
-                    Reset Password
-                  </button>
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                            System Access Role
+                          </label>
+                          <select
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                            className="w-full rounded-lg border border-gray-200 bg-white p-2.5 text-xs font-bold text-gray-800 outline-none focus:border-blue-600"
+                          >
+                            <option value="SUPERADMIN">SUPERADMIN</option>
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="EDITOR">EDITOR</option>
+                            <option value="AUTHOR">AUTHOR</option>
+                            <option value="VIEWER">VIEWER</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="border-t pt-4">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={(e) => setIsActive(e.target.checked)}
+                            className="rounded border-gray-200 text-blue-600 h-4 w-4 focus:ring-blue-500"
+                          />
+                          <div>
+                            <span className="text-xs font-bold text-gray-800">Account status active</span>
+                            <p className="text-[10px] text-gray-400">Disabled users are blocked from signing in or requesting credentials reset.</p>
+                          </div>
+                        </label>
+                      </div>
+
+                      {/* 2FA Administrative Status Control */}
+                      <div className="border-t pt-4">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                          Two-Factor Authentication Controls
+                        </label>
+                        {twoFaEnabled ? (
+                          <div className="border border-blue-200 bg-blue-50/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex gap-2.5 items-start">
+                              <Lock className="text-blue-500 mt-0.5 shrink-0" size={16} />
+                              <div>
+                                <span className="text-xs font-bold text-blue-800 block">🔒 Two-Factor Security is ACTIVE</span>
+                                <p className="text-[10px] text-blue-600/80 mt-0.5">
+                                  This user must provide a 6-digit OTP code to complete authentication.
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleDisable2Fa}
+                              disabled={saving}
+                              className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold whitespace-nowrap shadow-sm transition self-end sm:self-center"
+                            >
+                              Disable 2FA Security
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="border rounded-xl p-4 flex gap-2.5 bg-gray-50/50">
+                            <Unlock className="text-gray-400 shrink-0" size={16} />
+                            <div>
+                              <span className="text-xs font-bold text-gray-600 block">🔓 Two-Factor Security is not active</span>
+                              <p className="text-[10px] text-gray-400 mt-0.5">
+                                The user has not configured or completed enrollment for Two-Factor authentication.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action footer */}
+                      <div className="border-t pt-4 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={handleSaveProfile}
+                          disabled={saving}
+                          className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition disabled:opacity-50"
+                        >
+                          <Save size={12} />
+                          {saving ? "Saving..." : "Save Access Settings"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 2: Password Reset */}
+                  {activeTab === "password" && (
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-800">Administrative Password Reset</h4>
+                        <p className="text-[10px] text-gray-500 mt-0.5">
+                          Change or override the account password directly. Enter a custom key or use the random generator.
+                        </p>
+                      </div>
+
+                      {resetSuccessMessage && (
+                        <div className="border border-green-200 bg-green-50 p-4 rounded-xl space-y-3">
+                          <p className="text-xs font-semibold text-green-800">{resetSuccessMessage}</p>
+                          <div className="flex gap-2">
+                            <div className="bg-white border font-mono text-sm px-3 py-1.5 rounded-lg font-bold select-all flex-1 text-slate-800 flex justify-between items-center">
+                              {newPassword}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleCopy}
+                              className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs font-semibold flex items-center gap-1 transition"
+                            >
+                              {copied ? <Check size={12} /> : <Copy size={12} />}
+                              {copied ? "Copied!" : "Copy"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <form onSubmit={handleResetPassword} className="space-y-4 max-w-md pt-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                            New Account Password
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              required
+                              placeholder="Min 6 characters"
+                              value={newPassword}
+                              onChange={(e) => {
+                                setNewPassword(e.target.value);
+                                setResetSuccessMessage(null);
+                              }}
+                              className="flex-1 rounded-lg border border-gray-200 p-2.5 text-xs font-mono outline-none focus:border-blue-600"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleGeneratePassword}
+                              className="px-3.5 py-2 border rounded-lg hover:bg-gray-50 text-xs font-bold text-gray-600 transition flex items-center gap-1 whitespace-nowrap"
+                            >
+                              <RefreshCw size={12} />
+                              Generate Secure
+                            </button>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={saving || newPassword.length < 6}
+                          className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition disabled:opacity-50"
+                        >
+                          {saving ? "Resetting..." : "Apply New Password"}
+                        </button>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* TAB 3: Activity Log */}
+                  {activeTab === "activity" && (
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-800">User Activity Audit History</h4>
+                        <p className="text-[10px] text-gray-500 mt-0.5">
+                          View the last 20 logged actions and database changes triggered by this profile.
+                        </p>
+                      </div>
+
+                      <div className="border rounded-xl overflow-hidden shadow-sm">
+                        <table className="min-w-full divide-y text-left">
+                          <thead className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider text-[9px]">
+                            <tr>
+                              <th className="px-4 py-3">Action Type</th>
+                              <th className="px-4 py-3">Site Scope</th>
+                              <th className="px-4 py-3">Logged Details (JSON)</th>
+                              <th className="px-4 py-3">Event Date</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100 font-medium text-[11px] text-gray-600">
+                            {user.auditLogs && user.auditLogs.map((log) => (
+                              <tr key={log.id} className="hover:bg-gray-50/50">
+                                <td className="px-4 py-3 font-mono font-bold text-blue-600 uppercase text-[10px]">
+                                  {log.action}
+                                </td>
+                                <td className="px-4 py-3 text-gray-400">
+                                  {log.siteId || "System Global"}
+                                </td>
+                                <td className="px-4 py-3 font-mono text-[9px] text-gray-400 max-w-[200px] truncate" title={JSON.stringify(log.meta)}>
+                                  {log.meta ? JSON.stringify(log.meta) : "—"}
+                                </td>
+                                <td className="px-4 py-3 text-gray-400">
+                                  {new Date(log.createdAt).toLocaleString()}
+                                </td>
+                              </tr>
+                            ))}
+                            {(!user.auditLogs || user.auditLogs.length === 0) && (
+                              <tr>
+                                <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                                  No audit log actions logged.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 4: Login History */}
+                  {activeTab === "login" && (
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-xs font-bold text-gray-800">Account Login Access Attempts</h4>
+                        <p className="text-[10px] text-gray-500 mt-0.5">
+                          View the last 20 verified and failed login requests including IP logs and browser agents.
+                        </p>
+                      </div>
+
+                      <div className="border rounded-xl overflow-hidden shadow-sm">
+                        <table className="min-w-full divide-y text-left">
+                          <thead className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider text-[9px]">
+                            <tr>
+                              <th className="px-4 py-3">Sign-In Status</th>
+                              <th className="px-4 py-3">IP Address</th>
+                              <th className="px-4 py-3">User Agent / Browser</th>
+                              <th className="px-4 py-3">Access Time</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100 font-medium text-[11px] text-gray-600">
+                            {user.loginHistory && user.loginHistory.map((log) => (
+                              <tr key={log.id} className="hover:bg-gray-50/50">
+                                <td className="px-4 py-3">
+                                  {log.success ? (
+                                    <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-[9px] font-bold text-green-700 border border-green-200">
+                                      Success
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[9px] font-bold text-red-700 border border-red-200">
+                                      Failed
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 font-mono">
+                                  {log.ipAddress || "unknown"}
+                                </td>
+                                <td className="px-4 py-3 truncate max-w-[200px]" title={log.userAgent}>
+                                  {log.userAgent || "unknown"}
+                                </td>
+                                <td className="px-4 py-3 text-gray-400">
+                                  {new Date(log.createdAt).toLocaleString()}
+                                </td>
+                              </tr>
+                            ))}
+                            {(!user.loginHistory || user.loginHistory.length === 0) && (
+                              <tr>
+                                <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                                  No sign-in attempts recorded.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : (
-              <div>No user data</div>
-            )}
+              ) : (
+                <div className="py-20 text-center text-xs text-gray-450">No user data retrieved.</div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3.5 bg-gray-50 border-t flex justify-end gap-2 text-xs font-bold">
+              <button
+                type="button"
+                className="px-4 py-2 border rounded-lg bg-white hover:bg-gray-50 text-gray-700 transition"
+                onClick={() => setOpen(false)}
+              >
+                Close Console
+              </button>
+            </div>
           </div>
         </div>
       )}

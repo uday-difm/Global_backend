@@ -40,8 +40,14 @@ export async function GET(req, { params }) {
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        loginHistory: { orderBy: { createdAt: "desc" }, take: 5 },
-        auditLogs: { orderBy: { createdAt: "desc" }, take: 5 },
+        loginHistory: { 
+          orderBy: { createdAt: "desc" }, 
+          take: 20 
+        },
+        auditLogs: { 
+          orderBy: { createdAt: "desc" }, 
+          take: 20 
+        },
       },
     });
 
@@ -51,6 +57,7 @@ export async function GET(req, { params }) {
     const { passwordHash, ...userProfile } = user;
     return NextResponse.json({ user: userProfile });
   } catch (error) {
+    console.error("GET User ID Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },
@@ -83,7 +90,7 @@ export async function PATCH(req, { params }) {
     if (c < t) {
       return NextResponse.json(
         { error: "Forbidden: Insufficient privileges to modify this user" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -93,35 +100,67 @@ export async function PATCH(req, { params }) {
       if (c < n) {
         return NextResponse.json(
           { error: "Forbidden: Cannot assign role higher than your own" },
-          { status: 403 }
+          { status: 403 },
         );
+      }
+    }
+
+    const updateData = {};
+    if (body.globalRole !== undefined) updateData.globalRole = body.globalRole;
+    if (body.isActive !== undefined) updateData.isActive = body.isActive;
+
+    let twoFaResetOccurred = false;
+    if (body.twoFAEnabled === false) {
+      updateData.twoFAEnabled = false;
+      twoFaResetOccurred = true;
+      try {
+        await prisma.twoFactor.delete({
+          where: { userId: id },
+        });
+      } catch (err) {
+        // Suppress if the 2FA secret doesn't exist
       }
     }
 
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: { globalRole: body.globalRole, isActive: body.isActive },
+      data: updateData,
     });
 
-    await logAction(null, caller.id, "USER_ROLE_UPDATED", {
-      targetUserId: id,
-      newRole: body.globalRole,
-      isActive: body.isActive,
-    });
+    if (twoFaResetOccurred) {
+      try {
+        await logAction(null, caller.id, "USER_2FA_DISABLED_BY_ADMIN", {
+          targetUserId: id,
+          targetEmail: target.email,
+        });
+      } catch (logErr) {
+        console.error("Failed to write audit log:", logErr);
+      }
+    }
+
+    try {
+      await logAction(null, caller.id, "USER_ROLE_UPDATED", {
+        targetUserId: id,
+        newRole: body.globalRole !== undefined ? body.globalRole : target.globalRole,
+        isActive: body.isActive !== undefined ? body.isActive : target.isActive,
+      });
+    } catch (logErr) {
+      console.error("Failed to write audit log:", logErr);
+    }
 
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
     console.error("PATCH Error:", error);
     return NextResponse.json(
       { error: "Failed to update", message: String(error?.message || error) },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 function canDeleteRole(creatorRole, targetRole) {
-  const c = ROLES[creatorRole] || 0;
-  const t = ROLES[targetRole] || 0;
+  const c = ROLE_LEVEL[creatorRole] || 0;
+  const t = ROLE_LEVEL[targetRole] || 0;
   // require that creator's role level is strictly greater than target's
   return c > t;
 }
@@ -155,25 +194,34 @@ export async function DELETE(req, context) {
       return NextResponse.json({ error: "Missing user id" }, { status: 400 });
     }
 
-    // Prevent self-delete
-    if (caller.id === id) {
-      return NextResponse.json(
-        { error: "Cannot delete yourself" },
-        { status: 400 },
-      );
-    }
-
     // Find target user
     const target = await prisma.user.findUnique({ where: { id } });
     if (!target)
       return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    // Authorization: require caller role strictly higher than target role
-    if (!canDeleteRole(caller.globalRole, target.globalRole)) {
-      return NextResponse.json(
-        { error: "Forbidden: insufficient permission to deactivate this user" },
-        { status: 403 },
-      );
+    const isSelfDelete = caller.id === id;
+
+    // Prevent deleting the last active Superadmin
+    if (target.globalRole === "SUPERADMIN") {
+      const superadminCount = await prisma.user.count({
+        where: { globalRole: "SUPERADMIN", isActive: true, deletedAt: null },
+      });
+      if (superadminCount <= 1) {
+        return NextResponse.json(
+          { error: "Forbidden: Cannot delete the last active Superadmin account" },
+          { status: 403 },
+        );
+      }
+    }
+
+    // If not self-deletion, require caller role strictly higher than target role
+    if (!isSelfDelete) {
+      if (!canDeleteRole(caller.globalRole, target.globalRole)) {
+        return NextResponse.json(
+          { error: "Forbidden: insufficient permission to deactivate this user" },
+          { status: 403 },
+        );
+      }
     }
 
     // Delete user
@@ -181,7 +229,7 @@ export async function DELETE(req, context) {
 
     // Audit log
     try {
-      await logAction(null, caller.id, "USER_DELETED", { targetUserId: id });
+      await logAction(null, caller.id, isSelfDelete ? "USER_SELF_DELETED" : "USER_DELETED", { targetUserId: id });
     } catch (logErr) {
       console.error("Failed to write audit log:", logErr);
     }

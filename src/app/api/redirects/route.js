@@ -10,6 +10,24 @@ export async function GET(req) {
       return NextResponse.json({ error: "siteId is required" }, { status: 400 });
     }
 
+    const sourceParam = searchParams.get("source");
+    if (sourceParam) {
+      const formattedSource = sourceParam.trim().startsWith("/")
+        ? sourceParam.trim()
+        : `/${sourceParam.trim()}`;
+
+      const redirect = await prisma.redirect.findUnique({
+        where: {
+          siteId_source: {
+            siteId,
+            source: formattedSource
+          }
+        }
+      });
+
+      return NextResponse.json({ success: true, redirect });
+    }
+
     const redirects = await prisma.redirect.findMany({
       where: { siteId }
     });

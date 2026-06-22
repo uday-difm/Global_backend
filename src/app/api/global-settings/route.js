@@ -1,14 +1,15 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { getSiteId } from "@/lib/siteGuard";
 
 export async function GET(request) {
   try {
-    const url = new URL(request.url);
-    const siteId = url.searchParams.get("siteId");
-
-    if (!siteId) {
+    let siteId;
+    try {
+      siteId = getSiteId(request);
+    } catch (e) {
       return NextResponse.json(
-        { error: "Missing siteId query parameter" },
+        { error: e.message || "Missing siteId" },
         { status: 400 },
       );
     }

@@ -41,9 +41,10 @@ export default function DeleteServiceButton({ serviceId, siteId }) {
     <button
       onClick={handleDelete}
       disabled={loading}
-      className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs ml-2 disabled:opacity-50"
+      className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold shadow-sm transition disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
     >
-      {loading ? "Deleting..." : "Delete"}
+      {loading ? "Deleting..." : "Delete Service"}
     </button>
   );
 }
+

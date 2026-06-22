@@ -25,7 +25,7 @@ export async function GET(req, { params }) {
 
     const media = await mediaService.getById(siteId, id);
 
-    // Find usages of the media inside posts and services scoped by siteId
+    // Find usages of the media inside posts, services and team members scoped by siteId
     const postsUsing = await prisma.post.findMany({
       where: { featuredImageId: id, siteId },
       select: { id: true, title: true }
@@ -36,9 +36,21 @@ export async function GET(req, { params }) {
       select: { id: true, title: true }
     });
 
+    const teamUsing = await prisma.teamMember.findMany({
+      where: {
+        siteId,
+        OR: [
+          { photo: id },
+          { photo: media.url }
+        ]
+      },
+      select: { id: true, name: true }
+    });
+
     const usages = [
       ...postsUsing.map(p => ({ id: p.id, title: p.title, type: "Post", link: `/blogs/${p.id}/edit` })),
-      ...servicesUsing.map(s => ({ id: s.id, title: s.title, type: "Service", link: `/services/${s.id}/edit` }))
+      ...servicesUsing.map(s => ({ id: s.id, title: s.title, type: "Service", link: `/services/${s.id}/edit` })),
+      ...teamUsing.map(t => ({ id: t.id, title: t.name, type: "TeamMember", link: `/team` }))
     ];
 
     return NextResponse.json({ media, usages });

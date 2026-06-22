@@ -1,4 +1,6 @@
 // src/app/preview/page.js
+export const dynamic = "force-dynamic";
+
 import React from "react";
 import Image from "next/image";
 import prisma from "@/lib/prisma";
@@ -130,6 +132,162 @@ function TextBlock({ content }) {
   );
 }
 
+function ServicesSection({ content }) {
+  const items = content?.items || [];
+  return (
+    <section className="py-16 bg-slate-50 text-slate-800 border-t border-b">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Our Services</h2>
+          <p className="text-slate-500 mt-2 text-sm">Professional services customized to help you grow your brand identity.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {items.map((item) => (
+            <div key={item.id} className="bg-white rounded-xl shadow-xs border hover:shadow-md transition-all duration-200 p-6 flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{item.title}</h3>
+                <p className="text-xs text-slate-500 leading-relaxed mb-4">{item.description}</p>
+              </div>
+              <div className="border-t pt-4 flex items-center justify-between mt-4">
+                <span className="font-mono text-sm font-bold text-blue-600">{item.price || "Contact Us"}</span>
+                {item.ctaButtonText && (
+                  <a
+                    href={item.ctaButtonLink || "/"}
+                    className="px-3 py-1.5 bg-slate-900 text-white hover:bg-slate-800 rounded text-xs font-semibold"
+                  >
+                    {item.ctaButtonText}
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TeamSection({ content }) {
+  const items = content?.items || [];
+  return (
+    <section className="py-16 bg-white text-slate-800">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Meet Our Team</h2>
+          <p className="text-slate-500 mt-2 text-sm">Our group of expert professionals and leaders.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+          {items.map((member) => (
+            <div key={member.id} className="text-center group">
+              <div className="relative w-40 h-40 mx-auto rounded-full overflow-hidden mb-4 border-2 border-indigo-100 group-hover:border-indigo-500 transition duration-200">
+                {member.photo ? (
+                  <SafeImage
+                    src={member.photo}
+                    alt={member.name}
+                    fill
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-indigo-50 flex items-center justify-center text-indigo-400 font-bold text-3xl">
+                    {member.name.charAt(0)}
+                  </div>
+                )}
+              </div>
+              <h3 className="font-bold text-slate-900 text-base">{member.name}</h3>
+              <p className="text-xs text-indigo-650 font-semibold mb-1">{member.role}</p>
+              {member.bio && <p className="text-[11px] text-slate-400 max-w-xs mx-auto line-clamp-2 px-2">{member.bio}</p>}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsSection({ content }) {
+  const items = content?.items || [];
+  return (
+    <section className="py-16 bg-indigo-900 text-white">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h2 className="text-3xl font-extrabold tracking-tight">Client Feedback</h2>
+          <p className="text-indigo-200 mt-2 text-sm">Hear directly what our global partners say about us.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {items.map((item) => (
+            <div key={item.id} className="bg-indigo-950/40 p-6 rounded-xl border border-indigo-850 backdrop-blur-xs flex flex-col justify-between">
+              <div>
+                <div className="flex gap-1 mb-4 text-amber-400 font-mono text-sm">
+                  {Array.from({ length: item.rating || 5 }).map((_, idx) => (
+                    <span key={idx}>★</span>
+                  ))}
+                </div>
+                <p className="text-slate-200 text-xs italic leading-relaxed mb-6">"{item.content}"</p>
+              </div>
+              <div className="flex items-center gap-3 border-t border-indigo-850 pt-4">
+                {item.clientImage ? (
+                  <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                    <SafeImage src={item.clientImage} alt={item.clientName} fill style={{ objectFit: "cover" }} />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-indigo-800 flex items-center justify-center text-[10px] font-bold">
+                    {item.clientName.charAt(0)}
+                  </div>
+                )}
+                <span className="font-semibold text-xs text-white">{item.clientName}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FaqSection({ content }) {
+  const items = content?.items || [];
+  return (
+    <section className="py-16 bg-white text-slate-800">
+      <div className="max-w-3xl mx-auto px-6">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">FAQ</h2>
+          <p className="text-slate-500 mt-2 text-sm">Common questions and detailed answers.</p>
+        </div>
+        <div className="space-y-4">
+          {items.map((faq) => (
+            <div key={faq.id} className="border rounded-lg p-5 hover:bg-slate-50/50 transition">
+              <h3 className="font-bold text-slate-900 text-sm mb-2 flex items-start gap-2">
+                <span className="text-blue-600">Q.</span>
+                {faq.question}
+              </h3>
+              <p className="text-slate-650 text-xs pl-6 leading-relaxed">{faq.answer}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CtaSection({ content }) {
+  return (
+    <section className="py-12 bg-linear-to-r from-blue-600 to-indigo-600 text-white">
+      <div className="max-w-5xl mx-auto px-6 text-center">
+        <h2 className="text-2xl md:text-3xl font-bold mb-4">{content?.title || "Ready to scale up?"}</h2>
+        {content?.subtitle && <p className="text-sm text-blue-100 max-w-2xl mx-auto mb-6">{content.subtitle}</p>}
+        {content?.primaryButtonText && (
+          <a
+            href={content.primaryButtonUrl || "/"}
+            className="px-6 py-2.5 bg-white text-blue-600 font-semibold rounded hover:bg-blue-50 transition shadow"
+          >
+            {content.primaryButtonText}
+          </a>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default async function PreviewPage({ searchParams }) {
   // Unwrap searchParams if it's a promise-like in this runtime
   const sp = await searchParams;
@@ -166,7 +324,7 @@ export default async function PreviewPage({ searchParams }) {
   }
 
   let sections = await prisma.section.findMany({
-    where: { pageId: page.id },
+    where: { pageId: page.id, isDeleted: false },
     orderBy: { order: "asc" },
   });
 
@@ -193,17 +351,44 @@ export default async function PreviewPage({ searchParams }) {
     return acc;
   }, {});
 
-  // Inject URLs into section.content for preview rendering
-  sections = sections.map((s) => {
-    const content = { ...(s.content || {}) };
-    if (content.bannerMediaId && mediaMap[content.bannerMediaId]) {
-      content.bannerUrl = mediaMap[content.bannerMediaId];
-    }
-    if (content.imageMediaId && mediaMap[content.imageMediaId]) {
-      content.imageUrl = mediaMap[content.imageMediaId];
-    }
-    return { ...s, content };
-  });
+  // Inject URLs and dynamic collection items into section.content for preview rendering
+  sections = await Promise.all(
+    sections.map(async (s) => {
+      const content = { ...(s.content || {}) };
+      if (content.bannerMediaId && mediaMap[content.bannerMediaId]) {
+        content.bannerUrl = mediaMap[content.bannerMediaId];
+      }
+      if (content.imageMediaId && mediaMap[content.imageMediaId]) {
+        content.imageUrl = mediaMap[content.imageMediaId];
+      }
+
+      // Fetch dynamic collection list items
+      const type = String(s.type || "").toUpperCase();
+      if (type === "SERVICES") {
+        content.items = await prisma.service.findMany({
+          where: { siteId, status: "ACTIVE", deletedAt: null },
+          orderBy: { sortOrder: "asc" },
+        });
+      } else if (type === "TEAM") {
+        content.items = await prisma.teamMember.findMany({
+          where: { siteId, deletedAt: null },
+          orderBy: { sortOrder: "asc" },
+        });
+      } else if (type === "TESTIMONIALS") {
+        content.items = await prisma.testimonial.findMany({
+          where: { siteId, showHide: true, deletedAt: null },
+          orderBy: { sortOrder: "asc" },
+        });
+      } else if (type === "FAQ") {
+        content.items = await prisma.faq.findMany({
+          where: { siteId, showHide: true, deletedAt: null },
+          orderBy: { sortOrder: "asc" },
+        });
+      }
+
+      return { ...s, content };
+    })
+  );
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -232,8 +417,12 @@ export default async function PreviewPage({ searchParams }) {
           .map((s) => {
             const type = String(s.type || "").toUpperCase();
             if (type === "HERO") return <Hero key={s.id} content={s.content} />;
-            if (type === "TEXT_BLOCK")
-              return <TextBlock key={s.id} content={s.content} />;
+            if (type === "TEXT_BLOCK") return <TextBlock key={s.id} content={s.content} />;
+            if (type === "SERVICES") return <ServicesSection key={s.id} content={s.content} />;
+            if (type === "TEAM") return <TeamSection key={s.id} content={s.content} />;
+            if (type === "TESTIMONIALS") return <TestimonialsSection key={s.id} content={s.content} />;
+            if (type === "FAQ") return <FaqSection key={s.id} content={s.content} />;
+            if (type === "CTA") return <CtaSection key={s.id} content={s.content} />;
             return (
               <section key={s.id} className="container mx-auto px-6 py-8">
                 <h3 className="font-medium mb-2">{s.type}</h3>

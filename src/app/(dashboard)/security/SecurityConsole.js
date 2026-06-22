@@ -12,6 +12,11 @@ import {
   KeyRound,
   QrCode,
   RefreshCw,
+  Sliders,
+  Globe,
+  Trash2,
+  Plus,
+  Save,
 } from "lucide-react";
 
 export default function SecurityConsole({ siteId, user }) {
@@ -41,6 +46,138 @@ export default function SecurityConsole({ siteId, user }) {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [auditLogs, setAuditLogs] = useState([]);
   const [auditLoading, setAuditLoading] = useState(false);
+
+  // Security Controls States
+  const [recaptchaSiteKey, setRecaptchaSiteKey] = useState("");
+  const [recaptchaSecretKey, setRecaptchaSecretKey] = useState("");
+  const [rateLimitRps, setRateLimitRps] = useState(60);
+  const [sessionTimeoutMinutes, setSessionTimeoutMinutes] = useState(30);
+  const [ipBlocklist, setIpBlocklist] = useState([]);
+  const [newIpToBlock, setNewIpToBlock] = useState("");
+  const [controlsLoading, setControlsLoading] = useState(false);
+  const [controlsSuccess, setControlsSuccess] = useState(null);
+  const [controlsError, setControlsError] = useState(null);
+
+  // Fetch Security Controls Config
+  const fetchSecurityControls = async () => {
+    if (!isAdmin) return;
+    setControlsLoading(true);
+    setControlsError(null);
+    try {
+      const res = await fetch("/api/admin/security/config", {
+        headers: { "x-site-id": siteId }
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setRecaptchaSiteKey(json.securityControls?.recaptchaSiteKey || "");
+        setRecaptchaSecretKey(json.securityControls?.recaptchaSecretKey || "");
+        setRateLimitRps(json.securityControls?.rateLimitRps || 60);
+        setSessionTimeoutMinutes(json.securityControls?.sessionTimeoutMinutes || 30);
+        setIpBlocklist(json.securityControls?.ipBlocklist || []);
+      }
+    } catch (err) {
+      setControlsError(err.message);
+    } finally {
+      setControlsLoading(false);
+    }
+  };
+
+  // Save Security Controls Configuration
+  const handleSaveControls = async (e) => {
+    e.preventDefault();
+    setControlsLoading(true);
+    setControlsError(null);
+    setControlsSuccess(null);
+    try {
+      const res = await fetch("/api/admin/security/config", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-site-id": siteId
+        },
+        body: JSON.stringify({
+          recaptchaSiteKey,
+          recaptchaSecretKey,
+          rateLimitRps: parseInt(rateLimitRps, 10) || 60,
+          sessionTimeoutMinutes: parseInt(sessionTimeoutMinutes, 10) || 30,
+          ipBlocklist
+        })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to update security controls");
+      setControlsSuccess("Security configurations saved successfully!");
+      if (json.securityControls?.recaptchaSecretKey) {
+        setRecaptchaSecretKey(json.securityControls.recaptchaSecretKey);
+      }
+      setTimeout(() => setControlsSuccess(null), 3500);
+    } catch (err) {
+      setControlsError(err.message);
+    } finally {
+      setControlsLoading(false);
+    }
+  };
+
+  // Block a single IP Address
+  const handleBlockIp = async (e) => {
+    e.preventDefault();
+    if (!newIpToBlock) return;
+
+    const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^(([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})?::(([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})?$/;
+    
+    if (!ipv4Regex.test(newIpToBlock) && !ipv6Regex.test(newIpToBlock)) {
+      setControlsError("Invalid IP address format. Please enter a valid IPv4 or IPv6 address.");
+      return;
+    }
+
+    setControlsLoading(true);
+    setControlsError(null);
+    setControlsSuccess(null);
+    try {
+      const res = await fetch("/api/admin/security/ip-block", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-site-id": siteId
+        },
+        body: JSON.stringify({ ip: newIpToBlock })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to block IP");
+      setIpBlocklist(json.ipBlocklist || []);
+      setNewIpToBlock("");
+      setControlsSuccess(`IP Address ${newIpToBlock} blocked successfully.`);
+      setTimeout(() => setControlsSuccess(null), 3000);
+    } catch (err) {
+      setControlsError(err.message);
+    } finally {
+      setControlsLoading(false);
+    }
+  };
+
+  // Unblock a single IP Address
+  const handleUnblockIp = async (ipToUnblock) => {
+    setControlsLoading(true);
+    setControlsError(null);
+    setControlsSuccess(null);
+    try {
+      const res = await fetch(`/api/admin/security/ip-block?ip=${ipToUnblock}`, {
+        method: "DELETE",
+        headers: {
+          "x-site-id": siteId
+        }
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to unblock IP");
+      setIpBlocklist(json.ipBlocklist || []);
+      setControlsSuccess(`IP Address ${ipToUnblock} unblocked successfully.`);
+      setTimeout(() => setControlsSuccess(null), 3000);
+    } catch (err) {
+      setControlsError(err.message);
+    } finally {
+      setControlsLoading(false);
+    }
+  };
 
   // Change Password Handler
   const handleChangePassword = async (e) => {
@@ -167,6 +304,8 @@ export default function SecurityConsole({ siteId, user }) {
       fetchLoginHistory();
     } else if (activeTab === "audit" && isAdmin) {
       fetchAuditLogs();
+    } else if (activeTab === "controls" && isAdmin) {
+      fetchSecurityControls();
     }
   }, [activeTab]);
 
@@ -211,17 +350,31 @@ export default function SecurityConsole({ siteId, user }) {
         </button>
 
         {isAdmin && (
-          <button
-            onClick={() => setActiveTab("audit")}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-lg transition text-left ${
-              activeTab === "audit"
-                ? "bg-blue-50 text-blue-600 border border-blue-100"
-                : "text-gray-600 hover:bg-gray-50 border border-transparent"
-            }`}
-          >
-            <FileText size={16} />
-            System Audit Logs
-          </button>
+          <>
+            <button
+              onClick={() => setActiveTab("audit")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-lg transition text-left ${
+                activeTab === "audit"
+                  ? "bg-blue-50 text-blue-600 border border-blue-100"
+                  : "text-gray-600 hover:bg-gray-50 border border-transparent"
+              }`}
+            >
+              <FileText size={16} />
+              System Audit Logs
+            </button>
+
+            <button
+              onClick={() => setActiveTab("controls")}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-lg transition text-left ${
+                activeTab === "controls"
+                  ? "bg-blue-50 text-blue-600 border border-blue-100"
+                  : "text-gray-600 hover:bg-gray-50 border border-transparent"
+              }`}
+            >
+              <Sliders size={16} />
+              Security Controls
+            </button>
+          </>
         )}
       </div>
 
@@ -545,6 +698,196 @@ export default function SecurityConsole({ siteId, user }) {
                     )}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Security Controls Tab */}
+        {activeTab === "controls" && isAdmin && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Shield size={20} className="text-blue-600" />
+                Global Security Controls Configuration
+              </h2>
+              <p className="text-xs text-gray-500 mt-1">
+                Configure Google reCAPTCHA integrations, global request rate limiting rules, session timeout conditions, and network IP blocking filters.
+              </p>
+            </div>
+
+            {controlsError && (
+              <div className="flex gap-3 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm">
+                <AlertCircle className="shrink-0" size={18} />
+                <p className="font-medium">{controlsError}</p>
+              </div>
+            )}
+
+            {controlsSuccess && (
+              <div className="flex gap-3 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm animate-in fade-in duration-150">
+                <CheckCircle2 className="shrink-0" size={18} />
+                <p className="font-medium">{controlsSuccess}</p>
+              </div>
+            )}
+
+            {controlsLoading && !recaptchaSiteKey && !rateLimitRps ? (
+              <div className="py-12 text-center text-xs text-gray-400">Loading configurations...</div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                
+                {/* Left Columns: Config Form */}
+                <form onSubmit={handleSaveControls} className="xl:col-span-2 space-y-6">
+                  
+                  {/* Rate Limits & Timeout Card */}
+                  <div className="border p-5 rounded-xl space-y-4 bg-gray-50/20">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-gray-700 border-b pb-1.5 flex items-center gap-1.5">
+                      <Sliders size={14} className="text-blue-600" />
+                      Rate Limiting & Session Rules
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          API Rate Limit Threshold (RPS)
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="1"
+                          max="1000"
+                          value={rateLimitRps}
+                          onChange={(e) => setRateLimitRps(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 bg-white p-2.5 outline-none focus:border-blue-600 text-sm font-mono"
+                        />
+                        <p className="text-[9px] text-gray-400 mt-1">Maximum allowed requests per second per client IP address.</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          Session Inactivity Timeout (Minutes)
+                        </label>
+                        <input
+                          type="number"
+                          required
+                          min="5"
+                          max="1440"
+                          value={sessionTimeoutMinutes}
+                          onChange={(e) => setSessionTimeoutMinutes(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 bg-white p-2.5 outline-none focus:border-blue-600 text-sm font-mono"
+                        />
+                        <p className="text-[9px] text-gray-400 mt-1">Automatically logs out inactive user sessions after this window.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* reCAPTCHA setup */}
+                  <div className="border p-5 rounded-xl space-y-4 bg-gray-50/20">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-gray-700 border-b pb-1.5 flex items-center gap-1.5">
+                      <Lock size={14} className="text-blue-600" />
+                      Google reCAPTCHA Integration
+                    </h3>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          reCAPTCHA Site Key
+                        </label>
+                        <input
+                          type="text"
+                          value={recaptchaSiteKey}
+                          onChange={(e) => setRecaptchaSiteKey(e.target.value)}
+                          placeholder="e.g. 6LeIxAcTAAAAAJcZVRqyhFYlk8ppGJN..."
+                          className="w-full rounded-lg border border-gray-200 bg-white p-2.5 outline-none focus:border-blue-600 text-xs font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                          reCAPTCHA Secret Key
+                        </label>
+                        <input
+                          type="password"
+                          value={recaptchaSecretKey}
+                          onChange={(e) => setRecaptchaSecretKey(e.target.value)}
+                          placeholder="Provide secret key or '********' to retain current key"
+                          className="w-full rounded-lg border border-gray-200 bg-white p-2.5 outline-none focus:border-blue-600 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={controlsLoading}
+                    className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    <Save size={13} />
+                    Save Security Controls
+                  </button>
+                </form>
+
+                {/* Right Columns: IP Blocking Panel */}
+                <div className="xl:col-span-1 space-y-6">
+                  {/* Block IP Form */}
+                  <form onSubmit={handleBlockIp} className="border p-5 rounded-xl space-y-4 bg-gray-50/20">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-gray-700 border-b pb-1.5 flex items-center gap-1.5">
+                      <Globe size={14} className="text-blue-600" />
+                      Block Network IP
+                    </h3>
+                    
+                    <div className="space-y-3">
+                      <p className="text-[10px] text-gray-500 leading-normal">
+                        Enter an IPv4 or IPv6 network address to immediately blacklist and restrict site routing access.
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          required
+                          value={newIpToBlock}
+                          onChange={(e) => setNewIpToBlock(e.target.value)}
+                          placeholder="e.g. 192.168.1.100"
+                          className="w-full rounded-lg border border-gray-200 bg-white p-2.5 outline-none focus:border-blue-600 text-xs font-mono"
+                        />
+                        <button
+                          type="submit"
+                          disabled={controlsLoading}
+                          className="px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition disabled:opacity-50 border-0 outline-none"
+                        >
+                          Block
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+
+                  {/* Active Blocklist */}
+                  <div className="border p-5 rounded-xl space-y-3 bg-white">
+                    <h4 className="font-bold text-xs text-gray-700 border-b pb-1">
+                      Active IP Blocklist ({ipBlocklist.length})
+                    </h4>
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                      {ipBlocklist.map((ip) => (
+                        <div key={ip} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg border border-gray-150">
+                          <span className="font-mono text-xs text-gray-800 select-all">{ip}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleUnblockIp(ip)}
+                            disabled={controlsLoading}
+                            className="text-gray-400 hover:text-red-600 p-1 rounded transition"
+                            title="Unblock IP"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      ))}
+                      {ipBlocklist.length === 0 && (
+                        <p className="text-[10px] text-gray-400 italic text-center py-4">
+                          No blocked IP addresses.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
           </div>

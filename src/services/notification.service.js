@@ -29,6 +29,8 @@ export class NotificationService extends BaseService {
 
   async notifyNewLead(siteId, lead) {
     const config = await this.getNotificationConfig(siteId);
+    
+    // 1. Email Channel
     if (config.newLead?.email) {
       const settings = await prisma.globalSettings.findUnique({
         where: { siteId },
@@ -36,19 +38,41 @@ export class NotificationService extends BaseService {
       });
       const adminEmail = settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
       if (adminEmail) {
-        const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
-        await transporter.sendMail({
-          from: fromEmail,
-          to: adminEmail,
-          subject: `[Lead Alert] New Lead Captured: ${lead.name}`,
-          text: `A new lead has been recorded on the system:\n\nName: ${lead.name}\nEmail: ${lead.email}\nPhone: ${lead.phone || "N/A"}\nInterest: ${lead.serviceInterest || "N/A"}\n\nView in Lead CRM dashboard.`
+        try {
+          const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
+          await transporter.sendMail({
+            from: fromEmail,
+            to: adminEmail,
+            subject: `[Lead Alert] New Lead Captured: ${lead.name}`,
+            text: `A new lead has been recorded on the system:\n\nName: ${lead.name}\nEmail: ${lead.email}\nPhone: ${lead.phone || "N/A"}\nInterest: ${lead.serviceInterest || "N/A"}\n\nView in Lead CRM dashboard.`
+          });
+        } catch (e) {
+          console.error("Failed to send new lead email alert:", e);
+        }
+      }
+    }
+
+    // 2. Dashboard Channel
+    if (config.newLead?.dashboard) {
+      try {
+        await prisma.notificationAlert.create({
+          data: {
+            siteId,
+            title: "New Lead Captured",
+            message: `Lead name: ${lead.name} (${lead.email}). Interest: ${lead.serviceInterest || "N/A"}`,
+            type: "NEW_LEAD"
+          }
         });
+      } catch (e) {
+        console.error("Failed to log new lead dashboard alert:", e);
       }
     }
   }
 
   async notifyFailedForm(siteId, errorDetails) {
     const config = await this.getNotificationConfig(siteId);
+    
+    // 1. Email Channel
     if (config.failedForm?.email) {
       const settings = await prisma.globalSettings.findUnique({
         where: { siteId },
@@ -56,19 +80,41 @@ export class NotificationService extends BaseService {
       });
       const adminEmail = settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
       if (adminEmail) {
-        const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
-        await transporter.sendMail({
-          from: fromEmail,
-          to: adminEmail,
-          subject: `[System Alert] Contact Form Submission Failure`,
-          text: `A contact form submission failed on your site.\n\nError: ${errorDetails.message}\nPayload: ${JSON.stringify(errorDetails.payload)}\n\nPlease check system logs.`
+        try {
+          const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
+          await transporter.sendMail({
+            from: fromEmail,
+            to: adminEmail,
+            subject: `[System Alert] Contact Form Submission Failure`,
+            text: `A contact form submission failed on your site.\n\nError: ${errorDetails.message}\nPayload: ${JSON.stringify(errorDetails.payload)}\n\nPlease check system logs.`
+          });
+        } catch (e) {
+          console.error("Failed to send failed form email alert:", e);
+        }
+      }
+    }
+
+    // 2. Dashboard Channel
+    if (config.failedForm?.dashboard) {
+      try {
+        await prisma.notificationAlert.create({
+          data: {
+            siteId,
+            title: "Form Submission Failure",
+            message: `Submission failed. Error: ${errorDetails.message}`,
+            type: "FAILED_FORM"
+          }
         });
+      } catch (e) {
+        console.error("Failed to log form failure dashboard alert:", e);
       }
     }
   }
 
   async notifyNewBlogPost(siteId, post) {
     const config = await this.getNotificationConfig(siteId);
+    
+    // 1. Email Channel
     if (config.blogAlert?.email) {
       const settings = await prisma.globalSettings.findUnique({
         where: { siteId },
@@ -76,13 +122,33 @@ export class NotificationService extends BaseService {
       });
       const adminEmail = settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
       if (adminEmail) {
-        const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
-        await transporter.sendMail({
-          from: fromEmail,
-          to: adminEmail,
-          subject: `[Blog Alert] New Post Published: ${post.title}`,
-          text: `A new blog post has been published:\n\nTitle: ${post.title}\nSlug: ${post.slug}\n\nCheck out the live post.`
+        try {
+          const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
+          await transporter.sendMail({
+            from: fromEmail,
+            to: adminEmail,
+            subject: `[Blog Alert] New Post Published: ${post.title}`,
+            text: `A new blog post has been published:\n\nTitle: ${post.title}\nSlug: ${post.slug}\n\nCheck out the live post.`
+          });
+        } catch (e) {
+          console.error("Failed to send blog email alert:", e);
+        }
+      }
+    }
+
+    // 2. Dashboard Channel
+    if (config.blogAlert?.dashboard) {
+      try {
+        await prisma.notificationAlert.create({
+          data: {
+            siteId,
+            title: "New Blog Post Published",
+            message: `Published: "${post.title}" (/blog/${post.slug})`,
+            type: "BLOG_ALERT"
+          }
         });
+      } catch (e) {
+        console.error("Failed to log blog dashboard alert:", e);
       }
     }
   }

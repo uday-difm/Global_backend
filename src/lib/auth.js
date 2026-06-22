@@ -47,19 +47,50 @@ export const authOptions = {
 
   callbacks: {
     async jwt({ token, user }) {
+      const now = Date.now();
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.globalRole = user.globalRole;
+        token.lastActivity = now;
+      }
+
+      // Dynamic session timeout verification from database
+      try {
+        const activeSite = await prisma.site.findFirst({ where: { isActive: true } });
+        if (activeSite) {
+          const settings = await prisma.globalSettings.findUnique({
+            where: { siteId: activeSite.id },
+            select: { securityControls: true },
+          });
+          const timeoutMinutes = settings?.securityControls?.sessionTimeoutMinutes || 30;
+          const timeoutMs = timeoutMinutes * 60 * 1000;
+
+          if (token.lastActivity && now - token.lastActivity > timeoutMs) {
+            token.error = "SessionExpired";
+          } else {
+            token.lastActivity = now;
+          }
+        }
+      } catch (err) {
+        console.error("JWT Session timeout verification error:", err);
       }
 
       return token;
     },
 
     async session({ session, token }) {
-      session.user.id = token.id;
-      session.user.email = token.email;
-      session.user.globalRole = token.globalRole;
+      if (token.error === "SessionExpired") {
+        session.error = "SessionExpired";
+        session.user = null;
+        return session;
+      }
+
+      session.user = {
+        id: token.id,
+        email: token.email,
+        globalRole: token.globalRole,
+      };
 
       return session;
     },

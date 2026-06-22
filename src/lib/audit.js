@@ -6,8 +6,8 @@ export async function logAction(siteId, userId, action, meta = {}) {
   });
 }
 
-export async function recordLogin(userId, ipAddress, userAgent) {
+export async function recordLogin(userId, ipAddress, userAgent, success = true) {
   return await prisma.loginHistory.create({
-    data: { userId, ipAddress, userAgent, success: true },
+    data: { userId, ipAddress, userAgent, success },
   });
 }
