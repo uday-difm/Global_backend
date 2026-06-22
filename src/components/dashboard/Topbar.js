@@ -75,7 +75,7 @@ export default function Topbar({ siteId }) {
 
   async function handleLogout() {
     setMenuOpen(false);
-    await signOut({ callbackUrl: "/" });
+    await signOut({ callbackUrl: `${window.location.origin}/login` });
   }
 
   const handleMarkAllRead = async () => {

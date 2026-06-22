@@ -31,7 +31,11 @@ export default function ContactFormSection({ siteId = "", content = {}, recaptch
     // Get reCAPTCHA token if configured
     let recaptchaToken = undefined;
     if (recaptchaSiteKey && typeof window !== "undefined" && window.grecaptcha) {
-      recaptchaToken = window.grecaptcha.getResponse();
+      try {
+        recaptchaToken = window.grecaptcha.getResponse();
+      } catch (err) {
+        console.error("reCAPTCHA getResponse error:", err);
+      }
       if (!recaptchaToken) {
         setAlert({ type: "error", text: "Please complete the reCAPTCHA security verification." });
         setLoading(false);

@@ -3,6 +3,46 @@ import { sectionRepository } from "@/repositories/section.repository";
 import { BaseService } from "@/core/service";
 import { NotFoundError, ValidationError } from "@/core/errors";
 
+const RESERVED_SLUGS = [
+  // Next.js standard/special routes
+  "api",
+  "login",
+  "preview",
+  "_next",
+  "favicon.ico",
+  "sitemap.xml",
+  "robots.txt",
+  "index",
+  "home",
+  // Admin dashboard routes
+  "backup",
+  "blogs",
+  "compliance",
+  "contact",
+  "cta",
+  "dashboard",
+  "dev",
+  "email",
+  "faq",
+  "footer",
+  "header",
+  "leads",
+  "legal",
+  "media",
+  "navigation",
+  "notifications",
+  "pages",
+  "performance",
+  "redirects",
+  "security",
+  "services",
+  "settings",
+  "team",
+  "testimonials",
+  "users",
+  "visitors"
+];
+
 export class PageService extends BaseService {
   constructor() {
     super(pageRepository);
@@ -103,6 +143,25 @@ export class PageService extends BaseService {
 
     const updateData = { ...data };
 
+    if (data.slug) {
+      const cleanSlug = this.slugify(data.slug);
+      if (RESERVED_SLUGS.includes(cleanSlug.toLowerCase())) {
+        throw new ValidationError(`The slug "${data.slug}" is reserved for system use.`);
+      }
+
+      // Check if slug is used by another page in this site
+      const existing = await pageRepository.findFirst(siteId, {
+        where: {
+          slug: { in: [cleanSlug, `/${cleanSlug}`] },
+          id: { not: id }
+        }
+      });
+      if (existing) {
+        throw new ValidationError(`The slug "${data.slug}" is already in use by another page.`);
+      }
+      updateData.slug = cleanSlug;
+    }
+
     if (data.status === "PUBLISHED" && current.status !== "PUBLISHED") {
       updateData.publishedAt = new Date();
       updateData.publishedBy = userId;
@@ -139,7 +198,10 @@ export class PageService extends BaseService {
   async generateUniqueSlug(siteId, baseSlug) {
     let candidate = baseSlug;
     let i = 0;
-    while (await pageRepository.findFirst(siteId, { where: { slug: candidate } })) {
+    while (
+      RESERVED_SLUGS.includes(candidate.toLowerCase()) ||
+      (await pageRepository.findFirst(siteId, { where: { slug: { in: [candidate, `/${candidate}`] } } }))
+    ) {
       i += 1;
       candidate = `${baseSlug}-${i}`;
     }

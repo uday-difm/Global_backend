@@ -23,11 +23,42 @@ export const authOptions = {
           label: "Password",
           type: "password",
         },
+        recaptchaToken: {
+          label: "reCAPTCHA Token",
+          type: "text",
+        },
       },
 
       async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password required");
+        }
+
+        const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+        if (secretKey) {
+          const recaptchaToken = credentials?.recaptchaToken;
+          if (!recaptchaToken) {
+            throw new Error("reCAPTCHA verification is required");
+          }
+
+          try {
+            const verifyUrl = "https://www.google.com/recaptcha/api/siteverify";
+            const queryParams = new URLSearchParams({
+              secret: secretKey,
+              response: recaptchaToken,
+            });
+
+            const verifyRes = await fetch(`${verifyUrl}?${queryParams.toString()}`, {
+              method: "POST",
+            });
+
+            const verifyJson = await verifyRes.json();
+            if (!verifyJson.success) {
+              throw new Error("reCAPTCHA verification failed");
+            }
+          } catch (captchaErr) {
+            throw new Error(captchaErr.message || "reCAPTCHA verification failed");
+          }
         }
 
         try {
@@ -97,8 +128,8 @@ export const authOptions = {
   },
 
   pages: {
-    signIn: "/",
-    error: "/",
+    signIn: "/login",
+    error: "/login",
   },
 
   secret: process.env.NEXTAUTH_SECRET,
