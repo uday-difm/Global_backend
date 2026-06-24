@@ -144,6 +144,11 @@ export class CMSClient {
     return this._request(`/api/seo/${encodeURIComponent(pageSlug)}`);
   }
 
+  // --- Legal Pages ---
+  async getLegalPage(type) {
+    return this._request(`/api/legal/${encodeURIComponent(type)}`);
+  }
+
   // --- Centralized Global Settings & Unified Layouts ---
   async getGlobalSettings() {
     return this._request("/api/global-settings");
