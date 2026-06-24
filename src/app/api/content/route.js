@@ -9,7 +9,7 @@ export async function GET(req) {
     const siteId = searchParams.get("siteId");
     const slug = searchParams.get("slug");
 
-    if (!siteId || !slug) {
+    if (!siteId || slug === null) {
       return NextResponse.json(
         { error: "siteId & slug required" },
         { status: 400 },

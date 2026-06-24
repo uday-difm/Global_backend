@@ -29,7 +29,9 @@ export async function PATCH(req, { params }) {
       const effectiveType = body.type || section.type;
       const v = tryValidateByType(effectiveType, { content: body.content || section.content });
       if (!v.ok) {
-        return NextResponse.json({ error: "Validation failed", details: v.error.errors || String(v.error) }, { status: 400 });
+        const errorDetail = v.error.errors?.map(e => `${e.path.join('.')}: ${e.message}`).join(', ') || String(v.error);
+        console.error("Zod Validation Failed for Section:", effectiveType, errorDetail);
+        return NextResponse.json({ error: `Validation failed: ${errorDetail}`, details: v.error.errors }, { status: 400 });
       }
     }
 

@@ -49,10 +49,17 @@ const TextBlockContentSchema = z
   })
   .strict();
 
+// LEGAL_CONTENT content schema
+const LegalContentSchema = z
+  .object({
+    documentType: z.enum(["privacy", "terms", "cookies", "disclaimer", "refund"]),
+  })
+  .strict();
 
 const TypeSchemaMap = {
   HERO: HeroContentSchema,
   TEXT_BLOCK: TextBlockContentSchema,
+  LEGAL_CONTENT: LegalContentSchema,
 };
 
 export function validateByType(type, payload) {

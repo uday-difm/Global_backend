@@ -16,13 +16,14 @@ export default async function FooterPage() {
     );
   }
 
-  // Retrieve current footer configuration
+  // Retrieve current footer configuration and navigation menus
   const settings = await prisma.globalSettings.findUnique({
     where: { siteId: site.id },
-    select: { footer: true }
+    select: { footer: true, navigation: true }
   });
 
   const footerConfig = settings?.footer || null;
+  const menuTypes = Object.keys(settings?.navigation || { main: [], footer: [] });
 
   return (
     <div className="w-full">
@@ -36,6 +37,8 @@ export default async function FooterPage() {
       <FooterEditor
         siteId={site.id}
         initialConfig={footerConfig}
+        navigation={settings?.navigation || {}}
+        menuTypes={menuTypes}
       />
     </div>
   );

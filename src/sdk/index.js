@@ -6,7 +6,7 @@ export class CMSClient {
   constructor({ baseUrl, siteId }) {
     if (!baseUrl) throw new Error("baseUrl is required");
     if (!siteId) throw new Error("siteId is required");
-    
+
     this.baseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
     this.siteId = siteId;
   }

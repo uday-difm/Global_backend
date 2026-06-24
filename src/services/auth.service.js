@@ -15,7 +15,7 @@ export class AuthService extends BaseService {
     super(userRepository);
   }
 
-  async authenticate(email, password, reqHeaders = {}) {
+  async authenticate(email, password, twoFACode, reqHeaders = {}) {
     if (!email || !password) {
       throw new ValidationError("Email and password required");
     }
@@ -36,6 +36,34 @@ export class AuthService extends BaseService {
         console.error("Failed to record failed login details:", err);
       }
       throw new UnauthorizedError("Invalid credentials");
+    }
+
+    // Check if 2FA is enabled
+    if (user.twoFAEnabled) {
+      if (!twoFACode) {
+        throw new ValidationError("2FA_REQUIRED");
+      }
+
+      const tf = await twoFactorRepository.findByUserId(user.id);
+      if (!tf) {
+        throw new ValidationError("2FA not set up properly on this account");
+      }
+
+      const verified = speakeasy.totp.verify({
+        secret: tf.secret.trim(),
+        encoding: "base32",
+        token: twoFACode.toString().trim(),
+        window: 2,
+      });
+
+      if (!verified) {
+        try {
+          await recordLogin(user.id, ip, agent, false);
+        } catch (err) {
+          console.error("Failed to record failed login details:", err);
+        }
+        throw new ValidationError("Invalid 2FA verification code");
+      }
     }
 
     // Record login audit history

@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { requireAuth } from "@/lib/requireAuth";
 import CatchAllPage, { generateMetadata as slugGenerateMetadata } from "./[...slug]/page";
 
 export async function generateMetadata() {
@@ -5,5 +7,11 @@ export async function generateMetadata() {
 }
 
 export default async function HomePage() {
-  return <CatchAllPage params={Promise.resolve({ slug: [] })} />;
+  const user = await requireAuth();
+
+  if (user) {
+    return <CatchAllPage params={Promise.resolve({ slug: [] })} />;
+  } else {
+    redirect("/login");
+  }
 }

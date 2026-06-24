@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Save, Plus, Trash2, ArrowRight } from "lucide-react";
 
-export default function FooterEditor({ siteId, initialConfig }) {
+export default function FooterEditor({ siteId, initialConfig, navigation = {}, menuTypes = [] }) {
   const defaultConfig = {
     layout: "4-columns",
     copyright: `© ${new Date().getFullYear()} Company Name. All rights reserved.`,
@@ -182,48 +182,82 @@ export default function FooterEditor({ siteId, initialConfig }) {
 
         {/* QUICK LINKS FIELDS */}
         {col.type === "links" && (
-          <div className="space-y-3 pt-2">
-            <div className="flex justify-between items-center">
-              <label className="block text-xs font-semibold text-gray-500">Navigation Links</label>
-              <button
-                type="button"
-                onClick={() => handleAddLinkItem(idx)}
-                className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1"
+          <div className="space-y-4 pt-2">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Links Source Type</label>
+              <select
+                value={col.sourceType || "manual"}
+                onChange={(e) => updateColumnField(idx, "sourceType", e.target.value)}
+                className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm bg-white"
               >
-                <Plus size={12} /> Add Item
-              </button>
+                <option value="manual">Manual Links</option>
+                <option value="navigation">Synced Navigation Menu</option>
+              </select>
             </div>
 
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {(col.items || []).map((item, itemIdx) => (
-                <div key={itemIdx} className="flex gap-2 items-center bg-gray-50 p-2 rounded-lg border">
-                  <input
-                    type="text"
-                    value={item.label}
-                    onChange={(e) => handleUpdateLinkItem(idx, itemIdx, "label", e.target.value)}
-                    className="w-1/2 rounded border border-gray-200 p-1.5 text-xs outline-none focus:border-blue-600"
-                    placeholder="Label"
-                  />
-                  <input
-                    type="text"
-                    value={item.url}
-                    onChange={(e) => handleUpdateLinkItem(idx, itemIdx, "url", e.target.value)}
-                    className="w-1/2 rounded border border-gray-200 p-1.5 text-xs outline-none focus:border-blue-600 font-mono"
-                    placeholder="URL Route"
-                  />
+            {col.sourceType === "navigation" ? (
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1">Select Navigation Menu</label>
+                <select
+                  value={col.menuType || "footer"}
+                  onChange={(e) => updateColumnField(idx, "menuType", e.target.value)}
+                  className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm bg-white"
+                >
+                  {(menuTypes.length > 0 ? menuTypes : ["main", "footer"]).map((menuName) => (
+                    <option key={menuName} value={menuName}>
+                      {menuName.toUpperCase()} menu
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-gray-400 mt-1.5 leading-normal">
+                  Links in this column will dynamically sync with changes made in the Navigation & Menus builder.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <label className="block text-xs font-semibold text-gray-500">Navigation Links</label>
                   <button
                     type="button"
-                    onClick={() => handleRemoveLinkItem(idx, itemIdx)}
-                    className="text-gray-400 hover:text-red-600 p-1 rounded"
+                    onClick={() => handleAddLinkItem(idx)}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1"
                   >
-                    <Trash2 size={13} />
+                    <Plus size={12} /> Add Item
                   </button>
                 </div>
-              ))}
-              {(col.items || []).length === 0 && (
-                <p className="text-xs text-gray-400 italic">No links added. Click 'Add Item'.</p>
-              )}
-            </div>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {(col.items || []).map((item, itemIdx) => (
+                    <div key={itemIdx} className="flex gap-2 items-center bg-gray-50 p-2 rounded-lg border">
+                      <input
+                        type="text"
+                        value={item.label}
+                        onChange={(e) => handleUpdateLinkItem(idx, itemIdx, "label", e.target.value)}
+                        className="w-1/2 rounded border border-gray-200 p-1.5 text-xs outline-none focus:border-blue-600"
+                        placeholder="Label"
+                      />
+                      <input
+                        type="text"
+                        value={item.url}
+                        onChange={(e) => handleUpdateLinkItem(idx, itemIdx, "url", e.target.value)}
+                        className="w-1/2 rounded border border-gray-200 p-1.5 text-xs outline-none focus:border-blue-600 font-mono"
+                        placeholder="URL Route"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLinkItem(idx, itemIdx)}
+                        className="text-gray-400 hover:text-red-600 p-1 rounded"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                  {(col.items || []).length === 0 && (
+                    <p className="text-xs text-gray-400 italic">No links added. Click 'Add Item'.</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -306,15 +340,27 @@ export default function FooterEditor({ siteId, initialConfig }) {
         )}
 
         {col.type === "links" && (
-          <ul className="space-y-1.5 text-[11px] text-slate-400 font-medium">
-            {(col.items || []).map((item, linkIdx) => (
-              <li key={linkIdx}>
-                <a href={item.url} className="hover:text-white transition flex items-center gap-1">
-                  <span>•</span> {item.label}
-                </a>
-              </li>
-            ))}
-            {(col.items || []).length === 0 && <span className="italic text-slate-500 text-[10px]">No links configured</span>}
+          <ul className="space-y-1.5 text-[11px] text-slate-400 font-medium text-left">
+            {col.sourceType === "navigation" ? (
+              (navigation[col.menuType || "footer"] || []).map((item, linkIdx) => (
+                <li key={linkIdx}>
+                  <a href={item.url} onClick={(e) => e.preventDefault()} className="hover:text-white transition flex items-center gap-1">
+                    <span>•</span> {item.label}
+                  </a>
+                </li>
+              ))
+            ) : (
+              (col.items || []).map((item, linkIdx) => (
+                <li key={linkIdx}>
+                  <a href={item.url} onClick={(e) => e.preventDefault()} className="hover:text-white transition flex items-center gap-1">
+                    <span>•</span> {item.label}
+                  </a>
+                </li>
+              ))
+            )}
+            {((col.sourceType === "navigation" ? (navigation[col.menuType || "footer"] || []) : (col.items || [])).length === 0) && (
+              <span className="italic text-slate-500 text-[10px]">No links configured</span>
+            )}
           </ul>
         )}
 

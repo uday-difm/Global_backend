@@ -8,7 +8,7 @@ import { EventBus } from "@/core/events";
 const FormSubmitSchema = z.object({
   siteId: z.string().min(1),
   name: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email is required"),
+  email: z.email("Valid email is required"),
   phone: z.string().optional(),
   message: z.string().min(1, "Message is required"),
   recaptchaToken: z.string().optional(),
@@ -80,7 +80,7 @@ export async function POST(req) {
               payload: { name, email, ip }
             }
           });
-        } catch (e) {}
+        } catch (e) { }
         return NextResponse.json({ success: false, error: "Access Denied: Your IP is blocked" }, { status: 403 });
       }
 
@@ -97,7 +97,7 @@ export async function POST(req) {
               payload: { name, email, ip }
             }
           });
-        } catch (e) {}
+        } catch (e) { }
         return NextResponse.json({ success: false, error: "Too Many Requests: Rate limit exceeded" }, { status: 429 });
       }
     } catch (e) {
@@ -123,7 +123,7 @@ export async function POST(req) {
               payload: { name, email }
             }
           });
-        } catch (e) {}
+        } catch (e) { }
         return NextResponse.json(
           { success: false, error: "reCAPTCHA verification is required" },
           { status: 400 }
@@ -151,7 +151,7 @@ export async function POST(req) {
                 payload: { name, email }
               }
             });
-          } catch (e) {}
+          } catch (e) { }
           return NextResponse.json(
             { success: false, error: "reCAPTCHA verification failed" },
             { status: 400 }
@@ -167,7 +167,7 @@ export async function POST(req) {
               payload: { name, email }
             }
           });
-        } catch (e) {}
+        } catch (e) { }
         return NextResponse.json(
           { success: false, error: "Security check validation service temporarily unavailable" },
           { status: 400 }
@@ -196,7 +196,7 @@ export async function POST(req) {
               payload: { name, email, message }
             }
           });
-        } catch (e) {}
+        } catch (e) { }
         return NextResponse.json(
           { success: false, error: "Submission blocked as spam" },
           { status: 400 },
@@ -218,7 +218,7 @@ export async function POST(req) {
             payload: { name, email }
           }
         });
-      } catch (e) {}
+      } catch (e) { }
       return NextResponse.json(
         {
           success: false,

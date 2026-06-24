@@ -27,6 +27,10 @@ export const authOptions = {
           label: "reCAPTCHA Token",
           type: "text",
         },
+        twoFACode: {
+          label: "2FA Code",
+          type: "text",
+        },
       },
 
       async authorize(credentials, req) {
@@ -66,6 +70,7 @@ export const authOptions = {
           const user = await authService.authenticate(
             credentials.email,
             credentials.password,
+            credentials.twoFACode,
             req.headers || {}
           );
           return user;

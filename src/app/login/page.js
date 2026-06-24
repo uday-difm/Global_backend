@@ -3,16 +3,17 @@
 import { signIn, useSession } from "next-auth/react";
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { 
-  Eye, 
-  EyeOff, 
-  Loader2, 
-  ShieldCheck, 
-  Database, 
-  Layers, 
-  Cpu, 
-  Activity, 
-  Lock, 
+import Link from "next/link";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  ShieldCheck,
+  Database,
+  Layers,
+  Cpu,
+  Activity,
+  Lock,
   Image as ImageIcon,
   BookOpen,
   ArrowRight
@@ -29,6 +30,8 @@ function LoginAndProjectLanding() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [twoFaRequired, setTwoFaRequired] = useState(false);
+  const [twoFaCode, setTwoFaCode] = useState("");
 
   const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   const recaptchaContainerRef = useRef(null);
@@ -99,6 +102,7 @@ function LoginAndProjectLanding() {
     setError("");
     if (!email.trim()) return setError("Email is required.");
     if (!password) return setError("Password is required.");
+    if (twoFaRequired && !twoFaCode.trim()) return setError("2FA Code is required.");
 
     // Check reCAPTCHA if site key is configured
     let recaptchaToken = undefined;
@@ -140,9 +144,16 @@ function LoginAndProjectLanding() {
         email,
         password,
         recaptchaToken,
+        twoFACode: twoFaRequired ? twoFaCode : undefined,
       });
 
       if (!res || res.error) {
+        if (res.error === "2FA_REQUIRED") {
+          setTwoFaRequired(true);
+          setLoading(false);
+          return;
+        }
+
         const errMsg = res?.error === "CredentialsSignin"
           ? "Invalid email or password."
           : (res?.error || "Invalid email or password.");
@@ -155,7 +166,7 @@ function LoginAndProjectLanding() {
             } else {
               window.grecaptcha.reset();
             }
-          } catch (_) {}
+          } catch (_) { }
         }
         setLoading(false);
         return;
@@ -173,7 +184,7 @@ function LoginAndProjectLanding() {
           } else {
             window.grecaptcha.reset();
           }
-        } catch (_) {}
+        } catch (_) { }
       }
       setLoading(false);
     }
@@ -249,7 +260,7 @@ function LoginAndProjectLanding() {
               <p className="text-slate-400 text-base md:text-lg leading-relaxed max-w-2xl">
                 A secure, highly customizable, and performant headless CMS project. Built to deliver isolated multi-site rendering, advanced media management, compliance mechanisms, and real-time statistics to client frontends.
               </p>
-              
+
               {/* Tech Badges */}
               <div className="pt-4 flex flex-wrap gap-2.5">
                 {["Next.js App Router", "Prisma ORM", "PostgreSQL", "NextAuth Security", "Cloudinary Media", "TOTP 2FA"].map((tech) => (
@@ -289,58 +300,92 @@ function LoginAndProjectLanding() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-                  {/* Email */}
-                  <div>
-                    <label htmlFor="email" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                      Email Address
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setError("");
-                      }}
-                      placeholder="admin@example.com"
-                      className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-xs text-white outline-none hover:border-slate-700 focus:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
-                    />
-                  </div>
-
-                  {/* Password */}
-                  <div>
-                    <label htmlFor="password" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                      Password
-                    </label>
-                    <div className="relative">
+                  {twoFaRequired ? (
+                    <div>
+                      <label htmlFor="twoFaCode" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                        Two-Factor Authentication Code
+                      </label>
                       <input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
+                        id="twoFaCode"
+                        type="text"
                         required
-                        autoComplete="current-password"
-                        value={password}
+                        maxLength={6}
+                        value={twoFaCode}
                         onChange={(e) => {
-                          setPassword(e.target.value);
+                          setTwoFaCode(e.target.value);
                           setError("");
                         }}
-                        placeholder="••••••••"
-                        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 pr-11 text-xs text-white outline-none hover:border-slate-700 focus:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                        placeholder="e.g. 123456"
+                        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-xs text-white outline-none hover:border-slate-700 focus:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 text-center font-mono tracking-widest text-base"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
+                      <p className="text-[10px] text-slate-500 mt-1.5 text-center">
+                        Open your authenticator app to retrieve your security code.
+                      </p>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      {/* Email */}
+                      <div>
+                        <label htmlFor="email" className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                          Email Address
+                        </label>
+                        <input
+                          id="email"
+                          type="email"
+                          required
+                          autoComplete="email"
+                          value={email}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            setError("");
+                          }}
+                          placeholder="admin@example.com"
+                          className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-xs text-white outline-none hover:border-slate-700 focus:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                        />
+                      </div>
+
+                      {/* Password */}
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label htmlFor="password" className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            Password
+                          </label>
+                          <Link
+                            href="/forgot-password"
+                            className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition"
+                          >
+                            Forgot Password?
+                          </Link>
+                        </div>
+                        <div className="relative">
+                          <input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            required
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => {
+                              setPassword(e.target.value);
+                              setError("");
+                            }}
+                            placeholder="••••••••"
+                            className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 pr-11 text-xs text-white outline-none hover:border-slate-700 focus:bg-slate-950 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword((v) => !v)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition"
+                            tabIndex={-1}
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   {/* reCAPTCHA — explicitly rendered into this ref container */}
-                  {recaptchaSiteKey && (
+                  {recaptchaSiteKey && !twoFaRequired && (
                     <div className="flex justify-center my-4 rounded-lg overflow-hidden">
                       <div ref={recaptchaContainerRef} />
                     </div>
@@ -364,12 +409,26 @@ function LoginAndProjectLanding() {
                     {loading ? (
                       <>
                         <Loader2 size={14} className="animate-spin" />
-                        Verifying Credentials…
+                        {twoFaRequired ? "Verifying OTP…" : "Verifying Credentials…"}
                       </>
                     ) : (
-                      "Sign In to Dashboard"
+                      twoFaRequired ? "Verify Code & Sign In" : "Sign In to Dashboard"
                     )}
                   </button>
+
+                  {twoFaRequired && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTwoFaRequired(false);
+                        setTwoFaCode("");
+                        setError("");
+                      }}
+                      className="w-full text-center text-xs text-slate-500 hover:text-slate-350 transition duration-150 mt-1 font-semibold"
+                    >
+                      Back to Sign In
+                    </button>
+                  )}
                 </form>
 
                 <p className="mt-5 text-center text-[10px] text-slate-500">

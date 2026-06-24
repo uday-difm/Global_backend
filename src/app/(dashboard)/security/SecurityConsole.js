@@ -37,6 +37,7 @@ export default function SecurityConsole({ siteId, user }) {
   const [twoFaLoading, setTwoFaLoading] = useState(false);
   const [twoFaStep, setTwoFaStep] = useState(1); // 1 = Off, 2 = Secret Generated
   const [twoFaSecret, setTwoFaSecret] = useState("");
+  const [twoFaQrCode, setTwoFaQrCode] = useState("");
   const [twoFaToken, setTwoFaToken] = useState("");
   const [twoFaError, setTwoFaError] = useState(null);
   const [twoFaSuccess, setTwoFaSuccess] = useState(null);
@@ -229,6 +230,7 @@ export default function SecurityConsole({ siteId, user }) {
       if (!res.ok) throw new Error(json.error || "Failed to generate 2FA secret");
 
       setTwoFaSecret(json.secret);
+      setTwoFaQrCode(json.qrCode || "");
       setTwoFaStep(2);
     } catch (err) {
       setTwoFaError(err.message);
@@ -517,9 +519,19 @@ export default function SecurityConsole({ siteId, user }) {
                       Step 1: Scan Authenticator Setup Code
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
+                      <p className="text-xs text-gray-650 leading-relaxed">
+                        Scan this QR code using Google Authenticator, Microsoft Authenticator, or 1Password:
+                      </p>
+                      
+                      {twoFaQrCode && (
+                        <div className="flex justify-center p-3 bg-white border rounded-xl w-fit mx-auto shadow-sm">
+                          <img src={twoFaQrCode} alt="2FA enrollment QR code" className="w-36 h-36" />
+                        </div>
+                      )}
+                      
                       <p className="text-xs text-gray-600">
-                        Scan this configuration key into Google Authenticator, Microsoft Authenticator, or 1Password:
+                        Or enter the configuration key manually:
                       </p>
                       <div className="p-3 bg-white border font-mono rounded text-xs select-all text-gray-800 flex justify-between items-center">
                         <span>{twoFaSecret}</span>

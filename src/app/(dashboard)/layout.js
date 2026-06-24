@@ -8,7 +8,7 @@ export default async function Layout({ children }) {
   const user = await requireAuth();
 
   if (!user) {
-    redirect("/");
+    redirect("/login");
   }
 
   const site = await getSiteForUser(user);

@@ -493,15 +493,15 @@ export default async function PreviewPage({ searchParams }) {
   const isSticky = headerSettings.sticky ?? true;
   const isTransparent = headerSettings.transparent ?? false;
 
-  const paddingYClass = 
-    headerSettings.paddingY === "small" ? "py-2" : 
-    headerSettings.paddingY === "large" ? "py-6" : 
-    "py-4";
+  const paddingYClass =
+    headerSettings.paddingY === "small" ? "py-2" :
+      headerSettings.paddingY === "large" ? "py-6" :
+        "py-4";
 
-  const shadowClass = 
-    headerSettings.shadowSize === "none" ? "shadow-none" : 
-    headerSettings.shadowSize === "medium" ? "shadow" : 
-    "shadow-xs";
+  const shadowClass =
+    headerSettings.shadowSize === "none" ? "shadow-none" :
+      headerSettings.shadowSize === "medium" ? "shadow" :
+        "shadow-xs";
 
   const borderClass = headerSettings.borderBottom !== false ? "border-b" : "";
 

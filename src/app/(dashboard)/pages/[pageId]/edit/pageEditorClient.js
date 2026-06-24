@@ -3,21 +3,21 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { 
-  Plus, 
-  Trash2, 
-  Eye, 
-  EyeOff, 
-  ArrowUp, 
-  ArrowDown, 
+import {
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+  ArrowUp,
+  ArrowDown,
   ArrowUpCircle,
-  FileText, 
-  Settings, 
-  Sliders, 
-  Code, 
-  Smartphone, 
-  Monitor, 
-  Save, 
+  FileText,
+  Settings,
+  Sliders,
+  Code,
+  Smartphone,
+  Monitor,
+  Save,
   Image as ImageIcon,
   HelpCircle,
   CheckCircle,
@@ -76,7 +76,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState(null);
-  
+
   // Page Settings Metadata States
   const [title, setTitle] = useState(pageTitle || "");
   const [slug, setSlug] = useState("");
@@ -165,7 +165,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
   const handleSelectSection = (sec) => {
     setSelectedSection(sec);
     setRawJsonContent(JSON.stringify(sec.content || {}, null, 2));
-    
+
     // Seed visual inputs based on type
     if (sec.type === "HERO") {
       setVisualFields({
@@ -247,7 +247,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
   const handleSaveSection = async (updatedContent = null) => {
     if (!selectedSection) return;
     setActionLoading(true);
-    
+
     let contentToSave = updatedContent;
     if (!contentToSave) {
       if (activeTab === "section_json") {
@@ -368,7 +368,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
   const handleMoveSection = async (sec, direction) => {
     const currentIndex = sections.findIndex((s) => s.id === sec.id);
     if (currentIndex === -1) return;
-    
+
     let targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
     if (targetIndex < 0 || targetIndex >= sections.length) return;
 
@@ -580,11 +580,10 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
             type="button"
             onClick={handleTogglePublish}
             disabled={actionLoading}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg shadow transition ${
-              status === "PUBLISHED"
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg shadow transition ${status === "PUBLISHED"
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                 : "bg-slate-700 hover:bg-slate-600 text-slate-200"
-            }`}
+              }`}
           >
             <CheckCircle size={14} />
             {status === "PUBLISHED" ? "PUBLISHED" : "DRAFT"}
@@ -612,7 +611,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
       {/* Editor Split Grid Pane */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start">
-        
+
         {/* Left Side: Layout Sections Tree */}
         <div className="xl:col-span-1 bg-white border rounded-xl p-5 shadow-sm space-y-4">
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider border-b pb-2 flex items-center gap-1.5">
@@ -630,14 +629,13 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
           ) : (
             <div className="space-y-3.5 max-h-[60vh] overflow-y-auto pr-1">
               {sections.map((sec) => (
-                <div 
+                <div
                   key={sec.id}
                   onClick={() => handleSelectSection(sec)}
-                  className={`border p-3.5 rounded-lg cursor-pointer transition flex flex-col gap-2 hover:shadow-sm ${
-                    selectedSection?.id === sec.id
+                  className={`border p-3.5 rounded-lg cursor-pointer transition flex flex-col gap-2 hover:shadow-sm ${selectedSection?.id === sec.id
                       ? "border-indigo-600 bg-indigo-50/20 shadow-sm"
                       : "border-gray-250 hover:border-gray-400 bg-white"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-800 font-bold tracking-wider">
@@ -730,29 +728,26 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
           <div className="flex bg-gray-50 border rounded-lg p-1 text-xs font-bold text-gray-500">
             <button
               onClick={() => setActiveTab("page_meta")}
-              className={`flex-1 py-2 rounded-md transition flex items-center justify-center gap-1.5 ${
-                activeTab === "page_meta"
+              className={`flex-1 py-2 rounded-md transition flex items-center justify-center gap-1.5 ${activeTab === "page_meta"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "hover:text-gray-900"
-              }`}
+                }`}
             >
               <Settings size={14} />
               Page Details & SEO
             </button>
-            
+
             <button
               onClick={() => {
                 if (!selectedSection) return alert("Select a section from the tree first.");
                 setActiveTab("section_visual");
               }}
               disabled={!selectedSection}
-              className={`flex-1 py-2 rounded-md transition flex items-center justify-center gap-1.5 ${
-                !selectedSection ? "opacity-40 cursor-not-allowed" : ""
-              } ${
-                activeTab === "section_visual"
+              className={`flex-1 py-2 rounded-md transition flex items-center justify-center gap-1.5 ${!selectedSection ? "opacity-40 cursor-not-allowed" : ""
+                } ${activeTab === "section_visual"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "hover:text-gray-900"
-              }`}
+                }`}
             >
               <Sliders size={14} />
               Visual Editor
@@ -764,13 +759,11 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                 setActiveTab("section_json");
               }}
               disabled={!selectedSection}
-              className={`flex-1 py-2 rounded-md transition flex items-center justify-center gap-1.5 ${
-                !selectedSection ? "opacity-40 cursor-not-allowed" : ""
-              } ${
-                activeTab === "section_json"
+              className={`flex-1 py-2 rounded-md transition flex items-center justify-center gap-1.5 ${!selectedSection ? "opacity-40 cursor-not-allowed" : ""
+                } ${activeTab === "section_json"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "hover:text-gray-900"
-              }`}
+                }`}
             >
               <Code size={14} />
               Source JSON
@@ -778,11 +771,10 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
             <button
               onClick={() => setActiveTab("help")}
-              className={`flex-1 py-2 rounded-md transition flex items-center justify-center gap-1.5 ${
-                activeTab === "help"
+              className={`flex-1 py-2 rounded-md transition flex items-center justify-center gap-1.5 ${activeTab === "help"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "hover:text-gray-900"
-              }`}
+                }`}
             >
               <HelpCircle size={14} />
               Editor Guide
@@ -793,7 +785,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
           {activeTab === "page_meta" && (
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Page Metadata & Configurations</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Page Title</label>
@@ -1233,9 +1225,8 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
             <button
               type="button"
               onClick={() => setPreviewDevice("desktop")}
-              className={`px-3 py-1.5 text-[10px] font-bold rounded transition flex items-center gap-1 ${
-                previewDevice === "desktop" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-slate-200"
-              }`}
+              className={`px-3 py-1.5 text-[10px] font-bold rounded transition flex items-center gap-1 ${previewDevice === "desktop" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-slate-200"
+                }`}
             >
               <Monitor size={12} />
               Desktop View
@@ -1243,9 +1234,8 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
             <button
               type="button"
               onClick={() => setPreviewDevice("mobile")}
-              className={`px-3 py-1.5 text-[10px] font-bold rounded transition flex items-center gap-1 ${
-                previewDevice === "mobile" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-slate-200"
-              }`}
+              className={`px-3 py-1.5 text-[10px] font-bold rounded transition flex items-center gap-1 ${previewDevice === "mobile" ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-slate-200"
+                }`}
             >
               <Smartphone size={12} />
               Mobile View
@@ -1255,12 +1245,11 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
         {/* Viewport Frame */}
         <div className="w-full flex justify-center py-4 bg-slate-900/40 rounded-xl">
-          <div className={`bg-white text-black transition-all duration-300 shadow-lg min-h-[400px] overflow-hidden flex flex-col ${
-            previewDevice === "mobile"
+          <div className={`bg-white text-black transition-all duration-300 shadow-lg min-h-[400px] overflow-hidden flex flex-col ${previewDevice === "mobile"
               ? "w-full max-w-[380px] border border-slate-700 rounded-2xl ring-4 ring-slate-800"
               : "w-full border rounded-xl"
-          }`}>
-            
+            }`}>
+
             {/* Header simulated bar */}
             <div className="bg-white border-b px-4 py-3 flex items-center justify-between text-[10px] font-bold text-gray-500">
               <span className="text-slate-800 uppercase tracking-tight">{title || "MySite"}</span>
@@ -1274,7 +1263,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
             {/* Sections Content List Simulator Render */}
             <div className="flex-1 bg-slate-50 flex flex-col">
               {sections.filter((s) => s.isVisible).map((sec) => {
-                
+
                 // HERO Render
                 if (sec.type === "HERO") {
                   const aligns = {
@@ -1293,16 +1282,15 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                   const alignmentClassLive = aligns[displayAlignment || "center"];
 
                   return (
-                    <div 
+                    <div
                       key={sec.id}
                       style={{
                         backgroundImage: displayBgUrl ? `url(${displayBgUrl})` : "none",
                         backgroundPosition: "center",
                         backgroundSize: "cover"
                       }}
-                      className={`relative min-h-[220px] px-6 py-10 flex flex-col justify-center border-b ${
-                        displayBgUrl ? "text-white" : "bg-gradient-to-r from-slate-900 to-indigo-950 text-white"
-                      } ${selectedSection?.id === sec.id ? "ring-2 ring-indigo-500" : ""}`}
+                      className={`relative min-h-[220px] px-6 py-10 flex flex-col justify-center border-b ${displayBgUrl ? "text-white" : "bg-gradient-to-r from-slate-900 to-indigo-950 text-white"
+                        } ${selectedSection?.id === sec.id ? "ring-2 ring-indigo-500" : ""}`}
                     >
                       {/* Dark overlay for text readability */}
                       {displayBgUrl && <div className="absolute inset-0 bg-slate-950/60 z-0" />}
@@ -1314,7 +1302,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                         <p className="text-[10px] text-slate-300 max-w-sm">
                           {displaySubtitle || "This is a placeholder subtitle for the page banner."}
                         </p>
-                        
+
                         <div className="flex gap-2 mt-2">
                           <span className="px-3.5 py-1.5 bg-indigo-600 text-white rounded text-[8px] font-bold shadow">
                             {sec.content?.primaryButton?.text || "Action Button"}
@@ -1342,17 +1330,15 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                   const isRight = displayPosition === "right";
 
                   return (
-                    <div 
+                    <div
                       key={sec.id}
-                      className={`bg-white px-6 py-8 border-b flex flex-col gap-4 text-xs font-medium text-slate-650 ${
-                        selectedSection?.id === sec.id ? "ring-2 ring-indigo-500" : ""
-                      } ${
-                        (isLeft || isRight) && previewDevice === "desktop" ? "flex-row items-center" : "flex-col"
-                      }`}
+                      className={`bg-white px-6 py-8 border-b flex flex-col gap-4 text-xs font-medium text-slate-650 ${selectedSection?.id === sec.id ? "ring-2 ring-indigo-500" : ""
+                        } ${(isLeft || isRight) && previewDevice === "desktop" ? "flex-row items-center" : "flex-col"
+                        }`}
                     >
                       {displayImageUrl && (isLeft || displayPosition === "top") && (
                         <div className="shrink-0 w-full md:w-32 h-24 relative rounded overflow-hidden border">
-                          <SafeImage 
+                          <SafeImage
                             src={displayImageUrl}
                             alt="Mock Section Image"
                             fill
@@ -1378,7 +1364,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
                       {displayImageUrl && isRight && (
                         <div className="shrink-0 w-full md:w-32 h-24 relative rounded overflow-hidden border">
-                          <SafeImage 
+                          <SafeImage
                             src={displayImageUrl}
                             alt="Mock Section Image"
                             fill
@@ -1399,11 +1385,10 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                   const displayButtonText = isCurrent ? visualFields.buttonText : sec.content?.buttonText;
 
                   return (
-                    <div 
+                    <div
                       key={sec.id}
-                      className={`bg-white px-6 py-8 border-b flex flex-col gap-4 text-xs ${
-                        selectedSection?.id === sec.id ? "ring-2 ring-indigo-500" : ""
-                      }`}
+                      className={`bg-white px-6 py-8 border-b flex flex-col gap-4 text-xs ${selectedSection?.id === sec.id ? "ring-2 ring-indigo-500" : ""
+                        }`}
                     >
                       <div className="text-center max-w-sm mx-auto">
                         <h3 className="font-bold text-slate-900 text-sm">
@@ -1438,11 +1423,10 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
                 // Generic placeholder for other module sections (FAQ, Services, Testimonials, Team, CTA)
                 return (
-                  <div 
-                    key={sec.id} 
-                    className={`px-6 py-6 border-b bg-gray-50 flex items-center justify-between gap-4 ${
-                      selectedSection?.id === sec.id ? "ring-2 ring-indigo-500" : ""
-                    }`}
+                  <div
+                    key={sec.id}
+                    className={`px-6 py-6 border-b bg-gray-50 flex items-center justify-between gap-4 ${selectedSection?.id === sec.id ? "ring-2 ring-indigo-500" : ""
+                      }`}
                   >
                     <div className="space-y-1">
                       <span className="text-[8px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase tracking-wider">
@@ -1509,8 +1493,8 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 overflow-y-auto pr-1 flex-1 pb-4">
                 {mediaList.map((m) => (
-                  <div 
-                    key={m.id} 
+                  <div
+                    key={m.id}
                     onClick={() => handleSelectMedia(m)}
                     className="border rounded-xl p-2.5 bg-gray-50/20 hover:border-indigo-500 hover:shadow-sm cursor-pointer transition flex flex-col gap-2 group"
                   >

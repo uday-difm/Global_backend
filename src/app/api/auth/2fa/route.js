@@ -3,6 +3,7 @@ import { authService } from "@/services/auth.service";
 import { requireAuth } from "@/lib/requireAuth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/core/errors";
+import QRCode from "qrcode";
 
 async function getAuthenticatedUser() {
   const sessionUser = await requireAuth();
@@ -21,8 +22,15 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { secret } = await authService.generate2FASecret(user.id);
-    return NextResponse.json({ secret });
+    const { secret, otpauthUrl } = await authService.generate2FASecret(user.id);
+    
+    // Generate QR Code data URL
+    let qrCode = "";
+    if (otpauthUrl) {
+      qrCode = await QRCode.toDataURL(otpauthUrl);
+    }
+    
+    return NextResponse.json({ secret, qrCode });
   } catch (err) {
     return handleApiError(err);
   }

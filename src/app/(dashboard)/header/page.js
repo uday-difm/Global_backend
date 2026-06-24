@@ -45,6 +45,7 @@ export default async function HeaderPage() {
         siteId={site.id}
         initialConfig={headerConfig}
         menuTypes={menuTypes}
+        navigation={settings?.navigation || {}}
       />
     </div>
   );

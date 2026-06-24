@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Save, AlertCircle, CheckCircle2, Layout, Smartphone, HelpCircle, Eye, EyeOff } from "lucide-react";
 
-export default function HeaderEditor({ siteId, initialConfig, menuTypes = [] }) {
+export default function HeaderEditor({ siteId, initialConfig, menuTypes = [], navigation = {} }) {
   const defaultConfig = {
     layout: "logo-left",
     logoType: "image", // "image" | "text"
@@ -107,6 +107,38 @@ export default function HeaderEditor({ siteId, initialConfig, menuTypes = [] }) 
 
   // Safe navigation fallback if menuTypes is empty
   const activeMenus = menuTypes.length > 0 ? menuTypes : ["main", "footer"];
+
+  const activeMenuItems = navigation[config.menuType] || [];
+
+  const renderNavLinks = (itemsArray = [], isSplit = false, splitSide = "left") => {
+    let itemsToRender = itemsArray;
+    if (isSplit) {
+      const half = Math.ceil(itemsArray.length / 2);
+      itemsToRender = splitSide === "left" ? itemsArray.slice(0, half) : itemsArray.slice(half);
+    }
+
+    return (
+      <ul className="hidden md:flex gap-6 text-[10px] text-gray-500 font-bold uppercase tracking-wider items-center">
+        {itemsToRender.map((item, idx) => (
+          <li key={idx} className="relative group cursor-pointer hover:text-indigo-600 transition">
+            <span className="whitespace-nowrap">{item.label}</span>
+            {item.children && item.children.length > 0 && (
+              <div className="absolute left-0 mt-1 hidden group-hover:block bg-white border border-gray-250 rounded-lg shadow-lg p-2 min-w-[140px] text-gray-700 z-50 text-[9px] font-medium normal-case">
+                {item.children.map((child, cidx) => (
+                  <div key={cidx} className="px-2 py-1.5 hover:bg-gray-50 rounded transition text-gray-600 hover:text-indigo-600 text-left">
+                    {child.label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </li>
+        ))}
+        {itemsToRender.length === 0 && (
+          <span className="text-[10px] text-gray-400 italic">Empty Menu</span>
+        )}
+      </ul>
+    );
+  };
 
   // Mapping helper classes for live preview
   const getPaddingClass = (size) => {
@@ -589,12 +621,7 @@ export default function HeaderEditor({ siteId, initialConfig, menuTypes = [] }) 
                             />
                           )}
                         </div>
-                        <ul className="hidden md:flex gap-6 text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                          <li className="text-indigo-600 border-b border-indigo-600">Home</li>
-                          <li>Services</li>
-                          <li>Testimonials</li>
-                          <li>About</li>
-                        </ul>
+                        {renderNavLinks(activeMenuItems)}
                         <div>
                           {config.ctaText && (
                             <button type="button" className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold whitespace-nowrap shadow-sm">
@@ -608,10 +635,7 @@ export default function HeaderEditor({ siteId, initialConfig, menuTypes = [] }) 
                     {/* 2. Logo Center */}
                     {config.layout === "logo-center" && (
                       <>
-                        <ul className="hidden md:flex gap-6 text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                          <li className="text-indigo-600">Home</li>
-                          <li>Services</li>
-                        </ul>
+                        {renderNavLinks(activeMenuItems)}
                         <div className="shrink-0 flex items-center">
                           {config.logoType === "text" ? (
                             <span className="font-bold text-sm tracking-tight text-gray-900">{config.logoText}</span>
@@ -636,10 +660,7 @@ export default function HeaderEditor({ siteId, initialConfig, menuTypes = [] }) 
                     {/* 3. Logo Split */}
                     {config.layout === "logo-split" && (
                       <>
-                        <ul className="hidden md:flex gap-4 text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                          <li className="text-indigo-600">Home</li>
-                          <li>Services</li>
-                        </ul>
+                        {renderNavLinks(activeMenuItems, true, "left")}
                         <div className="shrink-0 flex items-center">
                           {config.logoType === "text" ? (
                             <span className="font-bold text-sm tracking-tight text-gray-900">{config.logoText}</span>
@@ -651,10 +672,7 @@ export default function HeaderEditor({ siteId, initialConfig, menuTypes = [] }) 
                             />
                           )}
                         </div>
-                        <ul className="hidden md:flex gap-4 text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                          <li>Testimonials</li>
-                          <li>About</li>
-                        </ul>
+                        {renderNavLinks(activeMenuItems, true, "right")}
                       </>
                     )}
 
@@ -668,11 +686,7 @@ export default function HeaderEditor({ siteId, initialConfig, menuTypes = [] }) 
                             </button>
                           )}
                         </div>
-                        <ul className="hidden md:flex gap-6 text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                          <li className="text-indigo-600">Home</li>
-                          <li>Services</li>
-                          <li>About</li>
-                        </ul>
+                        {renderNavLinks(activeMenuItems)}
                         <div className="shrink-0 flex items-center">
                           {config.logoType === "text" ? (
                             <span className="font-bold text-sm tracking-tight text-gray-900">{config.logoText}</span>
@@ -702,11 +716,7 @@ export default function HeaderEditor({ siteId, initialConfig, menuTypes = [] }) 
                           )}
                         </div>
                         <div className="flex w-full justify-between items-center pt-2 border-t border-gray-100">
-                          <ul className="flex gap-6 text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                            <li className="text-indigo-600">Home</li>
-                            <li>Services</li>
-                            <li>About</li>
-                          </ul>
+                          {renderNavLinks(activeMenuItems)}
                           <div>
                             {config.ctaText && (
                               <button type="button" className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold whitespace-nowrap shadow-sm">

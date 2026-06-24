@@ -74,13 +74,18 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
     (p) => p.status === "PUBLISHED" && p.publishedAt && new Date(p.publishedAt) > now
   ).length;
 
-  // Categories scoped to this site
+  // Categories scoped to this site (fetch all, but count posts for this site)
   const categories = await prisma.category.findMany({
-    where: {
-      posts: { some: { siteId: site.id } },
-    },
     orderBy: { name: "asc" },
-    include: { _count: { select: { posts: true } } },
+    include: {
+      _count: {
+        select: {
+          posts: {
+            where: { siteId: site.id, deletedAt: null }
+          }
+        }
+      }
+    }
   });
 
   const filters = [
