@@ -249,25 +249,6 @@ function LoginAndProjectLanding() {
       if (preData.twoFARequired) {
         // Show 2FA input — reset captcha so user completes a fresh challenge
         setTwoFaRequired(true);
-        // if (
-        //   recaptchaSiteKey &&
-        //   window.grecaptcha &&
-        //   recaptchaContainerRef.current
-        // ) {
-        //   try {
-        //     recaptchaContainerRef.current.innerHTML = "";
-        //     window.grecaptcha.ready(() => {
-        //       const id = window.grecaptcha.render(
-        //         recaptchaContainerRef.current,
-        //         {
-        //           sitekey: recaptchaSiteKey,
-        //           theme: "dark",
-        //         },
-        //       );
-        //       widgetIdRef.current = id;
-        //     });
-        //   } catch (_) {}
-        // }
         setLoading(false);
         return;
       }

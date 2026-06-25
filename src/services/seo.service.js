@@ -31,19 +31,26 @@ export class SeoService extends BaseService {
       orderBy: { updatedAt: "desc" },
     });
 
+    // Universal: exclude Next.js dynamic route patterns like [slug], [...catchall], [[optional]]
+    const DYNAMIC_SEGMENT = /\[.*?\]/;
+
     const items = [
-      ...pages.map(p => ({
-        url: p.slug.startsWith("/") ? p.slug : `/${p.slug}`,
-        lastModified: p.updatedAt.toISOString(),
-      })),
-      ...posts.map(p => ({
+      ...pages
+        .filter((p) => !DYNAMIC_SEGMENT.test(p.slug))
+        .map((p) => ({
+          url: p.slug.startsWith("/") ? p.slug : `/${p.slug}`,
+          lastModified: p.updatedAt.toISOString(),
+        })),
+      ...posts.map((p) => ({
         url: `/blogs/${p.slug}`,
         lastModified: p.updatedAt.toISOString(),
       })),
-      ...legalPages.map(lp => ({
-        url: `/legal/${lp.type}`,
-        lastModified: lp.updatedAt.toISOString(),
-      })),
+      ...legalPages
+        .filter((lp) => !DYNAMIC_SEGMENT.test(lp.type))
+        .map((lp) => ({
+          url: `/legal/${lp.type}`,
+          lastModified: lp.updatedAt.toISOString(),
+        })),
     ];
 
     return items;
@@ -58,9 +65,9 @@ export class SeoService extends BaseService {
     if (settings?.websiteSettings?.robotsTxt) {
       return settings.websiteSettings.robotsTxt;
     }
-    
+
     const domain = settings?.websiteSettings?.domain || `http://localhost:3000`;
-    
+
     return `User-agent: *
 Allow: /
 Disallow: /api/
@@ -83,12 +90,15 @@ Sitemap: ${domain}/sitemap.xml
     const site = await prisma.site.findUnique({
       where: { id: siteId },
       include: {
-        services: { where: { status: "ACTIVE" }, select: { title: true, description: true } },
+        services: {
+          where: { status: "ACTIVE" },
+          select: { title: true, description: true },
+        },
         posts: {
           where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
-          select: { title: true, excerpt: true }
+          select: { title: true, excerpt: true },
         },
-      }
+      },
     });
 
     if (!site) {
@@ -97,15 +107,15 @@ Sitemap: ${domain}/sitemap.xml
 
     let text = `# ${site.name} - AI Agent Guide\n\n`;
     text += `This document provides indexable information on the services, posts, and structure of ${site.name} for AI and LLM agents.\n\n`;
-    
+
     text += `## Core Offerings & Services\n`;
-    site.services.forEach(s => {
+    site.services.forEach((s) => {
       text += `- **${s.title}**: ${s.description || "No description"}\n`;
     });
     text += `\n`;
 
     text += `## Latest Blog Posts\n`;
-    site.posts.forEach(p => {
+    site.posts.forEach((p) => {
       text += `- **${p.title}**: ${p.excerpt || "Read full article"}\n`;
     });
 
