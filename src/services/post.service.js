@@ -2,10 +2,25 @@ import { postRepository } from "@/repositories/post.repository";
 import { BaseService } from "@/core/service";
 import { EventBus } from "@/core/events";
 import { NotFoundError } from "@/core/errors";
+import prisma from "@/lib/prisma";
 
 export class PostService extends BaseService {
   constructor() {
     super(postRepository);
+  }
+
+  /**
+   * Find or create a global "Others" category for uncategorized posts.
+   */
+  async getOrCreateOthersCategory() {
+    return prisma.category.upsert({
+      where: { name: "Others" },
+      update: {},
+      create: {
+        name: "Others",
+        slug: "others",
+      },
+    });
   }
 
   async getPosts(siteId, options = {}) {
@@ -26,7 +41,12 @@ export class PostService extends BaseService {
     return this.getList(siteId, {
       where,
       orderBy: { createdAt: "desc" },
-      include: { categories: true, tags: true, author: { select: { id: true, email: true } }, featuredImage: true },
+      include: {
+        categories: true,
+        tags: true,
+        author: { select: { id: true, email: true } },
+        featuredImage: true,
+      },
     });
   }
 
@@ -41,7 +61,9 @@ export class PostService extends BaseService {
   async create(siteId, postData, userId = null, options = {}) {
     const { categoryIds, tagIds, ...data } = postData;
 
-    const baseSlug = (data.slug && this.slugify(data.slug)) || this.slugify(data.title || "new-post");
+    const baseSlug =
+      (data.slug && this.slugify(data.slug)) ||
+      this.slugify(data.title || "new-post");
     const slug = await this.generateUniquePostSlug(siteId, baseSlug);
 
     let publishedAtVal = null;
@@ -51,12 +73,21 @@ export class PostService extends BaseService {
       publishedAtVal = new Date();
     }
 
+    // Default to "Others" category if none selected
+    let effectiveCategoryIds = categoryIds;
+    if (!effectiveCategoryIds || effectiveCategoryIds.length === 0) {
+      const others = await this.getOrCreateOthersCategory();
+      effectiveCategoryIds = [others.id];
+    }
+
     const relations = {};
-    if (categoryIds && categoryIds.length > 0) {
-      relations.categories = { connect: categoryIds.map(id => ({ id })) };
+    if (effectiveCategoryIds.length > 0) {
+      relations.categories = {
+        connect: effectiveCategoryIds.map((id) => ({ id })),
+      };
     }
     if (tagIds && tagIds.length > 0) {
-      relations.tags = { connect: tagIds.map(id => ({ id })) };
+      relations.tags = { connect: tagIds.map((id) => ({ id })) };
     }
 
     const created = await this.repository.create(siteId, {
@@ -67,7 +98,10 @@ export class PostService extends BaseService {
       authorId: data.authorId || userId,
     });
 
-    if (created.status === "PUBLISHED" && (!created.publishedAt || new Date(created.publishedAt) <= new Date())) {
+    if (
+      created.status === "PUBLISHED" &&
+      (!created.publishedAt || new Date(created.publishedAt) <= new Date())
+    ) {
       EventBus.emit("post.published", { siteId, data: created });
     }
 
@@ -77,12 +111,23 @@ export class PostService extends BaseService {
   async update(siteId, postId, postData, userId = null, options = {}) {
     const { categoryIds, tagIds, ...data } = postData;
 
+    // Default to "Others" category if explicitly clearing categories
+    let effectiveCategoryIds = categoryIds;
+    if (effectiveCategoryIds !== undefined) {
+      if (!effectiveCategoryIds || effectiveCategoryIds.length === 0) {
+        const others = await this.getOrCreateOthersCategory();
+        effectiveCategoryIds = [others.id];
+      }
+    }
+
     const relations = {};
-    if (categoryIds) {
-      relations.categories = { set: categoryIds.map(id => ({ id })) };
+    if (effectiveCategoryIds !== undefined) {
+      relations.categories = {
+        set: effectiveCategoryIds.map((id) => ({ id })),
+      };
     }
     if (tagIds) {
-      relations.tags = { set: tagIds.map(id => ({ id })) };
+      relations.tags = { set: tagIds.map((id) => ({ id })) };
     }
 
     const current = await this.repository.findUnique(siteId, postId);
@@ -102,7 +147,11 @@ export class PostService extends BaseService {
       ...relations,
     });
 
-    if (!wasPublished && willBePublished && (!updated.publishedAt || new Date(updated.publishedAt) <= new Date())) {
+    if (
+      !wasPublished &&
+      willBePublished &&
+      (!updated.publishedAt || new Date(updated.publishedAt) <= new Date())
+    ) {
       EventBus.emit("post.published", { siteId, data: updated });
     }
 
@@ -122,7 +171,9 @@ export class PostService extends BaseService {
   async generateUniquePostSlug(siteId, baseSlug) {
     let candidate = baseSlug;
     let i = 0;
-    while (await this.repository.findFirst(siteId, { where: { slug: candidate } })) {
+    while (
+      await this.repository.findFirst(siteId, { where: { slug: candidate } })
+    ) {
       i += 1;
       candidate = `${baseSlug}-${i}`;
     }
@@ -131,7 +182,6 @@ export class PostService extends BaseService {
 
   async checkScheduledPosts() {
     const now = new Date();
-    const prisma = (await import("@/lib/prisma")).default;
     const posts = await prisma.post.findMany({
       where: {
         status: "PUBLISHED",
@@ -140,7 +190,9 @@ export class PostService extends BaseService {
       },
     });
 
-    console.log(`⏰ Checking scheduled posts... Found ${posts.length} published posts.`);
+    console.log(
+      `⏰ Checking scheduled posts... Found ${posts.length} published posts.`,
+    );
 
     for (const post of posts) {
       const alreadyNotified = await prisma.auditLog.count({
