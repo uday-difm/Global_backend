@@ -1,6 +1,6 @@
 import React from "react";
 import Script from "next/script";
-
+import DOMPurify from "isomorphic-dompurify";
 /**
  * GlobalAnalytics Component
  * Injects Google Analytics, Microsoft Clarity, Facebook Pixel, LinkedIn Insight Tag, 
@@ -165,7 +165,7 @@ export function Header({ logoUrl, siteName, headerSettings = {}, navigationLinks
 
   const isSticky = config.sticky;
   const isTransparent = config.transparent;
-  
+
   // Padding Y style values
   let paddingYVal = "1rem";
   if (config.paddingY === "small") paddingYVal = "0.5rem";
@@ -455,5 +455,33 @@ export function Footer({ siteName, footerSettings = {}, navigationLinks = [] }) 
         </div>
       </div>
     </footer>
+  );
+
+}
+
+
+
+// ... existing code (GlobalAnalytics, Header, Footer) ...
+
+/**
+ * RichTextRenderer Component
+ * Takes raw HTML from the CMS (like BlockNote output), sanitizes it to prevent XSS,
+ * and renders it beautifully using standard typography classes.
+ */
+export function RichTextRenderer({ content, className = "" }) {
+  if (!content) return null;
+
+  // 1. Ensure the content is a string
+  const htmlString = typeof content === "string" ? content : String(content);
+
+  // 2. Clean the HTML to ensure it's 100% secure
+  const cleanHtml = DOMPurify.sanitize(htmlString);
+
+  // 3. Render it
+  return (
+    <div
+      className={`prose prose-slate prose-lg max-w-none space-y-4 ${className}`}
+      dangerouslySetInnerHTML={{ __html: cleanHtml }}
+    />
   );
 }

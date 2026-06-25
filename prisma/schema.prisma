@@ -438,6 +438,7 @@ model Post {
   title   String
   slug    String
   content Json?
+  contentJson String?
   excerpt String?
   status  PostStatus @default(DRAFT)
 
@@ -557,6 +558,7 @@ model LegalPage {
   type        String
   title       String
   content     String
+  contentJson String?
   published   Boolean   @default(false)
   lastUpdated DateTime  @default(now())
   createdAt   DateTime  @default(now())

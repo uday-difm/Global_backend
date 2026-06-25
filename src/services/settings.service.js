@@ -4,7 +4,25 @@ import { ValidationError } from "@/core/errors";
 import { CtaConfigSchema } from "@/lib/validators/cta";
 import { EventBus } from "@/core/events";
 import { logAction } from "@/lib/audit";
+async function triggerFrontendRevalidation(siteId) {
+  try {
+    // You'd ideally fetch the frontend URL from your FrontendProject table,
+    // but assuming a standard setup:
+    const frontendUrl =
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
 
+    await fetch(`${frontendUrl}/api/revalidate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        siteId,
+        secret: process.env.CMS_INTEGRATION_KEY, // Must match what the frontend expects
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to ping frontend revalidation webhook:", error);
+  }
+}
 export class SettingsService extends BaseService {
   constructor() {
     super(settingsRepository);
@@ -26,20 +44,30 @@ export class SettingsService extends BaseService {
     }
 
     const updated = await settingsRepository.upsertSettings(siteId, {
-      [fieldName]: data
+      [fieldName]: data,
     });
 
     if (userId) {
       try {
-        await logAction(siteId, userId, `SETTINGS_${fieldName.toUpperCase()}_UPDATE`, {
-          siteId
-        });
+        await logAction(
+          siteId,
+          userId,
+          `SETTINGS_${fieldName.toUpperCase()}_UPDATE`,
+          {
+            siteId,
+          },
+        );
       } catch (err) {
         console.error(`Audit log failed for setting ${fieldName} update:`, err);
       }
     }
 
-    EventBus.emit("settings.updated", { siteId, userId, fieldName, data: updated });
+    EventBus.emit("settings.updated", {
+      siteId,
+      userId,
+      fieldName,
+      data: updated,
+    });
 
     return updated[fieldName];
   }
@@ -60,17 +88,21 @@ export class SettingsService extends BaseService {
       analytics: data.analytics !== undefined ? data.analytics : undefined,
       scripts: data.scripts !== undefined ? data.scripts : undefined,
       ctaConfig: data.ctaConfig !== undefined ? data.ctaConfig : undefined,
-      contactDetails: data.contactDetails !== undefined ? data.contactDetails : undefined,
+      contactDetails:
+        data.contactDetails !== undefined ? data.contactDetails : undefined,
     };
 
     // Filter undefined keys
-    Object.keys(updatePayload).forEach(key => {
+    Object.keys(updatePayload).forEach((key) => {
       if (updatePayload[key] === undefined) {
         delete updatePayload[key];
       }
     });
 
-    const result = await settingsRepository.upsertSettings(siteId, updatePayload);
+    const result = await settingsRepository.upsertSettings(
+      siteId,
+      updatePayload,
+    );
 
     if (userId) {
       try {

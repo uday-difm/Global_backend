@@ -7,6 +7,7 @@ export const LegalPageValidationSchema = z.object({
   content: z.string({
     required_error: "Content is required",
   }).min(1, "Content must be at least 1 character long"),
+  contentJson: z.string().optional().nullable(),
   type: z.enum(["privacy", "terms", "cookies", "disclaimer", "refund"], {
     errorMap: () => ({ message: "Type must be one of: privacy, terms, cookies, disclaimer, refund" })
   }),

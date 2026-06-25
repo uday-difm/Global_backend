@@ -31,6 +31,7 @@ export class LegalPageRepository extends BaseRepository {
         data: {
           title: data.title,
           content: data.content,
+          contentJson: data.contentJson,
           published: data.published ?? existing.published,
           lastUpdated: new Date(),
           deletedAt: null // Restore if it was soft-deleted
@@ -44,6 +45,7 @@ export class LegalPageRepository extends BaseRepository {
         type,
         title: data.title,
         content: data.content,
+        contentJson: data.contentJson,
         published: data.published ?? false,
         lastUpdated: new Date()
       }

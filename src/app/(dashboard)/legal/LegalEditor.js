@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import DynamicBlockEditor from "@/components/DynamicBlockEditor";
 import { 
   CheckCircle2, 
   AlertCircle, 
   Save, 
-  Eye, 
-  Edit3, 
   Clock, 
   Lock, 
   Scale, 
@@ -28,7 +27,6 @@ const POLICY_TYPES = [
 export default function LegalEditor({ siteId, initialPages }) {
   const [pages, setPages] = useState(initialPages || []);
   const [activeTab, setActiveTab] = useState("privacy");
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
   const [message, setMessage] = useState(null);
@@ -39,19 +37,24 @@ export default function LegalEditor({ siteId, initialPages }) {
   // Form states
   const [title, setTitle] = useState(activePage?.title || POLICY_TYPES.find(p => p.type === activeTab).label);
   const [content, setContent] = useState(activePage?.content || "");
+  const [contentJson, setContentJson] = useState(activePage?.contentJson || "");
 
   // Update form inputs when changing tabs
   const handleTabChange = (type) => {
     setActiveTab(type);
-    setIsPreviewMode(false);
     setMessage(null);
     const page = pages.find(p => p.type === type);
     setTitle(page?.title || POLICY_TYPES.find(p => p.type === type).label);
     setContent(page?.content || "");
+    setContentJson(page?.contentJson || "");
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!content || !content.trim()) {
+      setMessage({ type: "error", text: "Document content cannot be empty." });
+      return;
+    }
     setIsSaving(true);
     setMessage(null);
 
@@ -62,7 +65,7 @@ export default function LegalEditor({ siteId, initialPages }) {
           "Content-Type": "application/json",
           "x-site-id": siteId
         },
-        body: JSON.stringify({ title, content, published: activePage?.published ?? false })
+        body: JSON.stringify({ title, content, contentJson, published: activePage?.published ?? false })
       });
 
       const data = await res.json();
@@ -103,6 +106,7 @@ export default function LegalEditor({ siteId, initialPages }) {
         body: JSON.stringify({
           title: currentPage?.title || title,
           content: currentPage?.content || content,
+          contentJson: currentPage?.contentJson || contentJson,
           published: newPublished
         })
       });
@@ -254,28 +258,6 @@ export default function LegalEditor({ siteId, initialPages }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* View Mode Toggle */}
-            <div className="bg-gray-200/70 p-0.5 rounded-lg flex border">
-              <button
-                type="button"
-                onClick={() => setIsPreviewMode(false)}
-                className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
-                  !isPreviewMode ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                <Edit3 size={13} /> Edit
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsPreviewMode(true)}
-                className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
-                  isPreviewMode ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                <Eye size={13} /> Live Preview
-              </button>
-            </div>
-
             {/* Publish / Unpublish Toggle Button */}
             {pages.find(p => p.type === activeTab) && (
               <button
@@ -294,17 +276,15 @@ export default function LegalEditor({ siteId, initialPages }) {
             )}
 
             {/* Save Button */}
-            {!isPreviewMode && (
-              <button
-                type="submit"
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition disabled:opacity-50"
-              >
-                <Save size={14} />
-                {isSaving ? "Saving..." : "Save Policy"}
-              </button>
-            )}
+            <button
+              type="submit"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              <Save size={14} />
+              {isSaving ? "Saving..." : "Save Policy"}
+            </button>
           </div>
         </div>
 
@@ -322,56 +302,42 @@ export default function LegalEditor({ siteId, initialPages }) {
 
         {/* Content Panel */}
         <div className="flex-1 flex flex-col">
-          {!isPreviewMode ? (
-            <form onSubmit={handleSave} className="flex-1 flex flex-col p-6 space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Document Title</label>
-                <input
-                  type="text"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 text-sm font-semibold text-gray-800 placeholder-gray-400"
-                  placeholder="e.g. Terms & Conditions"
-                />
-              </div>
-
-              <div className="flex-1 flex flex-col">
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400">Document Body (Markdown Supported)</label>
-                  <span className="text-[10px] text-gray-400">Use double newline (Enter twice) to separate paragraphs</span>
-                </div>
-                <textarea
-                  required
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder={`# 1. Scope of Service\nWrite your document paragraphs here. Use headers starting with '#' for H1 and '##' for H2 sections.\n\n# 2. Privacy Measures\nSpecify policy terms here.`}
-                  className="w-full flex-1 min-h-[380px] rounded-xl border border-gray-200 px-4 py-4 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 text-sm text-gray-700 font-mono leading-relaxed resize-none"
-                />
-              </div>
-
-              {/* Unpublished warning hint */}
-              {!isPublished && pages.find(p => p.type === activeTab) && (
-                <div className="flex items-center gap-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                  <EyeOff size={13} className="shrink-0" />
-                  This page is currently a <strong>Draft</strong>. Click <strong>Publish</strong> to make it accessible on the site.
-                </div>
-              )}
-            </form>
-          ) : (
-            <div className="p-8 max-w-4xl mx-auto w-full prose prose-slate">
-              <div className="border-b border-gray-150 pb-5 mb-8">
-                <h1 className="text-3xl font-extrabold text-gray-900 font-serif leading-tight">{title}</h1>
-                <p className="text-xs text-gray-400 font-medium font-mono mt-2">
-                  Last Updated: {getPageStatus(activeTab).date || new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                </p>
-              </div>
-              <div 
-                className="legal-content font-serif leading-relaxed text-gray-700 text-sm space-y-4"
-                dangerouslySetInnerHTML={{ __html: formatPreviewHtml(content) }}
+          <form onSubmit={handleSave} className="flex-1 flex flex-col p-6 space-y-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">Document Title</label>
+              <input
+                type="text"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 text-sm font-semibold text-gray-800 placeholder-gray-400"
+                placeholder="e.g. Terms & Conditions"
               />
             </div>
-          )}
+
+            <div className="flex-1 flex flex-col">
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400">Document Body (Block Editor)</label>
+              </div>
+              <div className="z-10 relative">
+                <DynamicBlockEditor
+                  key={activeTab}
+                  initialContent={activePage?.contentJson}
+                  fallbackHtml={activePage?.contentJson ? undefined : (activePage?.content ? (activePage.content.startsWith('<') ? activePage.content : formatPreviewHtml(activePage.content)) : undefined)}
+                  onChangeHtml={(html) => setContent(html)}
+                  onChangeJson={(json) => setContentJson(json)}
+                />
+              </div>
+            </div>
+
+            {/* Unpublished warning hint */}
+            {!isPublished && pages.find(p => p.type === activeTab) && (
+              <div className="flex items-center gap-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <EyeOff size={13} className="shrink-0" />
+                This page is currently a <strong>Draft</strong>. Click <strong>Publish</strong> to make it accessible on the site.
+              </div>
+            )}
+          </form>
         </div>
       </div>
     </div>

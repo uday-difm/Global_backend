@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import MediaPickerModal from "@/components/media/MediaPickerModal";
+import DynamicBlockEditor from "@/components/DynamicBlockEditor";
 import {
   Image as ImageIcon,
   Tag,
@@ -22,7 +23,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-export default function PostEditor({ siteId, post, categories = [], authors = [] }) {
+export default function PostEditor({
+  siteId,
+  post,
+  categories = [],
+  authors = [],
+}) {
   const router = useRouter();
   const isEditMode = !!post;
 
@@ -31,6 +37,7 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
+  const [contentJson, setContentJson] = useState(""); // Holds BlockNote JSON
   const [status, setStatus] = useState("DRAFT");
   const [authorId, setAuthorId] = useState("");
 
@@ -79,7 +86,11 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  // Strip HTML tags for an accurate word count from the generated HTML
+  const strippedContent = content.replace(/<[^>]+>/g, "");
+  const wordCount = strippedContent.trim()
+    ? strippedContent.trim().split(/\s+/).length
+    : 0;
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
   const isScheduled =
@@ -94,7 +105,14 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
       setTitle(post.title || "");
       setSlug(post.slug || "");
       setExcerpt(post.excerpt || "");
-      setContent(typeof post.content === "string" ? post.content : post.content ? JSON.stringify(post.content, null, 2) : "");
+      setContent(
+        typeof post.content === "string"
+          ? post.content
+          : post.content
+            ? JSON.stringify(post.content, null, 2)
+            : "",
+      );
+      setContentJson(post.contentJson || "");
       setStatus(post.status || "DRAFT");
       setAuthorId(post.authorId || "");
       setSeoTitle(post.seoTitle || "");
@@ -106,7 +124,9 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
 
       if (post.featuredImage) {
         setFeaturedImageId(post.featuredImage.id);
-        setFeaturedImageUrl(post.featuredImage.secureUrl || post.featuredImage.url || "");
+        setFeaturedImageUrl(
+          post.featuredImage.secureUrl || post.featuredImage.url || "",
+        );
         setFeaturedImageAlt(post.featuredImage.altText || "");
       } else if (post.featuredImageId) {
         setFeaturedImageId(post.featuredImageId);
@@ -128,7 +148,7 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
 
   const handleCategoryToggle = (id) => {
     setSelectedCategoryIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
 
@@ -146,8 +166,8 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
       if (!res.ok) throw new Error(data.error || "Failed to create category");
       setLocalCategories((prev) =>
         [...prev, { ...data.category, _count: { posts: 0 } }].sort((a, b) =>
-          a.name.localeCompare(b.name)
-        )
+          a.name.localeCompare(b.name),
+        ),
       );
       setSelectedCategoryIds((prev) => [...prev, data.category.id]);
       setNewCatName("");
@@ -182,6 +202,7 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
       slug,
       excerpt,
       content,
+      contentJson, // Included BlockNote JSON
       status,
       authorId: authorId || null,
       featuredImageId: featuredImageId || null,
@@ -219,11 +240,11 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
 
   /* ─────────────── Filtered categories ─────────────── */
   const filteredCategories = localCategories.filter((c) =>
-    c.name.toLowerCase().includes(catSearch.toLowerCase())
+    c.name.toLowerCase().includes(catSearch.toLowerCase()),
   );
 
   const selectedCategories = localCategories.filter((c) =>
-    selectedCategoryIds.includes(c.id)
+    selectedCategoryIds.includes(c.id),
   );
 
   /* ─────────────── Author display ─────────────── */
@@ -243,15 +264,17 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
     <div className="space-y-6">
       {error && (
         <div className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold">
-          <AlertCircle size={15} className="shrink-0 text-rose-500 mt-0.5" />
+          <AlertCircle size={15} className="shrink-0 text-rose-50 mt-0.5" />
           <p>{error}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
+      >
         {/* ── Left: Content Area ── */}
         <div className="lg:col-span-2 space-y-5">
-
           {/* Title & Slug */}
           <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-4">
             <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-100">
@@ -259,7 +282,10 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
             </h2>
 
             <div>
-              <label htmlFor="title" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="title"
+                className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+              >
                 Title <span className="text-rose-500">*</span>
               </label>
               <input
@@ -274,11 +300,16 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
             </div>
 
             <div>
-              <label htmlFor="slug" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="slug"
+                className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+              >
                 URL Slug <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono select-none">/</span>
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono select-none">
+                  /
+                </span>
                 <input
                   type="text"
                   id="slug"
@@ -292,7 +323,10 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
             </div>
 
             <div>
-              <label htmlFor="excerpt" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="excerpt"
+                className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+              >
                 Excerpt / Summary
               </label>
               <textarea
@@ -305,9 +339,9 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
               />
             </div>
 
-            <div>
+            <div className="z-10 relative">
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="content" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Content Body
                 </label>
                 <div className="flex items-center gap-3 text-[10px] text-slate-400">
@@ -316,13 +350,10 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                   <span>~{readTime} min read</span>
                 </div>
               </div>
-              <textarea
-                id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your article content here (Markdown supported)..."
-                rows={18}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-mono text-slate-700 leading-relaxed outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 resize-y"
+              <DynamicBlockEditor
+                initialContent={post?.contentJson}
+                onChangeHtml={(html) => setContent(html)}
+                onChangeJson={(json) => setContentJson(json)}
               />
             </div>
           </div>
@@ -354,20 +385,27 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                   example.com › blog › {previewSlug}
                 </p>
                 <p className="text-sm font-semibold text-blue-700 leading-snug hover:underline cursor-pointer truncate">
-                  {previewTitle.slice(0, 60)}{previewTitle.length > 60 ? "…" : ""}
+                  {previewTitle.slice(0, 60)}
+                  {previewTitle.length > 60 ? "…" : ""}
                 </p>
                 <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">
-                  {previewDesc.slice(0, 160)}{previewDesc.length > 160 ? "…" : ""}
+                  {previewDesc.slice(0, 160)}
+                  {previewDesc.length > 160 ? "…" : ""}
                 </p>
               </div>
             )}
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label htmlFor="seoTitle" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <label
+                  htmlFor="seoTitle"
+                  className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+                >
                   Meta Title
                 </label>
-                <span className={`text-[10px] font-semibold ${seoTitle.length > 60 ? "text-rose-500" : "text-slate-400"}`}>
+                <span
+                  className={`text-[10px] font-semibold ${seoTitle.length > 60 ? "text-rose-500" : "text-slate-400"}`}
+                >
                   {seoTitle.length}/60
                 </span>
               </div>
@@ -383,17 +421,24 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
               <div className="mt-1.5 h-0.5 rounded-full bg-slate-100 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-200 ${seoTitle.length > 60 ? "bg-rose-400" : "bg-indigo-400"}`}
-                  style={{ width: `${Math.min(100, (seoTitle.length / 60) * 100)}%` }}
+                  style={{
+                    width: `${Math.min(100, (seoTitle.length / 60) * 100)}%`,
+                  }}
                 />
               </div>
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label htmlFor="seoDescription" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <label
+                  htmlFor="seoDescription"
+                  className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider"
+                >
                   Meta Description
                 </label>
-                <span className={`text-[10px] font-semibold ${seoDescription.length > 160 ? "text-rose-500" : "text-slate-400"}`}>
+                <span
+                  className={`text-[10px] font-semibold ${seoDescription.length > 160 ? "text-rose-500" : "text-slate-400"}`}
+                >
                   {seoDescription.length}/160
                 </span>
               </div>
@@ -408,7 +453,9 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
               <div className="mt-1.5 h-0.5 rounded-full bg-slate-100 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-200 ${seoDescription.length > 160 ? "bg-rose-400" : "bg-indigo-400"}`}
-                  style={{ width: `${Math.min(100, (seoDescription.length / 160) * 100)}%` }}
+                  style={{
+                    width: `${Math.min(100, (seoDescription.length / 160) * 100)}%`,
+                  }}
                 />
               </div>
             </div>
@@ -417,7 +464,6 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
 
         {/* ── Right Sidebar ── */}
         <div className="space-y-5">
-
           {/* Publish Console */}
           <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-4">
             <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-100">
@@ -426,7 +472,10 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
 
             {/* Status selector */}
             <div>
-              <label htmlFor="status" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="status"
+                className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+              >
                 Status
               </label>
               <div className="relative">
@@ -439,7 +488,10 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                   <option value="DRAFT">Draft</option>
                   <option value="PUBLISHED">Published</option>
                 </select>
-                <ChevronRight size={13} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 rotate-90" />
+                <ChevronRight
+                  size={13}
+                  className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 rotate-90"
+                />
               </div>
             </div>
 
@@ -447,9 +499,14 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
             <div className="rounded-xl p-3 bg-slate-50 border border-slate-100 flex items-center gap-2">
               {isScheduled ? (
                 <>
-                  <CalendarClock size={14} className="text-amber-500 shrink-0" />
+                  <CalendarClock
+                    size={14}
+                    className="text-amber-500 shrink-0"
+                  />
                   <div>
-                    <p className="text-[10px] font-bold text-amber-700">Scheduled Post</p>
+                    <p className="text-[10px] font-bold text-amber-700">
+                      Scheduled Post
+                    </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Will publish on {new Date(publishDate).toLocaleString()}
                     </p>
@@ -459,7 +516,9 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                 <>
                   <CheckCircle size={14} className="text-green-500 shrink-0" />
                   <div>
-                    <p className="text-[10px] font-bold text-green-700">Publish Immediately</p>
+                    <p className="text-[10px] font-bold text-green-700">
+                      Publish Immediately
+                    </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Post will go live on save.
                     </p>
@@ -469,7 +528,9 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                 <>
                   <Clock size={14} className="text-slate-400 shrink-0" />
                   <div>
-                    <p className="text-[10px] font-bold text-slate-600">Draft Mode</p>
+                    <p className="text-[10px] font-bold text-slate-600">
+                      Draft Mode
+                    </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Not visible to the public.
                     </p>
@@ -480,14 +541,18 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
 
             {/* Schedule toggle */}
             <label className="flex items-center gap-2 cursor-pointer group">
-              <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${customPublishDate ? "bg-indigo-600" : "bg-slate-200"}`}>
+              <div
+                className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${customPublishDate ? "bg-indigo-600" : "bg-slate-200"}`}
+              >
                 <input
                   type="checkbox"
                   checked={customPublishDate}
                   onChange={(e) => setCustomPublishDate(e.target.checked)}
                   className="sr-only"
                 />
-                <span className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${customPublishDate ? "translate-x-3.5" : "translate-x-0"}`} />
+                <span
+                  className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${customPublishDate ? "translate-x-3.5" : "translate-x-0"}`}
+                />
               </div>
               <span className="text-[10px] font-bold text-slate-600 group-hover:text-slate-800 transition">
                 Schedule / Custom Date
@@ -507,14 +572,18 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                   required={customPublishDate}
                 />
                 <p className="text-[10px] text-slate-400 mt-1.5">
-                  A future date will schedule the post; a past date publishes immediately.
+                  A future date will schedule the post; a past date publishes
+                  immediately.
                 </p>
               </div>
             )}
 
             {/* Author */}
             <div>
-              <label htmlFor="authorId" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="authorId"
+                className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+              >
                 Author
               </label>
               {selectedAuthor ? (
@@ -541,7 +610,10 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                     </option>
                   ))}
                 </select>
-                <ChevronRight size={13} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 rotate-90" />
+                <ChevronRight
+                  size={13}
+                  className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 rotate-90"
+                />
               </div>
             </div>
 
@@ -568,7 +640,13 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                 ) : (
                   <>
                     <Save size={12} />
-                    {isEditMode ? "Save Changes" : isScheduled ? "Schedule Post" : status === "PUBLISHED" ? "Publish Post" : "Save Draft"}
+                    {isEditMode
+                      ? "Save Changes"
+                      : isScheduled
+                        ? "Schedule Post"
+                        : status === "PUBLISHED"
+                          ? "Publish Post"
+                          : "Save Draft"}
                   </>
                 )}
               </button>
@@ -629,8 +707,12 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                   <ImageIcon size={20} />
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-700 block">Select Featured Image</span>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">JPEG, PNG or WebP</span>
+                  <span className="text-xs font-bold text-slate-700 block">
+                    Select Featured Image
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                    JPEG, PNG or WebP
+                  </span>
                 </div>
               </button>
             )}
@@ -655,7 +737,10 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                     title="Click to remove"
                   >
                     {cat.name}
-                    <X size={9} className="opacity-60 group-hover:opacity-100" />
+                    <X
+                      size={9}
+                      className="opacity-60 group-hover:opacity-100"
+                    />
                   </button>
                 ))}
               </div>
@@ -663,7 +748,10 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
 
             {/* Category search */}
             <div className="relative">
-              <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search
+                size={12}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
               <input
                 type="text"
                 placeholder="Search categories..."
@@ -676,7 +764,9 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
             {/* Category list */}
             <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
               {filteredCategories.length === 0 ? (
-                <p className="text-[10px] text-slate-400 italic p-2">No categories match.</p>
+                <p className="text-[10px] text-slate-400 italic p-2">
+                  No categories match.
+                </p>
               ) : (
                 filteredCategories.map((cat) => (
                   <label
@@ -690,7 +780,9 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                         onChange={() => handleCategoryToggle(cat.id)}
                         className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 h-3.5 w-3.5"
                       />
-                      <span className="text-xs font-semibold text-slate-700">{cat.name}</span>
+                      <span className="text-xs font-semibold text-slate-700">
+                        {cat.name}
+                      </span>
                     </div>
                     <span className="text-[10px] text-slate-400">
                       {cat._count?.posts ?? 0}
@@ -722,7 +814,11 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
                   disabled={catCreating || !newCatName.trim()}
                   className="inline-flex items-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white disabled:bg-slate-300 text-[10px] font-bold rounded-xl transition-colors cursor-pointer"
                 >
-                  {catCreating ? <Loader2 size={10} className="animate-spin" /> : <Plus size={10} />}
+                  {catCreating ? (
+                    <Loader2 size={10} className="animate-spin" />
+                  ) : (
+                    <Plus size={10} />
+                  )}
                   Add
                 </button>
               </div>
@@ -746,9 +842,13 @@ export default function PostEditor({ siteId, post, categories = [], authors = []
             className="flex-1 inline-flex items-center justify-center gap-1.5 py-3 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md transition disabled:opacity-50"
           >
             {isSubmitting ? (
-              <><Loader2 size={12} className="animate-spin" /> Saving...</>
+              <>
+                <Loader2 size={12} className="animate-spin" /> Saving...
+              </>
             ) : (
-              <><Save size={12} /> {isEditMode ? "Save" : "Publish"}</>
+              <>
+                <Save size={12} /> {isEditMode ? "Save" : "Publish"}
+              </>
             )}
           </button>
         </div>

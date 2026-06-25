@@ -109,7 +109,7 @@ export class PostService extends BaseService {
   }
 
   async update(siteId, postId, postData, userId = null, options = {}) {
-    const { categoryIds, tagIds, ...data } = postData;
+    const { categoryIds, tagIds, siteId: _, ...data } = postData;
 
     // Default to "Others" category if explicitly clearing categories
     let effectiveCategoryIds = categoryIds;

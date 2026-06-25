@@ -17,9 +17,9 @@ export class CMSClient {
       method,
       headers: {
         "Content-Type": "application/json",
-        "x-site-id": this.siteId
+        "x-site-id": this.siteId,
       },
-      cache: "no-store"
+      cache: "no-store",
     };
 
     if (body && (method === "POST" || method === "PUT" || method === "PATCH")) {
@@ -60,7 +60,9 @@ export class CMSClient {
 
   // --- FAQs ---
   async getFaqs(pageSlug = null) {
-    const path = pageSlug ? `/api/faq?page=${encodeURIComponent(pageSlug)}` : "/api/faq";
+    const path = pageSlug
+      ? `/api/faq?page=${encodeURIComponent(pageSlug)}`
+      : "/api/faq";
     return this._request(path);
   }
 
@@ -110,19 +112,25 @@ export class CMSClient {
       name,
       email,
       phone,
-      message
+      message,
     });
   }
 
   // --- Visitor Tracker ---
-  async pingVisitor({ visitorId, pageViewed, location, deviceInfo, trafficSource }) {
+  async pingVisitor({
+    visitorId,
+    pageViewed,
+    location,
+    deviceInfo,
+    trafficSource,
+  }) {
     return this._request("/api/visitors/ping", "POST", {
       siteId: this.siteId,
       visitorId,
       pageViewed,
       location,
       deviceInfo,
-      trafficSource
+      trafficSource,
     });
   }
 
@@ -132,7 +140,7 @@ export class CMSClient {
       siteId: this.siteId,
       visitorId,
       consentType,
-      accepted
+      accepted,
     });
   }
 
@@ -145,8 +153,6 @@ export class CMSClient {
     return this._request(`/api/seo/${encodeURIComponent(pageSlug)}`);
   }
 
-
-
   // --- Centralized Global Settings & Unified Layouts ---
   async getGlobalSettings() {
     return this._request("/api/global-settings");
@@ -157,9 +163,11 @@ export class CMSClient {
     const items = await this._request("/api/sitemap");
     if (!domain) return items;
     const cleanDomain = domain.endsWith("/") ? domain.slice(0, -1) : domain;
-    return items.map(item => ({
+    return items.map((item) => ({
       ...item,
-      url: item.url.startsWith("http") ? item.url : `${cleanDomain}${item.url.startsWith("/") ? "" : "/"}${item.url}`
+      url: item.url.startsWith("http")
+        ? item.url
+        : `${cleanDomain}${item.url.startsWith("/") ? "" : "/"}${item.url}`,
     }));
   }
 
@@ -170,14 +178,14 @@ export class CMSClient {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-integration-key": integrationKey
+        "x-integration-key": integrationKey,
       },
       body: JSON.stringify({
         siteId: this.siteId,
         source: "client-sync-script",
         generatedAt: new Date().toISOString(),
-        routes
-      })
+        routes,
+      }),
     };
 
     const res = await fetch(url, options);
@@ -188,4 +196,3 @@ export class CMSClient {
     return result;
   }
 }
-
