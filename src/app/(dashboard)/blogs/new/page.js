@@ -25,12 +25,13 @@ export default async function NewPostPage() {
 
   // Categories scoped to this site
   const categories = await prisma.category.findMany({
+    where: { deletedAt: null },
     orderBy: { name: "asc" },
   });
 
   // Authors scoped to this site via SiteUser memberships
   const siteUsers = await prisma.siteUser.findMany({
-    where: { siteId: site.id },
+    where: { siteId: site.id, deletedAt: null },
     include: { user: { select: { id: true, email: true } } },
   });
   const authors = siteUsers.map((su) => su.user);

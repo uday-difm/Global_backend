@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { getSiteId } from "@/lib/siteGuard";
 import { handleApiError } from "@/core/errors";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req, { params }) {
   try {
     const siteId = getSiteId(req);
@@ -19,6 +21,7 @@ export async function GET(req, { params }) {
         siteId,
         status: "PUBLISHED",
         deletedAt: null,
+        publishedAt: { lte: new Date() },
       },
       include: {
         categories: true,
@@ -36,6 +39,7 @@ export async function GET(req, { params }) {
           siteId,
           status: "PUBLISHED",
           deletedAt: null,
+          publishedAt: { lte: new Date() },
         },
         include: {
           categories: true,

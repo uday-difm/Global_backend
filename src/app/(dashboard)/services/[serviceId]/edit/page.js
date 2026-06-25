@@ -26,8 +26,8 @@ export default async function EditServicePage({ params: rawParams }) {
   const actualParams = await rawParams;
   const { serviceId } = actualParams;
 
-  const service = await prisma.service.findUnique({
-    where: { id: serviceId },
+  const service = await prisma.service.findFirst({
+    where: { id: serviceId, deletedAt: null },
     include: { featuredImage: true },
   });
 

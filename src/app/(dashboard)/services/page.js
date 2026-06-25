@@ -29,7 +29,7 @@ export default async function ServicesAdmin() {
 
   // Retrieve services scoped to this site
   const services = await prisma.service.findMany({
-    where: { siteId: site.id },
+    where: { siteId: site.id, deletedAt: null },
     orderBy: { sortOrder: "asc" },
   });
 

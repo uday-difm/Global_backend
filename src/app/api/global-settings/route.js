@@ -26,6 +26,7 @@ export async function GET(request) {
         navigation: true,
         contactDetails: true,
         compliance: true,
+        ctaConfig: true,
         performanceConfig: true,
         updatedAt: true,
       },

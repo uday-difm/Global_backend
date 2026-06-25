@@ -17,7 +17,7 @@ export default async function TeamPage() {
   }
 
   const team = await prisma.teamMember.findMany({
-    where: { siteId: site.id },
+    where: { siteId: site.id, deletedAt: null },
     orderBy: { sortOrder: "asc" },
   });
 

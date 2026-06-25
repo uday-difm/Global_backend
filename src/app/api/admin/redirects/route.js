@@ -6,7 +6,7 @@ import { z } from "zod";
 const RedirectCreateSchema = z.object({
   source: z.string().min(1),
   target: z.string().min(1),
-  type: z.enum([301, 302]).optional().default(301)
+  type: z.union([z.literal(301), z.literal(302)]).optional().default(301)
 });
 
 export async function GET(req) {
@@ -60,7 +60,7 @@ export async function POST(req) {
         siteId: auth.siteId,
         source,
         target,
-        type: parseInt(type, 10)
+        type
       }
     });
 

@@ -18,7 +18,7 @@ export default async function RedirectsPage() {
 
   // Pre-load redirect rules
   const redirects = await prisma.redirect.findMany({
-    where: { siteId: site.id },
+    where: { siteId: site.id, deletedAt: null },
     orderBy: { createdAt: "desc" },
   });
 

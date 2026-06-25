@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { legalPageService } from "@/services/legalPage.service";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req, context) {
   try {
     const params = await context.params;
@@ -13,7 +15,8 @@ export async function GET(req, context) {
     }
 
     try {
-      const legalPage = await legalPageService.getPageByType(siteId, type);
+      // Only return the legal page if it has been published from the dashboard
+      const legalPage = await legalPageService.getPublishedPageByType(siteId, type);
       if (!legalPage) {
         return NextResponse.json({ error: "Legal page not found" }, { status: 404 });
       }
@@ -25,4 +28,5 @@ export async function GET(req, context) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
 }
+
 

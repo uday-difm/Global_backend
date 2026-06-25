@@ -15,7 +15,12 @@ export class SeoService extends BaseService {
     });
 
     const posts = await prisma.post.findMany({
-      where: { siteId, status: "PUBLISHED", deletedAt: null },
+      where: {
+        siteId,
+        status: "PUBLISHED",
+        deletedAt: null,
+        publishedAt: { lte: new Date() },
+      },
       select: { slug: true, updatedAt: true },
       orderBy: { updatedAt: "desc" },
     });
@@ -79,7 +84,10 @@ Sitemap: ${domain}/sitemap.xml
       where: { id: siteId },
       include: {
         services: { where: { status: "ACTIVE" }, select: { title: true, description: true } },
-        posts: { where: { status: "PUBLISHED" }, select: { title: true, excerpt: true } },
+        posts: {
+          where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
+          select: { title: true, excerpt: true }
+        },
       }
     });
 

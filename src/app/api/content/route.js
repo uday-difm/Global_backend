@@ -3,6 +3,8 @@ import { pageService } from "@/services/page.service";
 import prisma from "@/lib/prisma";
 import { handleApiError } from "@/core/errors";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
@@ -18,9 +20,19 @@ export async function GET(req) {
 
     const page = await pageService.getPageWithSections(siteId, slug);
 
+    if (page.status !== "PUBLISHED") {
+      return NextResponse.json(
+        { error: "Page not found or is not published" },
+        { status: 404 },
+      );
+    }
+
+    // Only render sections that are explicitly visible (default true when field absent)
+    const visibleSections = page.sections.filter((s) => s.isVisible !== false);
+
     // Resolve referenced media ids -> URLs in content
     const mediaIds = new Set();
-    page.sections.forEach((s) => {
+    visibleSections.forEach((s) => {
       const c = s.content || {};
       if (c.bannerMediaId) mediaIds.add(c.bannerMediaId);
       if (c.imageMediaId) mediaIds.add(c.imageMediaId);
@@ -39,7 +51,7 @@ export async function GET(req) {
     }
 
     const sectionsWithUrls = await Promise.all(
-      page.sections.map(async (s) => {
+      visibleSections.map(async (s) => {
         const content = { ...(s.content || {}) };
         if (content.bannerMediaId && mediaMap[content.bannerMediaId]) {
           content.bannerUrl = mediaMap[content.bannerMediaId];
@@ -75,6 +87,23 @@ export async function GET(req) {
             },
             orderBy: { sortOrder: "asc" },
           });
+        } else if (type === "BLOGS") {
+          const postsRes = await prisma.post.findMany({
+            where: {
+              siteId,
+              status: "PUBLISHED",
+              deletedAt: null,
+              publishedAt: { lte: new Date() },
+            },
+            orderBy: { publishedAt: "desc" },
+            take: content.maxItems || 6,
+            include: {
+              author: { select: { id: true, email: true } },
+              categories: { select: { id: true, name: true, slug: true } },
+              featuredImage: { select: { id: true, url: true, secureUrl: true, altText: true } },
+            },
+          });
+          content.items = postsRes;
         }
 
         return { ...s, content };

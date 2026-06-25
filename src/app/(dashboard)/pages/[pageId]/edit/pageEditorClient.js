@@ -21,7 +21,9 @@ import {
   Image as ImageIcon,
   HelpCircle,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  X,
+  RefreshCw
 } from "lucide-react";
 
 // SafeImage helper to support Next.js Image caching or fallback <img>
@@ -58,6 +60,10 @@ function SafeImage({ src, alt, ...props }) {
 }
 
 export default function PageEditorClient({ pageId, siteId, pageTitle }) {
+  const formattedSiteName = siteId
+    ? siteId.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+    : "CMS Site";
+
   // Safe fetch overlay injecting site token
   const fetchWithAuth = (url, options = {}) => {
     return fetch(url, {
@@ -187,6 +193,13 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
         ctaText: sec.content?.cta?.text || "",
         ctaUrl: sec.content?.cta?.url || "",
       });
+    } else if (sec.type === "CTA") {
+      setVisualFields({
+        title: sec.content?.title || "",
+        subtitle: sec.content?.subtitle || "",
+        primaryButtonText: sec.content?.primaryButtonText || "",
+        primaryButtonUrl: sec.content?.primaryButtonUrl || "",
+      });
     } else {
       // General or custom section type visual settings
       setVisualFields(sec.content || {});
@@ -223,6 +236,11 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
         defaultContent.title = "Get In Touch";
         defaultContent.description = "Fill out the form below and we will get back to you shortly.";
         defaultContent.buttonText = "Send Message";
+      } else if (type === "CTA") {
+        defaultContent.title = "Ready to get started?";
+        defaultContent.subtitle = "Contact us today for a free consultation or general inquiry.";
+        defaultContent.primaryButtonText = "Contact Us";
+        defaultContent.primaryButtonUrl = "/contact";
       }
 
       const res = await fetchWithAuth(`/api/admin/pages/${pageId}/sections`, {
@@ -292,6 +310,13 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
               url: visualFields.ctaUrl || "/",
             };
           }
+        } else if (selectedSection.type === "CTA") {
+          contentToSave = {
+            title: visualFields.title || "",
+            subtitle: visualFields.subtitle || "",
+            primaryButtonText: visualFields.primaryButtonText || "",
+            primaryButtonUrl: visualFields.primaryButtonUrl || "",
+          };
         } else {
           contentToSave = visualFields;
         }
@@ -1099,8 +1124,58 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                 </div>
               )}
 
+              {selectedSection.type === "CTA" && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">CTA Title</label>
+                      <input
+                        type="text"
+                        value={visualFields.title || ""}
+                        onChange={(e) => setVisualFields(prev => ({ ...prev, title: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-200 p-2.5 text-xs outline-none focus:border-indigo-600 font-semibold"
+                        placeholder="Ready to get started?"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">CTA Subtitle</label>
+                      <input
+                        type="text"
+                        value={visualFields.subtitle || ""}
+                        onChange={(e) => setVisualFields(prev => ({ ...prev, subtitle: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-200 p-2.5 text-xs outline-none focus:border-indigo-600"
+                        placeholder="Contact us today for a free consultation or general inquiry."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Button Text</label>
+                      <input
+                        type="text"
+                        value={visualFields.primaryButtonText || ""}
+                        onChange={(e) => setVisualFields(prev => ({ ...prev, primaryButtonText: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-200 p-2.5 text-xs outline-none focus:border-indigo-600 font-semibold"
+                        placeholder="Contact Us"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Button URL</label>
+                      <input
+                        type="text"
+                        value={visualFields.primaryButtonUrl || ""}
+                        onChange={(e) => setVisualFields(prev => ({ ...prev, primaryButtonUrl: e.target.value }))}
+                        className="w-full rounded-lg border border-gray-200 p-2.5 text-xs font-mono outline-none focus:border-indigo-600"
+                        placeholder="/contact"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Render custom configuration form for placeholder items like FAQ, services, etc. */}
-              {selectedSection.type !== "HERO" && selectedSection.type !== "TEXT_BLOCK" && (
+              {selectedSection.type !== "HERO" && selectedSection.type !== "TEXT_BLOCK" && selectedSection.type !== "CTA" && (
                 <div className="space-y-4">
                   <p className="text-[11px] text-gray-500 leading-relaxed border p-3 rounded-lg bg-gray-50">
                     💡 This section type is rendered dynamically. Customize its header title and styling configuration parameters below.
@@ -1252,7 +1327,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
             {/* Header simulated bar */}
             <div className="bg-white border-b px-4 py-3 flex items-center justify-between text-[10px] font-bold text-gray-500">
-              <span className="text-slate-800 uppercase tracking-tight">{title || "MySite"}</span>
+              <span className="text-slate-800 uppercase tracking-tight">{siteId === "layman_litigation" ? "⚖️ " : ""}{formattedSiteName}</span>
               <ul className="flex gap-3 uppercase text-[8px] tracking-wide text-gray-400">
                 <li className="text-indigo-600">Home</li>
                 <li>Details</li>
@@ -1421,7 +1496,36 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
                   );
                 }
 
-                // Generic placeholder for other module sections (FAQ, Services, Testimonials, Team, CTA)
+                // CTA Render
+                if (sec.type === "CTA") {
+                  const isCurrent = selectedSection?.id === sec.id;
+                  const displayTitle = isCurrent ? visualFields.title : sec.content?.title;
+                  const displaySubtitle = isCurrent ? visualFields.subtitle : sec.content?.subtitle;
+                  const displayButtonText = isCurrent ? visualFields.primaryButtonText : sec.content?.primaryButtonText;
+
+                  return (
+                    <div
+                      key={sec.id}
+                      className={`bg-slate-900 text-white px-6 py-8 border-b flex flex-col md:flex-row items-center justify-between gap-4 ${
+                        selectedSection?.id === sec.id ? "ring-2 ring-indigo-500" : ""
+                      }`}
+                    >
+                      <div className="space-y-1 text-center md:text-left">
+                        <h3 className="font-bold text-white text-sm">
+                          {displayTitle || "Ready to get started?"}
+                        </h3>
+                        <p className="text-[10px] text-slate-400 max-w-md leading-relaxed">
+                          {displaySubtitle || "Contact us today for a free consultation or general inquiry."}
+                        </p>
+                      </div>
+                      <span className="shrink-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold shadow">
+                        {displayButtonText || "Contact Us"}
+                      </span>
+                    </div>
+                  );
+                }
+
+                // Generic placeholder for other module sections (FAQ, Services, Testimonials, Team)
                 return (
                   <div
                     key={sec.id}
@@ -1457,7 +1561,7 @@ export default function PageEditorClient({ pageId, siteId, pageTitle }) {
 
             {/* Footer bar */}
             <div className="bg-slate-900 py-3 text-center text-[8px] text-slate-500 font-bold uppercase tracking-wider">
-              &copy; {new Date().getFullYear()} {title || "CMS Site"} &bull; Generated structured layout
+              &copy; {new Date().getFullYear()} {formattedSiteName} &bull; Generated structured layout
             </div>
           </div>
         </div>

@@ -18,7 +18,8 @@ export class CMSClient {
       headers: {
         "Content-Type": "application/json",
         "x-site-id": this.siteId
-      }
+      },
+      cache: "no-store"
     };
 
     if (body && (method === "POST" || method === "PUT" || method === "PATCH")) {
@@ -144,10 +145,7 @@ export class CMSClient {
     return this._request(`/api/seo/${encodeURIComponent(pageSlug)}`);
   }
 
-  // --- Legal Pages ---
-  async getLegalPage(type) {
-    return this._request(`/api/legal/${encodeURIComponent(type)}`);
-  }
+
 
   // --- Centralized Global Settings & Unified Layouts ---
   async getGlobalSettings() {

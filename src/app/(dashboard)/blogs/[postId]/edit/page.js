@@ -25,8 +25,8 @@ export default async function EditPostPage({ params: rawParams }) {
 
   const { postId } = await rawParams;
 
-  const post = await prisma.post.findUnique({
-    where: { id: postId },
+  const post = await prisma.post.findFirst({
+    where: { id: postId, deletedAt: null },
     include: {
       categories: true,
       featuredImage: true,
@@ -45,12 +45,13 @@ export default async function EditPostPage({ params: rawParams }) {
 
   // Categories for all available options
   const categories = await prisma.category.findMany({
+    where: { deletedAt: null },
     orderBy: { name: "asc" },
   });
 
   // Authors scoped to this site
   const siteUsers = await prisma.siteUser.findMany({
-    where: { siteId: site.id },
+    where: { siteId: site.id, deletedAt: null },
     include: { user: { select: { id: true, email: true } } },
   });
   const authors = siteUsers.map((su) => su.user);

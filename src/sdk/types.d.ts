@@ -81,8 +81,6 @@ export class CMSClient {
   // --- SEO Metadata ---
   getSeoMetadata(pageSlug: string): Promise<any>;
 
-  // --- Legal Pages ---
-  getLegalPage(type: string): Promise<any>;
 
   // --- Centralized Global Settings & Unified Layouts ---
   getGlobalSettings(): Promise<any>;

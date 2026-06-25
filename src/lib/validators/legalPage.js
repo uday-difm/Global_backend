@@ -10,4 +10,5 @@ export const LegalPageValidationSchema = z.object({
   type: z.enum(["privacy", "terms", "cookies", "disclaimer", "refund"], {
     errorMap: () => ({ message: "Type must be one of: privacy, terms, cookies, disclaimer, refund" })
   }),
+  published: z.boolean().optional(),
 });

@@ -159,17 +159,15 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
                 <Link
                   key={f.value}
                   href={`/blogs${f.value === "ALL" ? "" : `?status=${f.value}`}`}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 ${
-                    isActive
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 ${isActive
                       ? "bg-indigo-600 text-white shadow-sm"
                       : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-                  }`}
+                    }`}
                 >
                   {f.label}
                   <span
-                    className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${
-                      isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
-                    }`}
+                    className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+                      }`}
                   >
                     {f.count}
                   </span>

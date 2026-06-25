@@ -28,11 +28,17 @@ export async function POST(req) {
     // Keep only last 100 logs in configuration
     const updatedLogs = consentLogs.slice(0, 100);
 
-    await prisma.globalSettings.update({
+    await prisma.globalSettings.upsert({
       where: { siteId },
-      data: {
+      update: {
         compliance: {
           ...compliance,
+          consentLogs: updatedLogs
+        }
+      },
+      create: {
+        siteId,
+        compliance: {
           consentLogs: updatedLogs
         }
       }

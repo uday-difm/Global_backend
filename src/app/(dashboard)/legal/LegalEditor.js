@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { 
-  FileText, 
   CheckCircle2, 
   AlertCircle, 
   Save, 
@@ -13,7 +12,9 @@ import {
   Scale, 
   Cookie, 
   ShieldAlert, 
-  DollarSign 
+  DollarSign,
+  Globe,
+  EyeOff
 } from "lucide-react";
 
 const POLICY_TYPES = [
@@ -29,6 +30,7 @@ export default function LegalEditor({ siteId, initialPages }) {
   const [activeTab, setActiveTab] = useState("privacy");
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
   const [message, setMessage] = useState(null);
 
   // Get active page details from local state
@@ -60,7 +62,7 @@ export default function LegalEditor({ siteId, initialPages }) {
           "Content-Type": "application/json",
           "x-site-id": siteId
         },
-        body: JSON.stringify({ title, content })
+        body: JSON.stringify({ title, content, published: activePage?.published ?? false })
       });
 
       const data = await res.json();
@@ -75,7 +77,7 @@ export default function LegalEditor({ siteId, initialPages }) {
         return [...filtered, data.legalPage];
       });
 
-      setMessage({ type: "success", text: `${title} saved and published successfully!` });
+      setMessage({ type: "success", text: `${title} saved successfully!` });
       setTimeout(() => setMessage(null), 4000);
     } catch (err) {
       setMessage({ type: "error", text: err.message });
@@ -84,13 +86,72 @@ export default function LegalEditor({ siteId, initialPages }) {
     }
   };
 
+  const handleTogglePublish = async () => {
+    setIsToggling(true);
+    setMessage(null);
+
+    const currentPage = pages.find(p => p.type === activeTab);
+    const newPublished = !(currentPage?.published ?? false);
+
+    try {
+      const res = await fetch(`/api/admin/legal/${activeTab}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-site-id": siteId
+        },
+        body: JSON.stringify({
+          title: currentPage?.title || title,
+          content: currentPage?.content || content,
+          published: newPublished
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update publish status");
+      }
+
+      setPages(prev => {
+        const filtered = prev.filter(p => p.type !== activeTab);
+        return [...filtered, data.legalPage];
+      });
+
+      setMessage({
+        type: "success",
+        text: newPublished
+          ? `${title} is now published and accessible on the site.`
+          : `${title} has been unpublished and is no longer accessible.`
+      });
+      setTimeout(() => setMessage(null), 5000);
+    } catch (err) {
+      setMessage({ type: "error", text: err.message });
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
   // Helper to check if page type is configured
   const getPageStatus = (type) => {
     const page = pages.find(p => p.type === type);
-    if (!page) return { label: "Not Configured", color: "bg-gray-100 text-gray-500 border-gray-200" };
+    if (!page) return { label: "Not Configured", color: "bg-gray-100 text-gray-500 border-gray-200", published: false };
+    if (page.published) {
+      return { 
+        label: "Published", 
+        color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        published: true,
+        date: new Date(page.lastUpdated).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        })
+      };
+    }
     return { 
-      label: "Published", 
-      color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      label: "Draft", 
+      color: "bg-amber-50 text-amber-700 border-amber-200",
+      published: false,
       date: new Date(page.lastUpdated).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -125,6 +186,9 @@ export default function LegalEditor({ siteId, initialPages }) {
       })
       .join("");
   };
+
+  const activeStatus = getPageStatus(activeTab);
+  const isPublished = activeStatus.published;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
@@ -182,6 +246,11 @@ export default function LegalEditor({ siteId, initialPages }) {
             <h3 className="font-bold text-gray-900 text-base">
               Editing: {POLICY_TYPES.find(p => p.type === activeTab).label}
             </h3>
+            {/* Live published status badge */}
+            <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${activeStatus.color}`}>
+              {isPublished ? <Globe size={10} /> : <EyeOff size={10} />}
+              {activeStatus.label}
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -206,6 +275,23 @@ export default function LegalEditor({ siteId, initialPages }) {
                 <Eye size={13} /> Live Preview
               </button>
             </div>
+
+            {/* Publish / Unpublish Toggle Button */}
+            {pages.find(p => p.type === activeTab) && (
+              <button
+                type="button"
+                onClick={handleTogglePublish}
+                disabled={isToggling}
+                className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold shadow-sm transition disabled:opacity-50 ${
+                  isPublished
+                    ? "bg-amber-100 text-amber-800 border border-amber-300 hover:bg-amber-200"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
+              >
+                {isPublished ? <EyeOff size={14} /> : <Globe size={14} />}
+                {isToggling ? "Updating..." : isPublished ? "Unpublish" : "Publish"}
+              </button>
+            )}
 
             {/* Save Button */}
             {!isPreviewMode && (
@@ -263,6 +349,14 @@ export default function LegalEditor({ siteId, initialPages }) {
                   className="w-full flex-1 min-h-[380px] rounded-xl border border-gray-200 px-4 py-4 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100 text-sm text-gray-700 font-mono leading-relaxed resize-none"
                 />
               </div>
+
+              {/* Unpublished warning hint */}
+              {!isPublished && pages.find(p => p.type === activeTab) && (
+                <div className="flex items-center gap-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  <EyeOff size={13} className="shrink-0" />
+                  This page is currently a <strong>Draft</strong>. Click <strong>Publish</strong> to make it accessible on the site.
+                </div>
+              )}
             </form>
           ) : (
             <div className="p-8 max-w-4xl mx-auto w-full prose prose-slate">

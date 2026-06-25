@@ -6,7 +6,7 @@ import { z } from "zod";
 const RedirectUpdateSchema = z.object({
   source: z.string().optional(),
   target: z.string().optional(),
-  type: z.enum([301, 302]).optional()
+  type: z.union([z.literal(301), z.literal(302)]).optional()
 });
 
 export async function GET(req, context) {

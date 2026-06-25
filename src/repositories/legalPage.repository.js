@@ -12,6 +12,13 @@ export class LegalPageRepository extends BaseRepository {
     });
   }
 
+  async findPublishedByType(siteId, type) {
+    // Only returns the page if it is published (for public-facing routes)
+    return this.findFirst(siteId, {
+      where: { type, published: true }
+    });
+  }
+
   async upsertLegalPage(siteId, type, data) {
     // Check if it already exists (including soft-deleted ones)
     const existing = await this.db.findFirst({
@@ -24,6 +31,7 @@ export class LegalPageRepository extends BaseRepository {
         data: {
           title: data.title,
           content: data.content,
+          published: data.published ?? existing.published,
           lastUpdated: new Date(),
           deletedAt: null // Restore if it was soft-deleted
         }
@@ -36,6 +44,7 @@ export class LegalPageRepository extends BaseRepository {
         type,
         title: data.title,
         content: data.content,
+        published: data.published ?? false,
         lastUpdated: new Date()
       }
     });
@@ -43,3 +52,4 @@ export class LegalPageRepository extends BaseRepository {
 }
 
 export const legalPageRepository = new LegalPageRepository();
+

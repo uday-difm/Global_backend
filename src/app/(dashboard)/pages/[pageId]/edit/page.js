@@ -17,8 +17,8 @@ export default async function PageEditorPage({ params }) {
     );
   }
 
-  const page = await prisma.page.findUnique({
-    where: { id: pageId },
+  const page = await prisma.page.findFirst({
+    where: { id: pageId, deletedAt: null },
     select: { id: true, title: true, slug: true, siteId: true },
   });
 

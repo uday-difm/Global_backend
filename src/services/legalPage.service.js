@@ -14,6 +14,14 @@ export class LegalPageService extends BaseService {
     return this.repository.findByType(siteId, type);
   }
 
+  async getPublishedPageByType(siteId, type) {
+    if (!["privacy", "terms", "cookies", "disclaimer", "refund"].includes(type)) {
+      throw new Error(`Invalid legal page type: ${type}`);
+    }
+    return this.repository.findPublishedByType(siteId, type);
+  }
+
+
   async getAllActivePages(siteId) {
     return this.getList(siteId, {
       orderBy: { type: "asc" }

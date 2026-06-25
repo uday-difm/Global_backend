@@ -30,7 +30,7 @@ export default async function PagesAdmin() {
 
   // Retrieve all pages under this site
   const pages = await prisma.page.findMany({
-    where: { siteId: site.id },
+    where: { siteId: site.id, deletedAt: null },
     orderBy: { updatedAt: "desc" },
   });
 

@@ -25,11 +25,11 @@ export default async function LeadsPage() {
 
   const [submissions, leads, settings] = await Promise.all([
     prisma.contactFormSubmission.findMany({
-      where: { siteId: site.id },
+      where: { siteId: site.id, deletedAt: null },
       orderBy: { createdAt: "desc" },
     }),
     prisma.lead.findMany({
-      where: { siteId: site.id },
+      where: { siteId: site.id, deletedAt: null },
       orderBy: { createdAt: "desc" },
     }),
     prisma.globalSettings.findUnique({

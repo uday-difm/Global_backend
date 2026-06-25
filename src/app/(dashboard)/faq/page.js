@@ -17,7 +17,7 @@ export default async function FaqPage() {
   }
 
   const faqs = await prisma.faq.findMany({
-    where: { siteId: site.id },
+    where: { siteId: site.id, deletedAt: null },
     orderBy: { sortOrder: "asc" },
     include: {
       page: { select: { id: true, title: true, slug: true } },

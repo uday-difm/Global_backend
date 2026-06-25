@@ -13,7 +13,7 @@ export class PostService extends BaseService {
     if (options.status) {
       where.status = options.status;
     }
-    
+
     if (options.publicOnly) {
       where.status = "PUBLISHED";
       where.publishedAt = { lte: new Date() };
