@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+src/sdk/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
