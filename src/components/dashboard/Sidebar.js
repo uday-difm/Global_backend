@@ -208,16 +208,16 @@ function canSee(userRole, minRole) {
 
 function SidebarLink({ href, label, icon: Icon, pathname }) {
   const isActive =
-    pathname === href ||
-    (href !== "/dashboard" && pathname.startsWith(href));
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
 
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all ${isActive
-        ? "bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm"
-        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-        }`}
+      className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all ${
+        isActive
+          ? "bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm"
+          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+      }`}
     >
       <Icon
         size={14}
@@ -249,7 +249,7 @@ export default function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-3">
         {sections.map((section) => {
           const visibleLinks = section.links.filter((link) =>
-            canSee(userRole, link.minRole)
+            canSee(userRole, link.minRole),
           );
 
           if (!visibleLinks.length) return null;
@@ -262,11 +262,7 @@ export default function Sidebar() {
 
               <div className="space-y-0.5">
                 {visibleLinks.map((link) => (
-                  <SidebarLink
-                    key={link.href}
-                    {...link}
-                    pathname={pathname}
-                  />
+                  <SidebarLink key={link.href} {...link} pathname={pathname} />
                 ))}
               </div>
             </div>
@@ -334,9 +330,7 @@ export default function Sidebar() {
       {/* Footer */}
       <div className="border-t px-4 py-2.5 bg-gray-50">
         <div className="flex items-center justify-between">
-          <span className="text-[9px] text-gray-400 font-medium">
-            CMS v1.0
-          </span>
+          <span className="text-[9px] text-gray-400 font-medium">CMS v1.0</span>
 
           <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-indigo-700">
             {userRole}

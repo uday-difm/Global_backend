@@ -18,7 +18,6 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-
 export default function Topbar({ siteId, sites = [] }) {
   const [showSearch, setShowSearch] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -42,8 +41,8 @@ export default function Topbar({ siteId, sites = [] }) {
     try {
       const res = await fetch("/api/admin/notifications", {
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
       if (res.ok) {
         const json = await res.json();
@@ -69,13 +68,13 @@ export default function Topbar({ siteId, sites = [] }) {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
       }
-      if (notificationsRef.current && !notificationsRef.current.contains(e.target)) {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(e.target)
+      ) {
         setNotificationsOpen(false);
       }
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(e.target)
-      ) {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
         setSearchOpen(false);
       }
     }
@@ -94,8 +93,8 @@ export default function Topbar({ siteId, sites = [] }) {
       const res = await fetch("/api/admin/notifications/read", {
         method: "PUT",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
       if (res.ok) {
         setAlerts((prev) => prev.map((a) => ({ ...a, isRead: true })));
@@ -112,8 +111,8 @@ export default function Topbar({ siteId, sites = [] }) {
       const res = await fetch("/api/admin/notifications", {
         method: "DELETE",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
       if (res.ok) {
         setAlerts([]);
@@ -162,8 +161,8 @@ export default function Topbar({ siteId, sites = [] }) {
 
   const filteredItems = searchQuery
     ? searchItems.filter((item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
     : searchItems;
   useEffect(() => {
     const handler = (e) => {
@@ -190,8 +189,12 @@ export default function Topbar({ siteId, sites = [] }) {
             </button>
 
             <div>
-              <h1 className="text-lg font-semibold text-gray-900 md:text-xl">Admin Panel</h1>
-              <p className="hidden text-sm text-gray-500 sm:block">Manage your website content</p>
+              <h1 className="text-lg font-semibold text-gray-900 md:text-xl">
+                Admin Panel
+              </h1>
+              <p className="hidden text-sm text-gray-500 sm:block">
+                Manage your website content
+              </p>
             </div>
 
             {sites.length > 1 && (
@@ -205,7 +208,7 @@ export default function Topbar({ siteId, sites = [] }) {
                       const res = await fetch("/api/admin/switch-site", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ siteId: newSiteId })
+                        body: JSON.stringify({ siteId: newSiteId }),
                       });
                       if (res.ok) {
                         window.location.reload();
@@ -232,10 +235,7 @@ export default function Topbar({ siteId, sites = [] }) {
           {/* Right */}
           <div className="flex items-center gap-2 md:gap-4">
             {/* Desktop Search */}
-            <div
-              ref={searchRef}
-              className="relative hidden md:block"
-            >
+            <div ref={searchRef} className="relative hidden md:block">
               <Search
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -338,11 +338,16 @@ export default function Topbar({ siteId, sites = [] }) {
                     {alerts.map((alert) => (
                       <div
                         key={alert.id}
-                        className={`p-3 transition-colors ${alert.isRead ? "bg-white" : "bg-blue-50/30 hover:bg-blue-50/50"
-                          }`}
+                        className={`p-3 transition-colors ${
+                          alert.isRead
+                            ? "bg-white"
+                            : "bg-blue-50/30 hover:bg-blue-50/50"
+                        }`}
                       >
                         <div className="flex gap-2.5 items-start">
-                          <div className="mt-0.5 shrink-0">{getAlertIcon(alert.type)}</div>
+                          <div className="mt-0.5 shrink-0">
+                            {getAlertIcon(alert.type)}
+                          </div>
                           <div className="flex-1 space-y-0.5">
                             <div className="flex justify-between items-start gap-1">
                               <span className="font-bold text-gray-900 leading-tight">
@@ -364,7 +369,9 @@ export default function Topbar({ siteId, sites = [] }) {
                     ))}
 
                     {alerts.length === 0 && (
-                      <div className="p-8 text-center text-gray-400 italic">No recent system alerts.</div>
+                      <div className="p-8 text-center text-gray-400 italic">
+                        No recent system alerts.
+                      </div>
                     )}
                   </div>
 
@@ -398,8 +405,9 @@ export default function Topbar({ siteId, sites = [] }) {
 
                 <ChevronDown
                   size={14}
-                  className={`hidden lg:block text-gray-400 transition-transform ${menuOpen ? "rotate-180" : ""
-                    }`}
+                  className={`hidden lg:block text-gray-400 transition-transform ${
+                    menuOpen ? "rotate-180" : ""
+                  }`}
                 />
               </button>
 

@@ -20,6 +20,15 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Global Backend",
   description: "Managing your applications",
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 export default async function RootLayout({ children }) {
@@ -30,21 +39,33 @@ export default async function RootLayout({ children }) {
 
   const analytics = settings?.analytics || {};
   const scripts = settings?.scripts || {};
-  const timeoutMinutes = settings?.securityControls?.sessionTimeoutMinutes || 30;
+  const timeoutMinutes =
+    settings?.securityControls?.sessionTimeoutMinutes || 30;
   const performanceConfig = settings?.performanceConfig || {};
   const deferScripts = performanceConfig.deferNonEssentialScripts ?? true;
 
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         {/* The head scripts are now handled by the ClientScripts component below */}
         {analytics.searchConsoleId && (
-          <meta name="google-site-verification" content={analytics.searchConsoleId} />
+          <meta
+            name="google-site-verification"
+            content={analytics.searchConsoleId}
+          />
         )}
       </head>
       <body>
         {/* The ClientScripts component will inject scripts here and in the head */}
-        <ClientScripts headScripts={scripts.head} bodyScripts={scripts.body} deferScripts={deferScripts} />
+        <ClientScripts
+          headScripts={scripts.head}
+          bodyScripts={scripts.body}
+          deferScripts={deferScripts}
+        />
 
         {/* Google Tag Manager */}
         {analytics.googleTagManagerId && (
