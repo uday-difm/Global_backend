@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "ADMIN");
@@ -17,7 +18,7 @@ export async function GET(req) {
     const emailSettings = settings?.emailSettings || {};
     const failedLogs = emailSettings.failedLogs || [];
 
-    return NextResponse.json({ success: true, failedLogs });
+    return NextResponse.json(apiSuccess({ failedLogs }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
@@ -48,7 +49,7 @@ export async function DELETE(req) {
       }
     });
 
-    return NextResponse.json({ success: true, message: "Failed email logs cleared successfully" });
+    return NextResponse.json(apiSuccess({ message: "Failed email logs cleared successfully" }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

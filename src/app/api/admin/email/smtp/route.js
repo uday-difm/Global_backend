@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "ADMIN");
@@ -11,19 +12,22 @@ export async function GET(req) {
   try {
     const settings = await prisma.globalSettings.findUnique({
       where: { siteId: auth.siteId },
-      select: { emailSettings: true }
+      select: { emailSettings: true },
     });
 
-    // Sanitized settings (do not return plain passwords)
     const emailSettings = settings?.emailSettings || {};
     const sanitized = {
       ...emailSettings,
-      password: emailSettings.password ? "********" : null
+      password: emailSettings.password ? "********" : null,
+      resendApiKey: emailSettings.resendApiKey ? "********" : null,
     };
 
-    return NextResponse.json({ success: true, emailSettings: sanitized });
+    return NextResponse.json(apiSuccess({ emailSettings: sanitized }));
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error", message: err.message },
+      { status: 500 },
+    );
   }
 }
 
@@ -35,39 +39,72 @@ export async function PUT(req) {
 
   try {
     const body = await req.json();
-    const { host, port, username, password, formEmail, autoReplyTemplate, adminAlerts } = body;
+    const {
+      provider,
+      host,
+      port,
+      username,
+      password,
+      formEmail,
+      resendApiKey,
+      autoReplyTemplate,
+      adminAlerts,
+    } = body;
 
     const settings = await prisma.globalSettings.findUnique({
       where: { siteId: auth.siteId },
-      select: { emailSettings: true }
+      select: { emailSettings: true },
     });
 
     const currentEmailSettings = settings?.emailSettings || {};
+
     const updatedEmailSettings = {
+      provider:
+        provider !== undefined
+          ? provider
+          : currentEmailSettings.provider || "smtp",
       host: host !== undefined ? host : currentEmailSettings.host,
       port: port !== undefined ? port : currentEmailSettings.port,
-      username: username !== undefined ? username : currentEmailSettings.username,
-      // If password is "********" or empty, retain current password
-      password: (password !== undefined && password !== "********") ? password : currentEmailSettings.password,
-      formEmail: formEmail !== undefined ? formEmail : currentEmailSettings.formEmail,
-      autoReplyTemplate: autoReplyTemplate !== undefined ? autoReplyTemplate : currentEmailSettings.autoReplyTemplate,
-      adminAlerts: adminAlerts !== undefined ? adminAlerts : currentEmailSettings.adminAlerts,
-      failedLogs: currentEmailSettings.failedLogs || []
+      username:
+        username !== undefined ? username : currentEmailSettings.username,
+      password:
+        password !== undefined && password !== "********"
+          ? password
+          : currentEmailSettings.password,
+      formEmail:
+        formEmail !== undefined ? formEmail : currentEmailSettings.formEmail,
+      resendApiKey:
+        resendApiKey !== undefined && resendApiKey !== "********"
+          ? resendApiKey
+          : currentEmailSettings.resendApiKey,
+      autoReplyTemplate:
+        autoReplyTemplate !== undefined
+          ? autoReplyTemplate
+          : currentEmailSettings.autoReplyTemplate,
+      adminAlerts:
+        adminAlerts !== undefined
+          ? adminAlerts
+          : currentEmailSettings.adminAlerts,
+      failedLogs: currentEmailSettings.failedLogs || [],
     };
 
     const updated = await prisma.globalSettings.upsert({
       where: { siteId: auth.siteId },
       update: { emailSettings: updatedEmailSettings },
-      create: { siteId: auth.siteId, emailSettings: updatedEmailSettings }
+      create: { siteId: auth.siteId, emailSettings: updatedEmailSettings },
     });
 
     const sanitized = {
       ...updated.emailSettings,
-      password: updated.emailSettings.password ? "********" : null
+      password: updated.emailSettings.password ? "********" : null,
+      resendApiKey: updated.emailSettings.resendApiKey ? "********" : null,
     };
 
-    return NextResponse.json({ success: true, emailSettings: sanitized });
+    return NextResponse.json(apiSuccess({ emailSettings: sanitized }));
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error", message: err.message },
+      { status: 500 },
+    );
   }
 }
