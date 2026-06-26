@@ -1,39 +1,37 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAuth } from "@/lib/requireAuth";
-import { canManageBlogs } from "@/lib/permissions";
-
-async function getAuthenticatedUser() {
-  const user = await requireAuth();
-  if (!user && process.env.NODE_ENV === "development") {
-    return await prisma.user.findFirst();
-  }
-  return user;
-}
+import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 // PATCH /api/admin/categories/[categoryId] - Rename a category
-export async function PATCH(req, { params }) {
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function PATCH(req, context) {
+  const auth = await checkSitePermission(req, "EDITOR");
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  if (!canManageBlogs(user)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const { categoryId } = await params;
+  const params = await context.params;
+  const { categoryId } = params;
   const body = await req.json();
   const { name } = body;
 
   if (!name || !name.trim()) {
-    return NextResponse.json({ error: "Category name is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Category name is required" },
+      { status: 400 },
+    );
   }
 
   try {
-    const existing = await prisma.category.findUnique({ where: { id: categoryId } });
+    // Verify the category belongs to the authenticated site
+    const existing = await prisma.category.findFirst({
+      where: { id: categoryId, siteId: auth.siteId },
+    });
     if (!existing) {
-      return NextResponse.json({ error: "Category not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Category not found" },
+        { status: 404 },
+      );
     }
 
     const category = await prisma.category.update({
@@ -41,43 +39,51 @@ export async function PATCH(req, { params }) {
       data: { name: name.trim() },
     });
 
-    return NextResponse.json({ category });
+    return NextResponse.json(apiSuccess({ category }));
   } catch (err) {
     console.error("Rename category error:", err);
-    return NextResponse.json({ error: "Failed to rename category" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to rename category" },
+      { status: 500 },
+    );
   }
 }
 
 // DELETE /api/admin/categories/[categoryId] - Delete a category
-export async function DELETE(req, { params }) {
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function DELETE(req, context) {
+  const auth = await checkSitePermission(req, "EDITOR");
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  if (!canManageBlogs(user)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const { categoryId } = await params;
+  const params = await context.params;
+  const { categoryId } = params;
 
   try {
-    const existing = await prisma.category.findUnique({
-      where: { id: categoryId }
+    // Verify the category belongs to the authenticated site
+    const existing = await prisma.category.findFirst({
+      where: { id: categoryId, siteId: auth.siteId },
     });
 
     if (!existing) {
-      return NextResponse.json({ error: "Category not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Category not found" },
+        { status: 404 },
+      );
     }
 
-    // Delete category. Implicit many-to-many relationship with posts will disconnect automatically.
     await prisma.category.delete({
-      where: { id: categoryId }
+      where: { id: categoryId },
     });
 
-    return NextResponse.json({ message: "Category deleted successfully" });
+    return NextResponse.json(
+      apiSuccess({ message: "Category deleted successfully" }),
+    );
   } catch (err) {
     console.error("Delete category error:", err);
-    return NextResponse.json({ error: "Failed to delete category" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete category" },
+      { status: 500 },
+    );
   }
 }

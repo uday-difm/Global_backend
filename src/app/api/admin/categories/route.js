@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { requireAuth } from "@/lib/requireAuth";
-import { canManageBlogs } from "@/lib/permissions";
+import { checkSitePermission } from "@/lib/apiAuth";
 import { z } from "zod";
-
-async function getAuthenticatedUser() {
-  const user = await requireAuth();
-  if (!user && process.env.NODE_ENV === "development") {
-    return await prisma.user.findFirst();
-  }
-  return user;
-}
+import { apiSuccess } from "@/core/errors";
 
 function slugify(text = "") {
   return text
@@ -22,30 +14,30 @@ function slugify(text = "") {
     .replace(/\-\-+/g, "-");
 }
 
-// GET /api/admin/categories - List all categories
-export async function GET() {
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!canManageBlogs(user)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+// GET /api/admin/categories - List all categories for the site
+export async function GET(req) {
+  const auth = await checkSitePermission(req, "EDITOR");
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   try {
     const categories = await prisma.category.findMany({
+      where: { siteId: auth.siteId },
       orderBy: { name: "asc" },
       include: {
         _count: {
-          select: { posts: true }
-        }
-      }
+          select: { posts: true },
+        },
+      },
     });
-    return NextResponse.json({ categories });
+    return NextResponse.json(apiSuccess({ categories }));
   } catch (err) {
     console.error("Fetch categories error:", err);
-    return NextResponse.json({ error: "Failed to fetch categories" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch categories" },
+      { status: 500 },
+    );
   }
 }
 
@@ -56,13 +48,9 @@ const CreateCategorySchema = z.object({
 
 // POST /api/admin/categories - Create a category
 export async function POST(req) {
-  const user = await getAuthenticatedUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  if (!canManageBlogs(user)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const auth = await checkSitePermission(req, "EDITOR");
+  if (auth.error) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
   try {
@@ -70,37 +58,45 @@ export async function POST(req) {
     const data = CreateCategorySchema.parse(body);
 
     const baseSlug = (data.slug && slugify(data.slug)) || slugify(data.name);
-    
-    // Check if category with this name or slug already exists
+
+    // Check if category with this name or slug already exists for this site
     const existing = await prisma.category.findFirst({
       where: {
+        siteId: auth.siteId,
         OR: [
           { name: { equals: data.name, mode: "insensitive" } },
-          { slug: baseSlug }
-        ]
-      }
+          { slug: baseSlug },
+        ],
+      },
     });
 
     if (existing) {
       return NextResponse.json(
         { error: "A category with this name or slug already exists." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const category = await prisma.category.create({
       data: {
+        siteId: auth.siteId,
         name: data.name.trim(),
         slug: baseSlug,
-      }
+      },
     });
 
-    return NextResponse.json({ category }, { status: 201 });
+    return NextResponse.json(apiSuccess({ category }), { status: 201 });
   } catch (err) {
     console.error("Create category error:", err);
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation error", details: err.errors }, { status: 400 });
+      return NextResponse.json(
+        { error: "Validation error", details: err.errors },
+        { status: 400 },
+      );
     }
-    return NextResponse.json({ error: "Failed to create category" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create category" },
+      { status: 500 },
+    );
   }
 }
