@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
-import nodemailer from "nodemailer";
+import { apiSuccess } from "@/core/errors";
+import { emailService } from "@/services/email.service";
 
 export async function POST(req) {
   const auth = await checkSitePermission(req, "ADMIN");
@@ -9,82 +9,42 @@ export async function POST(req) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  const settings = await prisma.globalSettings.findUnique({
-    where: { siteId: auth.siteId },
-    select: { emailSettings: true }
-  });
-
-  const emailSettings = settings?.emailSettings || {};
-  let { host, port, username, password, formEmail } = emailSettings;
-
-  if (!host || !port || !username || !password) {
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      host = process.env.SMTP_HOST;
-      port = process.env.SMTP_PORT || "587";
-      username = process.env.SMTP_USER;
-      password = process.env.SMTP_PASS;
-      formEmail = process.env.FORM_EMAIL || process.env.SMTP_USER;
-    } else {
-      return NextResponse.json({ error: "SMTP is not fully configured in settings or env" }, { status: 400 });
-    }
-  }
-
   try {
-    const transporter = nodemailer.createTransport({
-      host,
-      port: parseInt(port, 10),
-      secure: parseInt(port, 10) === 465,
-      auth: {
-        user: username,
-        pass: password
-      },
-      // Timeout settings to prevent hanging in test
-      connectionTimeout: 5000,
-      greetingTimeout: 5000,
-      socketTimeout: 5000
-    });
+    // Test the connection using emailService which handles both SMTP and Resend
+    const connectionResult = await emailService.testConnection(auth.siteId);
 
-    // Send test email
-    await transporter.sendMail({
-      from: formEmail || username,
-      to: auth.user.email,
-      subject: "SMTP Configuration Test - Global Backend CMS",
-      text: "Congratulations! Your SMTP settings have been verified and are working correctly."
-    });
+    // Send a test email to the authenticated user
+    const testResult = await emailService.sendTestEmail(
+      auth.siteId,
+      auth.user.email,
+    );
 
-    return NextResponse.json({ success: true, message: `Test email sent successfully to ${auth.user.email}` });
+    return NextResponse.json(
+      apiSuccess({
+        message: testResult.message,
+        connection: connectionResult,
+      }),
+    );
   } catch (err) {
-    console.error("SMTP Test Error:", err);
+    console.error("Email Test Error:", err);
 
     // Log failure
     try {
-      const currentEmailSettings = settings.emailSettings || {};
-      const failedLogs = currentEmailSettings.failedLogs || [];
-      failedLogs.unshift({
-        error: err.message,
-        timestamp: new Date().toISOString()
+      await emailService.logEmailFailure(auth.siteId, err.message, {
+        context: "connection-test",
+        to: auth.user.email,
       });
-
-      // Keep only last 50 failed logs
-      const updatedFailedLogs = failedLogs.slice(0, 50);
-
-      await prisma.globalSettings.update({
-        where: { siteId: auth.siteId },
-        data: {
-          emailSettings: {
-            ...currentEmailSettings,
-            failedLogs: updatedFailedLogs
-          }
-        }
-      });
-    } catch (dbErr) {
-      console.error("Failed to save SMTP fail log to DB:", dbErr);
+    } catch (logErr) {
+      console.error("Failed to save email fail log to DB:", logErr);
     }
 
-    return NextResponse.json({
-      success: false,
-      error: "SMTP connection failed",
-      message: err.message
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Email connection failed",
+        message: err.message,
+      },
+      { status: 500 },
+    );
   }
 }
