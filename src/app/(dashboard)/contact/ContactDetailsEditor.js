@@ -2,29 +2,77 @@
 
 import { useState, useEffect } from "react";
 import {
-  Phone, Mail, MapPin, MessageCircle, Map, Clock, Share2,
-  Plus, Trash2, Save, AlertCircle, CheckCircle, Globe,
-  Link2, ChevronDown, ChevronUp
+  Phone,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Map,
+  Clock,
+  Share2,
+  Plus,
+  Trash2,
+  Save,
+  AlertCircle,
+  CheckCircle,
+  Globe,
+  Link2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
-
 const SOCIAL_PLATFORMS = [
-  { key: "facebook",  label: "Facebook",    icon: Link2, placeholder: "https://facebook.com/yourpage" },
-  { key: "instagram", label: "Instagram",   icon: Link2, placeholder: "https://instagram.com/yourhandle" },
-  { key: "twitter",   label: "X / Twitter", icon: Link2, placeholder: "https://x.com/yourhandle" },
-  { key: "linkedin",  label: "LinkedIn",    icon: Link2, placeholder: "https://linkedin.com/in/yourprofile" },
-  { key: "youtube",   label: "YouTube",     icon: Link2, placeholder: "https://youtube.com/@yourchannel" },
-  { key: "website",   label: "Website",     icon: Globe, placeholder: "https://yourwebsite.com" },
+  {
+    key: "facebook",
+    label: "Facebook",
+    icon: Link2,
+    placeholder: "https://facebook.com/yourpage",
+  },
+  {
+    key: "instagram",
+    label: "Instagram",
+    icon: Link2,
+    placeholder: "https://instagram.com/yourhandle",
+  },
+  {
+    key: "twitter",
+    label: "X / Twitter",
+    icon: Link2,
+    placeholder: "https://x.com/yourhandle",
+  },
+  {
+    key: "linkedin",
+    label: "LinkedIn",
+    icon: Link2,
+    placeholder: "https://linkedin.com/in/yourprofile",
+  },
+  {
+    key: "youtube",
+    label: "YouTube",
+    icon: Link2,
+    placeholder: "https://youtube.com/@yourchannel",
+  },
+  {
+    key: "tiktok",
+    label: "TikTok",
+    icon: Link2,
+    placeholder: "https://tiktok.com/@yourhandle",
+  },
+  {
+    key: "website",
+    label: "Website",
+    icon: Globe,
+    placeholder: "https://yourwebsite.com",
+  },
 ];
 
 const DEFAULT_HOURS = [
-  { day: "Monday",    open: "09:00", close: "18:00", closed: false },
-  { day: "Tuesday",   open: "09:00", close: "18:00", closed: false },
+  { day: "Monday", open: "09:00", close: "18:00", closed: false },
+  { day: "Tuesday", open: "09:00", close: "18:00", closed: false },
   { day: "Wednesday", open: "09:00", close: "18:00", closed: false },
-  { day: "Thursday",  open: "09:00", close: "18:00", closed: false },
-  { day: "Friday",    open: "09:00", close: "18:00", closed: false },
-  { day: "Saturday",  open: "10:00", close: "15:00", closed: false },
-  { day: "Sunday",    open: "",      close: "",       closed: true  },
+  { day: "Thursday", open: "09:00", close: "18:00", closed: false },
+  { day: "Friday", open: "09:00", close: "18:00", closed: false },
+  { day: "Saturday", open: "10:00", close: "15:00", closed: false },
+  { day: "Sunday", open: "", close: "", closed: true },
 ];
 
 function SectionCard({ icon: Icon, title, children, defaultOpen = true }) {
@@ -42,9 +90,17 @@ function SectionCard({ icon: Icon, title, children, defaultOpen = true }) {
           </div>
           <span className="text-sm font-bold text-slate-900">{title}</span>
         </div>
-        {open ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+        {open ? (
+          <ChevronUp size={16} className="text-slate-400" />
+        ) : (
+          <ChevronDown size={16} className="text-slate-400" />
+        )}
       </button>
-      {open && <div className="px-6 pb-6 space-y-4 border-t border-slate-100 pt-5">{children}</div>}
+      {open && (
+        <div className="px-6 pb-6 space-y-4 border-t border-slate-100 pt-5">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -52,7 +108,9 @@ function SectionCard({ icon: Icon, title, children, defaultOpen = true }) {
 function FieldRow({ label, children, hint }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-slate-700 mb-1">{label}</label>
+      <label className="block text-xs font-semibold text-slate-700 mb-1">
+        {label}
+      </label>
       {children}
       {hint && <p className="mt-1 text-2xs text-slate-400">{hint}</p>}
     </div>
@@ -61,23 +119,58 @@ function FieldRow({ label, children, hint }) {
 
 export default function ContactDetailsEditor({ siteId, initialData }) {
   // ── Primary contact fields ──────────────────────────────────────────────────
-  const [phones, setPhones] = useState(initialData?.phones || [{ number: "", label: "Primary", isWhatsApp: false }]);
-  const [emails, setEmails] = useState(initialData?.emails || [{ address: "", label: "General" }]);
-  const [addresses, setAddresses] = useState(initialData?.addresses || [{ line1: "", line2: "", city: "", state: "", country: "", postalCode: "", label: "Main Office" }]);
+  const [phones, setPhones] = useState(
+    initialData?.phones || [
+      { number: "", label: "Primary", isWhatsApp: false },
+    ],
+  );
+  const [emails, setEmails] = useState(
+    initialData?.emails || [{ address: "", label: "General" }],
+  );
+  const [addresses, setAddresses] = useState(
+    initialData?.addresses || [
+      {
+        line1: "",
+        line2: "",
+        city: "",
+        state: "",
+        country: "",
+        postalCode: "",
+        label: "Main Office",
+      },
+    ],
+  );
 
   // ── WhatsApp ─────────────────────────────────────────────────────────────────
-  const [whatsapp, setWhatsapp] = useState(initialData?.whatsapp || { number: "", defaultMessage: "", showWidget: false });
+  const [whatsapp, setWhatsapp] = useState(
+    initialData?.whatsapp || {
+      number: "",
+      defaultMessage: "",
+      showWidget: false,
+    },
+  );
 
   // ── Google Maps ──────────────────────────────────────────────────────────────
-  const [maps, setMaps] = useState(initialData?.maps || { embedUrl: "", directionsUrl: "", latitude: "", longitude: "" });
+  const [maps, setMaps] = useState(
+    initialData?.maps || {
+      embedUrl: "",
+      directionsUrl: "",
+      latitude: "",
+      longitude: "",
+    },
+  );
 
   // ── Business hours ───────────────────────────────────────────────────────────
-  const [hours, setHours] = useState(initialData?.businessHours || DEFAULT_HOURS);
+  const [hours, setHours] = useState(
+    initialData?.businessHours || DEFAULT_HOURS,
+  );
   const [timezone, setTimezone] = useState(initialData?.timezone || "");
 
   // ── Social links ─────────────────────────────────────────────────────────────
   const [socials, setSocials] = useState(initialData?.socials || {});
-  const [customSocials, setCustomSocials] = useState(initialData?.customSocials || []);
+  const [customSocials, setCustomSocials] = useState(
+    initialData?.customSocials || [],
+  );
 
   // ── UI state ─────────────────────────────────────────────────────────────────
   const [saving, setSaving] = useState(false);
@@ -85,23 +178,54 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
   const [success, setSuccess] = useState(false);
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
-  const addPhone = () => setPhones((p) => [...p, { number: "", label: "", isWhatsApp: false }]);
+  const addPhone = () =>
+    setPhones((p) => [...p, { number: "", label: "", isWhatsApp: false }]);
   const removePhone = (i) => setPhones((p) => p.filter((_, idx) => idx !== i));
-  const updatePhone = (i, field, val) => setPhones((p) => p.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
+  const updatePhone = (i, field, val) =>
+    setPhones((p) =>
+      p.map((item, idx) => (idx === i ? { ...item, [field]: val } : item)),
+    );
 
   const addEmail = () => setEmails((e) => [...e, { address: "", label: "" }]);
   const removeEmail = (i) => setEmails((e) => e.filter((_, idx) => idx !== i));
-  const updateEmail = (i, field, val) => setEmails((e) => e.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
+  const updateEmail = (i, field, val) =>
+    setEmails((e) =>
+      e.map((item, idx) => (idx === i ? { ...item, [field]: val } : item)),
+    );
 
-  const addAddress = () => setAddresses((a) => [...a, { line1: "", line2: "", city: "", state: "", country: "", postalCode: "", label: "" }]);
-  const removeAddress = (i) => setAddresses((a) => a.filter((_, idx) => idx !== i));
-  const updateAddress = (i, field, val) => setAddresses((a) => a.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
+  const addAddress = () =>
+    setAddresses((a) => [
+      ...a,
+      {
+        line1: "",
+        line2: "",
+        city: "",
+        state: "",
+        country: "",
+        postalCode: "",
+        label: "",
+      },
+    ]);
+  const removeAddress = (i) =>
+    setAddresses((a) => a.filter((_, idx) => idx !== i));
+  const updateAddress = (i, field, val) =>
+    setAddresses((a) =>
+      a.map((item, idx) => (idx === i ? { ...item, [field]: val } : item)),
+    );
 
-  const updateHour = (i, field, val) => setHours((h) => h.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
+  const updateHour = (i, field, val) =>
+    setHours((h) =>
+      h.map((item, idx) => (idx === i ? { ...item, [field]: val } : item)),
+    );
 
-  const addCustomSocial = () => setCustomSocials((c) => [...c, { platform: "", url: "" }]);
-  const removeCustomSocial = (i) => setCustomSocials((c) => c.filter((_, idx) => idx !== i));
-  const updateCustomSocial = (i, field, val) => setCustomSocials((c) => c.map((item, idx) => idx === i ? { ...item, [field]: val } : item));
+  const addCustomSocial = () =>
+    setCustomSocials((c) => [...c, { platform: "", url: "" }]);
+  const removeCustomSocial = (i) =>
+    setCustomSocials((c) => c.filter((_, idx) => idx !== i));
+  const updateCustomSocial = (i, field, val) =>
+    setCustomSocials((c) =>
+      c.map((item, idx) => (idx === i ? { ...item, [field]: val } : item)),
+    );
 
   // ── Save ──────────────────────────────────────────────────────────────────────
   const handleSave = async () => {
@@ -124,7 +248,7 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
     try {
       const res = await fetch(`/api/admin/contact/details?siteId=${siteId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-site-id": siteId },
         body: JSON.stringify(payload),
       });
 
@@ -147,7 +271,8 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Contact Details</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Manage your business contact information, business hours, and social links.
+            Manage your business contact information, business hours, and social
+            links.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -176,10 +301,15 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
       <SectionCard icon={Phone} title="Phone Numbers">
         <div className="space-y-3">
           {phones.map((phone, i) => (
-            <div key={i} className="flex gap-2 items-start bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <div
+              key={i}
+              className="flex gap-2 items-start bg-slate-50 border border-slate-200 rounded-lg p-3"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
                 <div>
-                  <label className="block text-2xs font-semibold text-slate-500 mb-1">Label</label>
+                  <label className="block text-2xs font-semibold text-slate-500 mb-1">
+                    Label
+                  </label>
                   <input
                     type="text"
                     value={phone.label}
@@ -189,7 +319,9 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-2xs font-semibold text-slate-500 mb-1">Phone Number</label>
+                  <label className="block text-2xs font-semibold text-slate-500 mb-1">
+                    Phone Number
+                  </label>
                   <input
                     type="tel"
                     value={phone.number}
@@ -204,13 +336,19 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
                   <input
                     type="checkbox"
                     checked={phone.isWhatsApp}
-                    onChange={(e) => updatePhone(i, "isWhatsApp", e.target.checked)}
+                    onChange={(e) =>
+                      updatePhone(i, "isWhatsApp", e.target.checked)
+                    }
                     className="rounded border-slate-300 text-green-600 h-3 w-3"
                   />
                   WhatsApp
                 </label>
                 {phones.length > 1 && (
-                  <button type="button" onClick={() => removePhone(i)} className="text-red-500 hover:text-red-700 transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => removePhone(i)}
+                    className="text-red-500 hover:text-red-700 transition-colors"
+                  >
                     <Trash2 size={14} />
                   </button>
                 )}
@@ -231,10 +369,15 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
       <SectionCard icon={Mail} title="Email Addresses">
         <div className="space-y-3">
           {emails.map((email, i) => (
-            <div key={i} className="flex gap-2 items-start bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <div
+              key={i}
+              className="flex gap-2 items-start bg-slate-50 border border-slate-200 rounded-lg p-3"
+            >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
                 <div>
-                  <label className="block text-2xs font-semibold text-slate-500 mb-1">Label</label>
+                  <label className="block text-2xs font-semibold text-slate-500 mb-1">
+                    Label
+                  </label>
                   <input
                     type="text"
                     value={email.label}
@@ -244,7 +387,9 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-2xs font-semibold text-slate-500 mb-1">Email Address</label>
+                  <label className="block text-2xs font-semibold text-slate-500 mb-1">
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     value={email.address}
@@ -255,7 +400,11 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
                 </div>
               </div>
               {emails.length > 1 && (
-                <button type="button" onClick={() => removeEmail(i)} className="text-red-500 hover:text-red-700 pt-5 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => removeEmail(i)}
+                  className="text-red-500 hover:text-red-700 pt-5 transition-colors"
+                >
                   <Trash2 size={14} />
                 </button>
               )}
@@ -275,7 +424,10 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
       <SectionCard icon={MapPin} title="Office Addresses">
         <div className="space-y-4">
           {addresses.map((addr, i) => (
-            <div key={i} className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+            <div
+              key={i}
+              className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3"
+            >
               <div className="flex items-center justify-between">
                 <input
                   type="text"
@@ -285,35 +437,94 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
                   className="px-2.5 py-1 text-xs font-semibold border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white w-64"
                 />
                 {addresses.length > 1 && (
-                  <button type="button" onClick={() => removeAddress(i)} className="text-red-500 hover:text-red-700 transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => removeAddress(i)}
+                    className="text-red-500 hover:text-red-700 transition-colors"
+                  >
                     <Trash2 size={14} />
                   </button>
                 )}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="sm:col-span-2">
-                  <label className="block text-2xs font-semibold text-slate-500 mb-1">Address Line 1</label>
-                  <input type="text" value={addr.line1} onChange={(e) => updateAddress(i, "line1", e.target.value)} placeholder="Street address" className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white" />
+                  <label className="block text-2xs font-semibold text-slate-500 mb-1">
+                    Address Line 1
+                  </label>
+                  <input
+                    type="text"
+                    value={addr.line1}
+                    onChange={(e) => updateAddress(i, "line1", e.target.value)}
+                    placeholder="Street address"
+                    className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                  />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-2xs font-semibold text-slate-500 mb-1">Address Line 2 <span className="text-slate-400 font-normal">(optional)</span></label>
-                  <input type="text" value={addr.line2} onChange={(e) => updateAddress(i, "line2", e.target.value)} placeholder="Suite, floor, building..." className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white" />
+                  <label className="block text-2xs font-semibold text-slate-500 mb-1">
+                    Address Line 2{" "}
+                    <span className="text-slate-400 font-normal">
+                      (optional)
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={addr.line2}
+                    onChange={(e) => updateAddress(i, "line2", e.target.value)}
+                    placeholder="Suite, floor, building..."
+                    className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                  />
                 </div>
                 <div>
-                  <label className="block text-2xs font-semibold text-slate-500 mb-1">City</label>
-                  <input type="text" value={addr.city} onChange={(e) => updateAddress(i, "city", e.target.value)} placeholder="City" className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white" />
+                  <label className="block text-2xs font-semibold text-slate-500 mb-1">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    value={addr.city}
+                    onChange={(e) => updateAddress(i, "city", e.target.value)}
+                    placeholder="City"
+                    className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                  />
                 </div>
                 <div>
-                  <label className="block text-2xs font-semibold text-slate-500 mb-1">State / Province</label>
-                  <input type="text" value={addr.state} onChange={(e) => updateAddress(i, "state", e.target.value)} placeholder="State" className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white" />
+                  <label className="block text-2xs font-semibold text-slate-500 mb-1">
+                    State / Province
+                  </label>
+                  <input
+                    type="text"
+                    value={addr.state}
+                    onChange={(e) => updateAddress(i, "state", e.target.value)}
+                    placeholder="State"
+                    className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                  />
                 </div>
                 <div>
-                  <label className="block text-2xs font-semibold text-slate-500 mb-1">Country</label>
-                  <input type="text" value={addr.country} onChange={(e) => updateAddress(i, "country", e.target.value)} placeholder="Country" className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white" />
+                  <label className="block text-2xs font-semibold text-slate-500 mb-1">
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    value={addr.country}
+                    onChange={(e) =>
+                      updateAddress(i, "country", e.target.value)
+                    }
+                    placeholder="Country"
+                    className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                  />
                 </div>
                 <div>
-                  <label className="block text-2xs font-semibold text-slate-500 mb-1">Postal Code</label>
-                  <input type="text" value={addr.postalCode} onChange={(e) => updateAddress(i, "postalCode", e.target.value)} placeholder="ZIP / Postcode" className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white" />
+                  <label className="block text-2xs font-semibold text-slate-500 mb-1">
+                    Postal Code
+                  </label>
+                  <input
+                    type="text"
+                    value={addr.postalCode}
+                    onChange={(e) =>
+                      updateAddress(i, "postalCode", e.target.value)
+                    }
+                    placeholder="ZIP / Postcode"
+                    className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                  />
                 </div>
               </div>
             </div>
@@ -331,20 +542,30 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
       {/* ── WhatsApp ────────────────────────────────────────────────────────── */}
       <SectionCard icon={MessageCircle} title="WhatsApp">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <FieldRow label="WhatsApp Number" hint="Include country code, e.g. +14155552671">
+          <FieldRow
+            label="WhatsApp Number"
+            hint="Include country code, e.g. +14155552671"
+          >
             <input
               type="tel"
               value={whatsapp.number}
-              onChange={(e) => setWhatsapp((w) => ({ ...w, number: e.target.value }))}
+              onChange={(e) =>
+                setWhatsapp((w) => ({ ...w, number: e.target.value }))
+              }
               placeholder="+14155552671"
               className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </FieldRow>
-          <FieldRow label="Default Message (pre-filled)" hint="Message users will see when they open the chat">
+          <FieldRow
+            label="Default Message (pre-filled)"
+            hint="Message users will see when they open the chat"
+          >
             <input
               type="text"
               value={whatsapp.defaultMessage}
-              onChange={(e) => setWhatsapp((w) => ({ ...w, defaultMessage: e.target.value }))}
+              onChange={(e) =>
+                setWhatsapp((w) => ({ ...w, defaultMessage: e.target.value }))
+              }
               placeholder="Hi! I'd like to know more about..."
               className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
@@ -354,7 +575,9 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
           <input
             type="checkbox"
             checked={whatsapp.showWidget}
-            onChange={(e) => setWhatsapp((w) => ({ ...w, showWidget: e.target.checked }))}
+            onChange={(e) =>
+              setWhatsapp((w) => ({ ...w, showWidget: e.target.checked }))
+            }
             className="rounded border-slate-300 text-green-600 h-4 w-4"
           />
           Show WhatsApp floating widget on website
@@ -363,20 +586,30 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
 
       {/* ── Google Maps ─────────────────────────────────────────────────────── */}
       <SectionCard icon={Map} title="Google Maps">
-        <FieldRow label="Embed URL" hint="Paste the Google Maps embed iframe src URL here">
+        <FieldRow
+          label="Embed URL"
+          hint="Paste the Google Maps embed iframe src URL here"
+        >
           <input
             type="url"
             value={maps.embedUrl}
-            onChange={(e) => setMaps((m) => ({ ...m, embedUrl: e.target.value }))}
+            onChange={(e) =>
+              setMaps((m) => ({ ...m, embedUrl: e.target.value }))
+            }
             placeholder="https://www.google.com/maps/embed?pb=..."
             className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </FieldRow>
-        <FieldRow label="Directions URL" hint="Link to Google Maps directions for your location">
+        <FieldRow
+          label="Directions URL"
+          hint="Link to Google Maps directions for your location"
+        >
           <input
             type="url"
             value={maps.directionsUrl}
-            onChange={(e) => setMaps((m) => ({ ...m, directionsUrl: e.target.value }))}
+            onChange={(e) =>
+              setMaps((m) => ({ ...m, directionsUrl: e.target.value }))
+            }
             placeholder="https://maps.google.com/?q=..."
             className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
@@ -386,7 +619,9 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
             <input
               type="text"
               value={maps.latitude}
-              onChange={(e) => setMaps((m) => ({ ...m, latitude: e.target.value }))}
+              onChange={(e) =>
+                setMaps((m) => ({ ...m, latitude: e.target.value }))
+              }
               placeholder="40.7128"
               className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
@@ -395,7 +630,9 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
             <input
               type="text"
               value={maps.longitude}
-              onChange={(e) => setMaps((m) => ({ ...m, longitude: e.target.value }))}
+              onChange={(e) =>
+                setMaps((m) => ({ ...m, longitude: e.target.value }))
+              }
               placeholder="-74.0060"
               className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
@@ -416,7 +653,10 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
 
       {/* ── Business Hours ──────────────────────────────────────────────────── */}
       <SectionCard icon={Clock} title="Business Hours">
-        <FieldRow label="Timezone" hint="Used to display correct local times to visitors">
+        <FieldRow
+          label="Timezone"
+          hint="Used to display correct local times to visitors"
+        >
           <input
             type="text"
             value={timezone}
@@ -427,8 +667,13 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
         </FieldRow>
         <div className="space-y-2 mt-2">
           {hours.map((hour, i) => (
-            <div key={i} className="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
-              <span className="text-xs font-semibold text-slate-700 w-24 shrink-0">{hour.day}</span>
+            <div
+              key={i}
+              className="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0"
+            >
+              <span className="text-xs font-semibold text-slate-700 w-24 shrink-0">
+                {hour.day}
+              </span>
               <label className="flex items-center gap-1.5 cursor-pointer shrink-0">
                 <input
                   type="checkbox"
@@ -436,16 +681,22 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
                   onChange={(e) => updateHour(i, "closed", e.target.checked)}
                   className="rounded border-slate-300 text-red-500 h-3.5 w-3.5"
                 />
-                <span className="text-2xs text-slate-500 font-semibold">Closed</span>
+                <span className="text-2xs text-slate-500 font-semibold">
+                  Closed
+                </span>
               </label>
-              <div className={`flex items-center gap-2 flex-1 ${hour.closed ? "opacity-30 pointer-events-none" : ""}`}>
+              <div
+                className={`flex items-center gap-2 flex-1 ${hour.closed ? "opacity-30 pointer-events-none" : ""}`}
+              >
                 <input
                   type="time"
                   value={hour.open}
                   onChange={(e) => updateHour(i, "open", e.target.value)}
                   className="px-2 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
-                <span className="text-2xs text-slate-400 font-semibold">to</span>
+                <span className="text-2xs text-slate-400 font-semibold">
+                  to
+                </span>
                 <input
                   type="time"
                   value={hour.close}
@@ -461,33 +712,41 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
       {/* ── Social Links ────────────────────────────────────────────────────── */}
       <SectionCard icon={Share2} title="Social Links">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {SOCIAL_PLATFORMS.map(({ key, label, icon: PlatformIcon, placeholder }) => (
-            <div key={key}>
-              <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1">
-                <PlatformIcon size={13} className="text-slate-500" />
-                {label}
-              </label>
-              <input
-                type="url"
-                value={socials[key] || ""}
-                onChange={(e) => setSocials((s) => ({ ...s, [key]: e.target.value }))}
-                placeholder={placeholder}
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-          ))}
+          {SOCIAL_PLATFORMS.map(
+            ({ key, label, icon: PlatformIcon, placeholder }) => (
+              <div key={key}>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1">
+                  <PlatformIcon size={13} className="text-slate-500" />
+                  {label}
+                </label>
+                <input
+                  type="url"
+                  value={socials[key] || ""}
+                  onChange={(e) =>
+                    setSocials((s) => ({ ...s, [key]: e.target.value }))
+                  }
+                  placeholder={placeholder}
+                  className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            ),
+          )}
         </div>
 
         {/* Custom socials */}
         {customSocials.length > 0 && (
           <div className="mt-4 space-y-2">
-            <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider">Custom Links</p>
+            <p className="text-2xs font-bold text-slate-400 uppercase tracking-wider">
+              Custom Links
+            </p>
             {customSocials.map((cs, i) => (
               <div key={i} className="flex items-center gap-2">
                 <input
                   type="text"
                   value={cs.platform}
-                  onChange={(e) => updateCustomSocial(i, "platform", e.target.value)}
+                  onChange={(e) =>
+                    updateCustomSocial(i, "platform", e.target.value)
+                  }
                   placeholder="Platform name"
                   className="w-32 px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
@@ -498,7 +757,11 @@ export default function ContactDetailsEditor({ siteId, initialData }) {
                   placeholder="https://..."
                   className="flex-1 px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
-                <button type="button" onClick={() => removeCustomSocial(i)} className="text-red-500 hover:text-red-700 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => removeCustomSocial(i)}
+                  className="text-red-500 hover:text-red-700 transition-colors"
+                >
                   <Trash2 size={14} />
                 </button>
               </div>

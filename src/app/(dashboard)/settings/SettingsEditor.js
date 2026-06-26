@@ -16,13 +16,24 @@ import {
   Grid,
   Settings,
   HelpCircle,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
 
 // Inline SVG components to ensure compatibility across lucide-react versions
 function FacebookIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
     </svg>
   );
@@ -30,7 +41,18 @@ function FacebookIcon({ className }) {
 
 function TwitterIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
     </svg>
   );
@@ -38,7 +60,18 @@ function TwitterIcon({ className }) {
 
 function InstagramIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
@@ -48,7 +81,18 @@ function InstagramIcon({ className }) {
 
 function LinkedinIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
       <rect x="2" y="9" width="4" height="12"></rect>
       <circle cx="4" cy="4" r="2"></circle>
@@ -58,7 +102,18 @@ function LinkedinIcon({ className }) {
 
 function MapPinIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
       <circle cx="12" cy="10" r="3"></circle>
     </svg>
@@ -67,7 +122,18 @@ function MapPinIcon({ className }) {
 
 function ClockIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <circle cx="12" cy="12" r="10"></circle>
       <polyline points="12 6 12 12 16 14"></polyline>
     </svg>
@@ -76,7 +142,18 @@ function ClockIcon({ className }) {
 
 function PhoneCallIcon({ className }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
     </svg>
   );
@@ -87,31 +164,51 @@ export default function SettingsEditor({ siteId, initialSettings }) {
   const [activeTab, setActiveTab] = useState("brand");
 
   // Settings States
-  const [websiteSettings, setWebsiteSettings] = useState(initialSettings?.websiteSettings || {});
+  const [websiteSettings, setWebsiteSettings] = useState(
+    initialSettings?.websiteSettings || {},
+  );
   const [analytics, setAnalytics] = useState(initialSettings?.analytics || {});
   const [scripts, setScripts] = useState(initialSettings?.scripts || {});
-  
+
   // New Layout & Info Settings States
-  const [header, setHeader] = useState(initialSettings?.header || {
-    sticky: true,
-    showSearch: true,
-    showSocials: true,
-    logoHeight: 40,
-    layout: "standard"
-  });
-  const [footer, setFooter] = useState(initialSettings?.footer || {
-    layout: "4-columns",
-    copyright: `© ${new Date().getFullYear()} Company. All rights reserved.`,
-    showNewsletter: true
-  });
-  const [contactDetails, setContactDetails] = useState(initialSettings?.contactDetails || {
-    phone: "",
-    email: "",
-    address: "",
-    operatingHours: "",
-    socials: { facebook: "", twitter: "", instagram: "", linkedin: "" },
-    mapsUrl: ""
-  });
+  const [header, setHeader] = useState(
+    initialSettings?.header || {
+      sticky: true,
+      showSearch: true,
+      showSocials: true,
+      logoHeight: 40,
+      layout: "logo-left",
+      bgColor: "#ffffff",
+      textColor: "#4a5568",
+      announcementBar: {
+        enabled: false,
+        text: "",
+        link: "",
+        bgColor: "#2563eb",
+        textColor: "#ffffff",
+      },
+      mobileDrawerStyle: "slide-left",
+      mobileDrawerBg: "#ffffff",
+      mobileDrawerTextColor: "#1a202c",
+    },
+  );
+  const [footer, setFooter] = useState(
+    initialSettings?.footer || {
+      layout: "4-columns",
+      copyright: `© ${new Date().getFullYear()} Company. All rights reserved.`,
+      showNewsletter: true,
+    },
+  );
+  const [contactDetails, setContactDetails] = useState(
+    initialSettings?.contactDetails || {
+      phone: "",
+      email: "",
+      address: "",
+      operatingHours: "",
+      socials: { facebook: "", twitter: "", instagram: "", linkedin: "" },
+      mapsUrl: "",
+    },
+  );
 
   // UI Loading/Status States
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -147,8 +244,8 @@ export default function SettingsEditor({ siteId, initialSettings }) {
         ...prev,
         socials: {
           ...(prev.socials || {}),
-          [socialKey]: value
-        }
+          [socialKey]: value,
+        },
       }));
     } else {
       setContactDetails((prev) => ({ ...prev, [name]: value }));
@@ -198,7 +295,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
       const [resGlobal, resWebsite] = await Promise.all([
         fetch("/api/admin/global-settings", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-site-id": siteId,
+          },
           body: JSON.stringify(settingsData),
         }),
         fetch("/api/admin/settings", {
@@ -213,7 +313,9 @@ export default function SettingsEditor({ siteId, initialSettings }) {
 
       if (!resGlobal.ok) {
         const errorData = await resGlobal.json();
-        throw new Error(errorData.error || "Failed to save tracking/layout settings");
+        throw new Error(
+          errorData.error || "Failed to save tracking/layout settings",
+        );
       }
       if (!resWebsite.ok) {
         const errorData = await resWebsite.json();
@@ -246,7 +348,9 @@ export default function SettingsEditor({ siteId, initialSettings }) {
           <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold">Settings Saved</p>
-            <p className="text-sm">Global website configurations saved successfully!</p>
+            <p className="text-sm">
+              Global website configurations saved successfully!
+            </p>
           </div>
         </div>
       )}
@@ -306,7 +410,7 @@ export default function SettingsEditor({ siteId, initialSettings }) {
             <PhoneCallIcon className="w-4 h-4" />
             Default Contact Info
           </button>
-          
+
           <button
             type="button"
             onClick={() => setActiveTab("seo")}
@@ -362,18 +466,25 @@ export default function SettingsEditor({ siteId, initialSettings }) {
 
         {/* Tab Body */}
         <div className="p-6">
-          
           {/* Tab 1: Brand & Identity */}
           {activeTab === "brand" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Brand Information & Assets</h3>
-                <p className="text-xs text-gray-500 mt-1">Configure your domain base URL, color theme palletes, and logos.</p>
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                  Brand Information & Assets
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Configure your domain base URL, color theme palletes, and
+                  logos.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="domain" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <label
+                    htmlFor="domain"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1"
+                  >
                     <Globe className="w-3.5 h-3.5 text-gray-400" />
                     Site Domain (Canonical Base URL)
                   </label>
@@ -392,12 +503,14 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Brand Color Palette
                   </label>
-                  
+
                   {/* Colors Row */}
                   <div className="grid grid-cols-3 gap-3">
                     {/* Primary */}
                     <div>
-                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block mb-1">Primary</span>
+                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block mb-1">
+                        Primary
+                      </span>
                       <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
                         <input
                           type="color"
@@ -418,7 +531,9 @@ export default function SettingsEditor({ siteId, initialSettings }) {
 
                     {/* Secondary */}
                     <div>
-                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block mb-1">Secondary</span>
+                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block mb-1">
+                        Secondary
+                      </span>
                       <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
                         <input
                           type="color"
@@ -439,7 +554,9 @@ export default function SettingsEditor({ siteId, initialSettings }) {
 
                     {/* Accent */}
                     <div>
-                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block mb-1">Accent</span>
+                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block mb-1">
+                        Accent
+                      </span>
                       <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
                         <input
                           type="color"
@@ -467,8 +584,13 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-amber-600" />
                     <div>
-                      <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">Maintenance Mode</h4>
-                      <p className="text-[10px] text-amber-700">Block public access to website content with a custom message.</p>
+                      <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">
+                        Maintenance Mode
+                      </h4>
+                      <p className="text-[10px] text-amber-700">
+                        Block public access to website content with a custom
+                        message.
+                      </p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -484,7 +606,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                 </div>
                 {websiteSettings.maintenanceMode && (
                   <div className="animate-in fade-in slide-in-from-top-1 duration-150">
-                    <label htmlFor="maintenanceMessage" className="block text-[10px] font-bold text-amber-800 uppercase tracking-wider mb-1.5">
+                    <label
+                      htmlFor="maintenanceMessage"
+                      className="block text-[10px] font-bold text-amber-800 uppercase tracking-wider mb-1.5"
+                    >
                       Custom Maintenance Message
                     </label>
                     <textarea
@@ -530,9 +655,13 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                         src={websiteSettings.logoUrl}
                         alt="Logo Preview"
                         className="max-h-8 max-w-[120px] object-contain"
-                        onError={(e) => { e.target.style.display = "none"; }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
                       />
-                      <span className="text-[10px] text-gray-400 font-mono truncate max-w-[160px]">{websiteSettings.logoUrl}</span>
+                      <span className="text-[10px] text-gray-400 font-mono truncate max-w-[160px]">
+                        {websiteSettings.logoUrl}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -565,14 +694,17 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                         src={websiteSettings.favicon}
                         alt="Favicon Preview"
                         className="w-5 h-5 object-contain"
-                        onError={(e) => { e.target.style.display = "none"; }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
                       />
-                      <span className="text-[10px] text-gray-400 font-mono truncate max-w-[160px]">{websiteSettings.favicon}</span>
+                      <span className="text-[10px] text-gray-400 font-mono truncate max-w-[160px]">
+                        {websiteSettings.favicon}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
-
             </div>
           )}
 
@@ -580,31 +712,53 @@ export default function SettingsEditor({ siteId, initialSettings }) {
           {activeTab === "header" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Header Configuration</h3>
-                <p className="text-xs text-gray-500 mt-1">Configure layout style, navigation rules, and header elements behavior.</p>
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                  Header Configuration
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Configure layout style, navigation rules, and header elements
+                  behavior.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="headerLayout" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label
+                    htmlFor="headerLayout"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"
+                  >
                     Header Layout Style
                   </label>
                   <select
                     id="headerLayout"
                     name="layout"
-                    value={header.layout || "standard"}
+                    value={header.layout || "logo-left"}
                     onChange={handleHeaderChange}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                   >
-                    <option value="standard">Standard (Logo Left, Menu Right)</option>
-                    <option value="centered">Centered (Logo Center, Menu Underneath)</option>
-                    <option value="minimal">Minimal (Logo Left, Hamburger Menu)</option>
-                    <option value="boxed">Boxed (Contained block grid width)</option>
+                    <option value="logo-left">
+                      Logo Left, Navigation Right (Standard)
+                    </option>
+                    <option value="logo-center">
+                      Logo Centered, Navigation Left
+                    </option>
+                    <option value="logo-right">
+                      Logo Right, Navigation Left
+                    </option>
+                    <option value="logo-split">
+                      Logo Split (Logo in Middle)
+                    </option>
+                    <option value="stacked">
+                      Logo Stacked (Logo Top, Navigation Bottom)
+                    </option>
                   </select>
                 </div>
 
                 <div>
-                  <label htmlFor="logoHeight" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label
+                    htmlFor="logoHeight"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"
+                  >
                     Header Logo Height (Pixels)
                   </label>
                   <input
@@ -620,12 +774,16 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-4 gap-4">
                 {/* Sticky Header Toggle */}
                 <div className="flex items-center justify-between border p-4 rounded-xl bg-gray-50/50">
                   <div>
-                    <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Sticky Header</h5>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Fixed header position on scroll.</p>
+                    <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                      Sticky Header
+                    </h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      Fixed on scroll.
+                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -639,11 +797,59 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                   </label>
                 </div>
 
+                {/* Transparent Header Toggle */}
+                <div className="flex items-center justify-between border p-4 rounded-xl bg-gray-50/50">
+                  <div>
+                    <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                      Transparent
+                    </h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      Transparent background.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="transparent"
+                      checked={!!header.transparent}
+                      onChange={handleHeaderChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-100"></div>
+                  </label>
+                </div>
+
+                {/* Border Bottom Toggle */}
+                <div className="flex items-center justify-between border p-4 rounded-xl bg-gray-50/50">
+                  <div>
+                    <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                      Border Bottom
+                    </h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      Bottom line style.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="borderBottom"
+                      checked={header.borderBottom !== false}
+                      onChange={handleHeaderChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-100"></div>
+                  </label>
+                </div>
+
                 {/* Show Search Toggle */}
                 <div className="flex items-center justify-between border p-4 rounded-xl bg-gray-50/50">
                   <div>
-                    <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Search Utility</h5>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Display search icon button in header.</p>
+                    <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                      Search Utility
+                    </h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      Display search button.
+                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -656,23 +862,269 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-100"></div>
                   </label>
                 </div>
+              </div>
 
-                {/* Show Socials Toggle */}
-                <div className="flex items-center justify-between border p-4 rounded-xl bg-gray-50/50">
-                  <div>
-                    <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Social Links</h5>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Show active social profile links.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                {/* Padding Y */}
+                <div>
+                  <label
+                    htmlFor="paddingY"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"
+                  >
+                    Header Padding Y
+                  </label>
+                  <select
+                    id="paddingY"
+                    name="paddingY"
+                    value={header.paddingY || "medium"}
+                    onChange={handleHeaderChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:bg-white"
+                  >
+                    <option value="small">Small Padding</option>
+                    <option value="medium">Medium Padding</option>
+                    <option value="large">Large Padding</option>
+                  </select>
+                </div>
+
+                {/* Shadow Size */}
+                <div>
+                  <label
+                    htmlFor="shadowSize"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"
+                  >
+                    Header Box Shadow Size
+                  </label>
+                  <select
+                    id="shadowSize"
+                    name="shadowSize"
+                    value={header.shadowSize || "small"}
+                    onChange={handleHeaderChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:bg-white"
+                  >
+                    <option value="none">No Shadow</option>
+                    <option value="small">Small Shadow</option>
+                    <option value="medium">Medium Shadow</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                {/* Header Background Color */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Header Background Color
+                  </label>
+                  <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
+                    <input
+                      type="color"
+                      name="bgColor"
+                      value={header.bgColor || "#ffffff"}
+                      onChange={handleHeaderChange}
+                      className="w-8 h-8 p-0 bg-transparent border-0 rounded cursor-pointer shrink-0"
+                    />
+                    <input
+                      type="text"
+                      name="bgColor"
+                      value={header.bgColor || "#ffffff"}
+                      onChange={handleHeaderChange}
+                      className="w-full text-xs outline-none bg-transparent font-mono"
+                    />
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                </div>
+
+                {/* Header Text Color */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Header Link/Text Color
+                  </label>
+                  <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
+                    <input
+                      type="color"
+                      name="textColor"
+                      value={header.textColor || "#4a5568"}
+                      onChange={handleHeaderChange}
+                      className="w-8 h-8 p-0 bg-transparent border-0 rounded cursor-pointer shrink-0"
+                    />
+                    <input
+                      type="text"
+                      name="textColor"
+                      value={header.textColor || "#4a5568"}
+                      onChange={handleHeaderChange}
+                      className="w-full text-xs outline-none bg-transparent font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Announcement Bar Sub-card */}
+              <div className="bg-blue-50/50 border border-blue-200/70 p-5 rounded-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wider">
+                      Announcement Bar
+                    </h4>
+                    <p className="text-[10px] text-blue-700">
+                      Show a prominent top announcement line.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer select-none">
                     <input
                       type="checkbox"
-                      name="showSocials"
-                      checked={!!header.showSocials}
-                      onChange={handleHeaderChange}
+                      name="announcementBar.enabled"
+                      checked={!!header.announcementBar?.enabled}
+                      onChange={(e) => {
+                        const { checked } = e.target;
+                        setHeader((prev) => ({
+                          ...prev,
+                          announcementBar: {
+                            ...(prev.announcementBar || {}),
+                            enabled: checked,
+                          },
+                        }));
+                      }}
                       className="sr-only peer"
                     />
-                    <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-100"></div>
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
+                </div>
+
+                {header.announcementBar?.enabled && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-150">
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-1">
+                        Announcement Text
+                      </label>
+                      <input
+                        type="text"
+                        value={header.announcementBar?.text || ""}
+                        onChange={(e) => {
+                          const { value } = e.target;
+                          setHeader((prev) => ({
+                            ...prev,
+                            announcementBar: {
+                              ...(prev.announcementBar || {}),
+                              text: value,
+                            },
+                          }));
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-xs"
+                        placeholder="e.g. Free shipping on orders over $50!"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-1">
+                        Announcement Link
+                      </label>
+                      <input
+                        type="text"
+                        value={header.announcementBar?.link || ""}
+                        onChange={(e) => {
+                          const { value } = e.target;
+                          setHeader((prev) => ({
+                            ...prev,
+                            announcementBar: {
+                              ...(prev.announcementBar || {}),
+                              link: value,
+                            },
+                          }));
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-xs font-mono"
+                        placeholder="e.g. /shop"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-1">
+                          BG Color
+                        </label>
+                        <input
+                          type="color"
+                          value={header.announcementBar?.bgColor || "#2563eb"}
+                          onChange={(e) => {
+                            const { value } = e.target;
+                            setHeader((prev) => ({
+                              ...prev,
+                              announcementBar: {
+                                ...(prev.announcementBar || {}),
+                                bgColor: value,
+                              },
+                            }));
+                          }}
+                          className="w-full h-8 bg-transparent border-0 rounded cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-1">
+                          Text Color
+                        </label>
+                        <input
+                          type="color"
+                          value={header.announcementBar?.textColor || "#ffffff"}
+                          onChange={(e) => {
+                            const { value } = e.target;
+                            setHeader((prev) => ({
+                              ...prev,
+                              announcementBar: {
+                                ...(prev.announcementBar || {}),
+                                textColor: value,
+                              },
+                            }));
+                          }}
+                          className="w-full h-8 bg-transparent border-0 rounded cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Drawer Settings Sub-card */}
+              <div className="bg-slate-50/50 border border-slate-200/70 p-5 rounded-xl space-y-4">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Mobile Drawer Customization
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Drawer Style Animation
+                    </label>
+                    <select
+                      name="mobileDrawerStyle"
+                      value={header.mobileDrawerStyle || "slide-left"}
+                      onChange={handleHeaderChange}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs"
+                    >
+                      <option value="slide-left">Slide from Left</option>
+                      <option value="slide-right">Slide from Right</option>
+                      <option value="fade">Fade/Popup Center</option>
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Background
+                      </label>
+                      <input
+                        type="color"
+                        name="mobileDrawerBg"
+                        value={header.mobileDrawerBg || "#ffffff"}
+                        onChange={handleHeaderChange}
+                        className="w-full h-8 bg-transparent border-0 rounded cursor-pointer"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Text Color
+                      </label>
+                      <input
+                        type="color"
+                        name="mobileDrawerTextColor"
+                        value={header.mobileDrawerTextColor || "#1a202c"}
+                        onChange={handleHeaderChange}
+                        className="w-full h-8 bg-transparent border-0 rounded cursor-pointer"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -682,13 +1134,21 @@ export default function SettingsEditor({ siteId, initialSettings }) {
           {activeTab === "footer" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Footer Layout & copyright</h3>
-                <p className="text-xs text-gray-500 mt-1">Configure layout, newsletter signup widgets, and legal copyright line.</p>
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                  Footer Layout & copyright
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Configure layout, newsletter signup widgets, and legal
+                  copyright line.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="footerLayout" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label
+                    htmlFor="footerLayout"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"
+                  >
                     Footer Column Scheme
                   </label>
                   <select
@@ -698,15 +1158,26 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     onChange={handleFooterChange}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                   >
-                    <option value="4-columns">4 Columns Grid layout (Complex)</option>
-                    <option value="3-columns">3 Columns Grid layout (Standard)</option>
-                    <option value="2-columns">2 Columns Grid layout (Simple)</option>
-                    <option value="minimal">Minimalist (Copyright and links line only)</option>
+                    <option value="4-columns">
+                      4 Columns Grid layout (Complex)
+                    </option>
+                    <option value="3-columns">
+                      3 Columns Grid layout (Standard)
+                    </option>
+                    <option value="2-columns">
+                      2 Columns Grid layout (Simple)
+                    </option>
+                    <option value="minimal">
+                      Minimalist (Copyright and links line only)
+                    </option>
                   </select>
                 </div>
 
                 <div>
-                  <label htmlFor="copyright" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label
+                    htmlFor="copyright"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"
+                  >
                     Legal Copyright Notice Line
                   </label>
                   <input
@@ -723,10 +1194,14 @@ export default function SettingsEditor({ siteId, initialSettings }) {
 
               <div className="flex items-center justify-between border p-4 rounded-xl bg-gray-50/50 max-w-sm mt-4">
                 <div>
-                  <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Newsletter Widget</h5>
-                  <p className="text-[10px] text-gray-400 mt-0.5">Show newsletter subscription block in footer columns.</p>
+                  <h5 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                    Newsletter Widget
+                  </h5>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    Show newsletter subscription block in footer columns.
+                  </p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
+                <label className="relative inline-flex items-center cursor-pointer select-none">
                   <input
                     type="checkbox"
                     name="showNewsletter"
@@ -737,6 +1212,77 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                   <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-100"></div>
                 </label>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-100">
+                {/* Footer Background Color */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Footer Background Color
+                  </label>
+                  <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
+                    <input
+                      type="color"
+                      name="bgColor"
+                      value={footer.bgColor || "#1a202c"}
+                      onChange={handleFooterChange}
+                      className="w-8 h-8 p-0 bg-transparent border-0 rounded cursor-pointer shrink-0"
+                    />
+                    <input
+                      type="text"
+                      name="bgColor"
+                      value={footer.bgColor || "#1a202c"}
+                      onChange={handleFooterChange}
+                      className="w-full text-xs outline-none bg-transparent font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Footer Text Color */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Footer Text Color
+                  </label>
+                  <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
+                    <input
+                      type="color"
+                      name="textColor"
+                      value={footer.textColor || "#a0aec0"}
+                      onChange={handleFooterChange}
+                      className="w-8 h-8 p-0 bg-transparent border-0 rounded cursor-pointer shrink-0"
+                    />
+                    <input
+                      type="text"
+                      name="textColor"
+                      value={footer.textColor || "#a0aec0"}
+                      onChange={handleFooterChange}
+                      className="w-full text-xs outline-none bg-transparent font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Footer Border Top Color */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Footer Top Border Color
+                  </label>
+                  <div className="flex items-center gap-1.5 border p-1 rounded-lg bg-gray-50/50">
+                    <input
+                      type="color"
+                      name="borderTopColor"
+                      value={footer.borderTopColor || "#2d3748"}
+                      onChange={handleFooterChange}
+                      className="w-8 h-8 p-0 bg-transparent border-0 rounded cursor-pointer shrink-0"
+                    />
+                    <input
+                      type="text"
+                      name="borderTopColor"
+                      value={footer.borderTopColor || "#2d3748"}
+                      onChange={handleFooterChange}
+                      className="w-full text-xs outline-none bg-transparent font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -744,13 +1290,21 @@ export default function SettingsEditor({ siteId, initialSettings }) {
           {activeTab === "contact" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Default Company Contact Info</h3>
-                <p className="text-xs text-gray-500 mt-1">Global contact references used in CTAs, footer contact blocks, and forms page.</p>
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                  Default Company Contact Info
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Global contact references used in CTAs, footer contact blocks,
+                  and forms page.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="contact_phone" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <label
+                    htmlFor="contact_phone"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"
+                  >
                     <PhoneCallIcon className="w-3.5 h-3.5 text-gray-400" />
                     Default Phone Number
                   </label>
@@ -766,7 +1320,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                 </div>
 
                 <div>
-                  <label htmlFor="contact_email" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <label
+                    htmlFor="contact_email"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"
+                  >
                     <Globe className="w-3.5 h-3.5 text-gray-400" />
                     Default Support/Sales Email
                   </label>
@@ -782,7 +1339,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                 </div>
 
                 <div>
-                  <label htmlFor="contact_address" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <label
+                    htmlFor="contact_address"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"
+                  >
                     <MapPinIcon className="w-3.5 h-3.5 text-gray-400" />
                     Office/HQ Address
                   </label>
@@ -798,7 +1358,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                 </div>
 
                 <div>
-                  <label htmlFor="contact_hours" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <label
+                    htmlFor="contact_hours"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"
+                  >
                     <ClockIcon className="w-3.5 h-3.5 text-gray-400" />
                     Operating/Office Hours
                   </label>
@@ -814,7 +1377,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                 </div>
 
                 <div>
-                  <label htmlFor="contact_maps" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <label
+                    htmlFor="contact_maps"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"
+                  >
                     <Globe className="w-3.5 h-3.5 text-gray-400" />
                     Google Maps Link/Embed Coordinates URL
                   </label>
@@ -832,7 +1398,9 @@ export default function SettingsEditor({ siteId, initialSettings }) {
 
               {/* Social links block */}
               <div className="pt-4 border-t border-gray-150 space-y-4">
-                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Social Media Profile Slugs/URLs</h4>
+                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Social Media Profile Slugs/URLs
+                </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Facebook */}
                   <div className="flex items-center gap-2 border p-2 rounded-lg bg-gray-50/50">
@@ -894,13 +1462,21 @@ export default function SettingsEditor({ siteId, initialSettings }) {
           {activeTab === "seo" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Global SEO Configurations</h3>
-                <p className="text-xs text-gray-500 mt-1">Define default metadata values applied when pages or posts lack overrides.</p>
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                  Global SEO Configurations
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Define default metadata values applied when pages or posts
+                  lack overrides.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="seo_title" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                  <label
+                    htmlFor="seo_title"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"
+                  >
                     Default SEO Title
                   </label>
                   <input
@@ -915,9 +1491,14 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                 </div>
 
                 <div>
-                  <label htmlFor="seo_titleTemplate" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <label
+                    htmlFor="seo_titleTemplate"
+                    className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"
+                  >
                     Title Template
-                    <span className="normal-case text-[10px] text-gray-400 font-normal">Use %s for dynamic page title</span>
+                    <span className="normal-case text-[10px] text-gray-400 font-normal">
+                      Use %s for dynamic page title
+                    </span>
                   </label>
                   <input
                     type="text"
@@ -932,7 +1513,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
               </div>
 
               <div>
-                <label htmlFor="seo_description" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                <label
+                  htmlFor="seo_description"
+                  className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"
+                >
                   Default Meta Description
                 </label>
                 <textarea
@@ -975,9 +1559,13 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                       src={websiteSettings.ogImageUrl}
                       alt="OG Preview"
                       className="max-h-16 max-w-[160px] object-cover rounded"
-                      onError={(e) => { e.target.style.display = "none"; }}
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
                     />
-                    <span className="text-[10px] text-gray-400 font-mono truncate max-w-[160px]">{websiteSettings.ogImageUrl}</span>
+                    <span className="text-[10px] text-gray-400 font-mono truncate max-w-[160px]">
+                      {websiteSettings.ogImageUrl}
+                    </span>
                   </div>
                 )}
               </div>
@@ -988,14 +1576,40 @@ export default function SettingsEditor({ siteId, initialSettings }) {
           {activeTab === "analytics" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Analytics & Tracking Codes</h3>
-                <p className="text-xs text-gray-500 mt-1">Configure measurement keys for user action and session tracking engines.</p>
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                  Analytics & Tracking Codes
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Configure measurement keys for user action and session
+                  tracking engines.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="googleAnalyticsId" className="block text-sm font-medium text-gray-700 mb-2">
-                    Google Analytics ID
+                  <label
+                    htmlFor="gaMeasurementId"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Google Analytics Measurement ID
+                  </label>
+                  <input
+                    type="text"
+                    name="gaMeasurementId"
+                    id="gaMeasurementId"
+                    value={analytics.gaMeasurementId || ""}
+                    onChange={handleAnalyticsChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    placeholder="G-XXXXXXXXXX"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="googleAnalyticsId"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Google Analytics ID (Legacy)
                   </label>
                   <input
                     type="text"
@@ -1004,12 +1618,51 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     value={analytics.googleAnalyticsId || ""}
                     onChange={handleAnalyticsChange}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
-                    placeholder="G-XXXXXXXXXX"
+                    placeholder="UA-XXXXXXX-X"
                   />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="clarityId" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="gtmId"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Google Tag Manager ID
+                  </label>
+                  <input
+                    type="text"
+                    name="gtmId"
+                    id="gtmId"
+                    value={analytics.gtmId || ""}
+                    onChange={handleAnalyticsChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    placeholder="GTM-XXXXXXX"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="googleTagManagerId"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Google Tag Manager ID (Legacy)
+                  </label>
+                  <input
+                    type="text"
+                    name="googleTagManagerId"
+                    id="googleTagManagerId"
+                    value={analytics.googleTagManagerId || ""}
+                    onChange={handleAnalyticsChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    placeholder="GTM-XXXXXXX"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="clarityId"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Microsoft Clarity ID
                   </label>
                   <input
@@ -1024,23 +1677,29 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                 </div>
 
                 <div>
-                  <label htmlFor="googleTagManagerId" className="block text-sm font-medium text-gray-700 mb-2">
-                    Google Tag Manager ID
+                  <label
+                    htmlFor="searchConsoleVerification"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Google Search Console Verification Code
                   </label>
                   <input
                     type="text"
-                    name="googleTagManagerId"
-                    id="googleTagManagerId"
-                    value={analytics.googleTagManagerId || ""}
+                    name="searchConsoleVerification"
+                    id="searchConsoleVerification"
+                    value={analytics.searchConsoleVerification || ""}
                     onChange={handleAnalyticsChange}
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
-                    placeholder="GTM-XXXXXXX"
+                    placeholder="e.g. google1234567890abcdef"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="searchConsoleId" className="block text-sm font-medium text-gray-700 mb-2">
-                    Google Search Console ID / Verification Code
+                  <label
+                    htmlFor="searchConsoleId"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Search Console ID (Legacy)
                   </label>
                   <input
                     type="text"
@@ -1054,7 +1713,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                 </div>
 
                 <div>
-                  <label htmlFor="metaPixelId" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="metaPixelId"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Facebook Meta Pixel ID
                   </label>
                   <input
@@ -1069,7 +1731,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                 </div>
 
                 <div>
-                  <label htmlFor="linkedInTagId" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="linkedInTagId"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     LinkedIn Partner Insight ID
                   </label>
                   <input
@@ -1082,6 +1747,24 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     placeholder="e.g. 1234567"
                   />
                 </div>
+
+                <div>
+                  <label
+                    htmlFor="linkedinPartnerId"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    LinkedIn Partner ID (Alt)
+                  </label>
+                  <input
+                    type="text"
+                    name="linkedinPartnerId"
+                    id="linkedinPartnerId"
+                    value={analytics.linkedinPartnerId || ""}
+                    onChange={handleAnalyticsChange}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                    placeholder="e.g. partner-1234567"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -1091,8 +1774,13 @@ export default function SettingsEditor({ siteId, initialSettings }) {
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3 flex justify-between items-center flex-wrap gap-2">
                 <div>
-                  <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Robots, Sitemaps & AI Scrapers</h3>
-                  <p className="text-xs text-gray-500 mt-1">Edit crawler guidelines, scrapers exclusions, and AI-agent context instructions.</p>
+                  <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                    Robots, Sitemaps & AI Scrapers
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Edit crawler guidelines, scrapers exclusions, and AI-agent
+                    context instructions.
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <a
@@ -1123,7 +1811,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
               </div>
 
               <div>
-                <label htmlFor="robotsTxt" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                <label
+                  htmlFor="robotsTxt"
+                  className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"
+                >
                   Custom Robots.txt Content
                 </label>
                 <textarea
@@ -1138,7 +1829,10 @@ export default function SettingsEditor({ siteId, initialSettings }) {
               </div>
 
               <div>
-                <label htmlFor="llmTxt" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                <label
+                  htmlFor="llmTxt"
+                  className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2"
+                >
                   Custom LLM.txt Agent Guide
                 </label>
                 <textarea
@@ -1158,13 +1852,20 @@ export default function SettingsEditor({ siteId, initialSettings }) {
           {activeTab === "scripts" && (
             <div className="space-y-6">
               <div className="border-b border-gray-100 pb-3">
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Custom Header & Body Scripts</h3>
-                <p className="text-xs text-gray-500 mt-1">Inject custom script snippets globally.</p>
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                  Custom Header & Body Scripts
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Inject custom script snippets globally.
+                </p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="headScripts" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="headScripts"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Scripts for &lt;head&gt;
                   </label>
                   <textarea
@@ -1177,9 +1878,12 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                     placeholder={`<script>... head injection ...</script>`}
                   />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="bodyScripts" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="bodyScripts"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Scripts for start of &lt;body&gt;
                   </label>
                   <textarea
@@ -1195,13 +1899,13 @@ export default function SettingsEditor({ siteId, initialSettings }) {
               </div>
             </div>
           )}
-
         </div>
 
         {/* Submit Bar */}
         <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-200 flex justify-between items-center">
           <span className="text-xs text-gray-400 font-medium">
-            Be careful updating brand identities and layout scripts on production sites.
+            Be careful updating brand identities and layout scripts on
+            production sites.
           </span>
           <button
             type="submit"
@@ -1212,7 +1916,6 @@ export default function SettingsEditor({ siteId, initialSettings }) {
             {isSubmitting ? "Saving..." : "Save Settings"}
           </button>
         </div>
-
       </div>
 
       {/* Media Picker Modal */}
@@ -1222,8 +1925,8 @@ export default function SettingsEditor({ siteId, initialSettings }) {
             activePickerField === "logo"
               ? "Select Brand Logo"
               : activePickerField === "favicon"
-              ? "Select Website Favicon"
-              : "Select Default OG Image"
+                ? "Select Website Favicon"
+                : "Select Default OG Image"
           }
           filter="images"
           onSelect={handleMediaSelect}

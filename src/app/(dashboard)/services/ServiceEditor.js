@@ -2,21 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Image as ImageIcon, 
-  Plus, 
-  Trash2, 
-  Edit, 
-  AlertCircle, 
-  HelpCircle, 
-  Save, 
-  CheckCircle, 
-  Eye, 
-  EyeOff, 
-  Sparkles, 
+import {
+  Image as ImageIcon,
+  Plus,
+  Trash2,
+  Edit,
+  AlertCircle,
+  HelpCircle,
+  Save,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Sparkles,
   ExternalLink,
   ChevronRight,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import MediaPickerModal from "@/components/media/MediaPickerModal";
 
@@ -30,6 +30,7 @@ export default function ServiceEditor({ siteId, service }) {
     ctaButtonLink: "",
     sortOrder: 0,
     status: "DRAFT",
+    visible: true,
     featuredImageId: null,
   });
 
@@ -40,16 +41,12 @@ export default function ServiceEditor({ siteId, service }) {
   // Media Picker states
   const [showMediaPicker, setShowMediaPicker] = useState(false);
 
-  // FAQs states
+  // FAQs state (stored as JSON array on the Service model)
   const [faqs, setFaqs] = useState([]);
-  const [faqsLoading, setFaqsLoading] = useState(false);
   const [showFaqModal, setShowFaqModal] = useState(false);
-  const [editingFaq, setEditingFaq] = useState(null);
+  const [editingFaqIndex, setEditingFaqIndex] = useState(null);
   const [faqQuestion, setFaqQuestion] = useState("");
   const [faqAnswer, setFaqAnswer] = useState("");
-  const [faqSortOrder, setFaqSortOrder] = useState(0);
-  const [faqShowHide, setFaqShowHide] = useState(true);
-  const [faqSchemaMarkup, setFaqSchemaMarkup] = useState(false);
   const [faqError, setFaqError] = useState(null);
 
   const isEditMode = !!service;
@@ -65,44 +62,32 @@ export default function ServiceEditor({ siteId, service }) {
         ctaButtonLink: service.ctaButtonLink || "",
         sortOrder: service.sortOrder || 0,
         status: service.status || "DRAFT",
+        visible: service.visible !== false,
         featuredImageId: service.featuredImageId || null,
       });
 
       if (service.featuredImage) {
-        setFeaturedImageUrl(service.featuredImage.secureUrl || service.featuredImage.url || "");
+        setFeaturedImageUrl(
+          service.featuredImage.secureUrl || service.featuredImage.url || "",
+        );
       }
-      fetchFaqs();
+
+      if (service.faqs && Array.isArray(service.faqs)) {
+        setFaqs(service.faqs);
+      }
     }
   }, [service, isEditMode]);
 
-  // Fetch all FAQs and filter by page slug mapping
-  const fetchFaqs = async () => {
-    if (!isEditMode) return;
-    setFaqsLoading(true);
-    try {
-      const res = await fetch(`/api/admin/faq`, {
-        headers: {
-          "x-site-id": siteId,
-        },
-      });
-      const json = await res.json();
-      if (res.ok) {
-        // Service-scoped FAQ linking will use join tables (see schema roadmap).
-        // Legacy slug assignment via Faq.page was replaced by Faq.pageId.
-        setFaqs([]);
-      }
-    } catch (err) {
-      console.error("Fetch FAQs error:", err);
-    } finally {
-      setFaqsLoading(false);
-    }
-  };
-
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "number" ? parseInt(value, 10) || 0 : value,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : type === "number"
+            ? parseInt(value, 10) || 0
+            : value,
     }));
   };
 
@@ -112,12 +97,12 @@ export default function ServiceEditor({ siteId, service }) {
     setIsSubmitting(true);
     setError(null);
 
-    const serviceData = { ...formData, siteId };
+    const serviceData = { ...formData, siteId, faqs };
 
     const url = isEditMode
       ? `/api/admin/services/${service.id}`
       : "/api/admin/services";
-      
+
     const method = isEditMode ? "PATCH" : "POST";
 
     try {
@@ -153,59 +138,56 @@ export default function ServiceEditor({ siteId, service }) {
     setShowMediaPicker(false);
   };
 
-  // FAQ CRUD helpers
-  const handleSaveFaq = async (e) => {
+  // FAQ helpers (inline JSON array editing)
+  const openAddFaq = () => {
+    setEditingFaqIndex(null);
+    setFaqQuestion("");
+    setFaqAnswer("");
+    setFaqError(null);
+    setShowFaqModal(true);
+  };
+
+  const openEditFaq = (index) => {
+    const faq = faqs[index];
+    setEditingFaqIndex(index);
+    setFaqQuestion(faq.question);
+    setFaqAnswer(faq.answer);
+    setFaqError(null);
+    setShowFaqModal(true);
+  };
+
+  const handleSaveFaq = (e) => {
     e.preventDefault();
     setFaqError(null);
 
-    const payload = {
-      question: faqQuestion,
-      answer: faqAnswer,
-      pageId: null,
-      sortOrder: Number(faqSortOrder),
-      showHide: faqShowHide,
-      schemaMarkup: faqSchemaMarkup,
-    };
-
-    const url = editingFaq ? `/api/admin/faq/${editingFaq.id}` : `/api/admin/faq`;
-    const method = editingFaq ? "PATCH" : "POST";
-
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          "x-site-id": siteId,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson.error || "Failed to save FAQ");
-      }
-
-      setShowFaqModal(false);
-      fetchFaqs();
-    } catch (err) {
-      setFaqError(err.message);
+    if (!faqQuestion.trim()) {
+      setFaqError("Question is required.");
+      return;
     }
+    if (!faqAnswer.trim()) {
+      setFaqError("Answer is required.");
+      return;
+    }
+
+    const newFaq = { question: faqQuestion.trim(), answer: faqAnswer.trim() };
+
+    if (editingFaqIndex !== null) {
+      setFaqs((prev) =>
+        prev.map((f, i) => (i === editingFaqIndex ? newFaq : f)),
+      );
+    } else {
+      setFaqs((prev) => [...prev, newFaq]);
+    }
+
+    setShowFaqModal(false);
+    setEditingFaqIndex(null);
+    setFaqQuestion("");
+    setFaqAnswer("");
   };
 
-  const handleDeleteFaq = async (faqId) => {
+  const handleDeleteFaq = (index) => {
     if (!confirm("Are you sure you want to delete this FAQ?")) return;
-    try {
-      const res = await fetch(`/api/admin/faq/${faqId}`, {
-        method: "DELETE",
-        headers: {
-          "x-site-id": siteId,
-        },
-      });
-      if (!res.ok) throw new Error("Failed to delete FAQ");
-      fetchFaqs();
-    } catch (err) {
-      alert(err.message);
-    }
+    setFaqs((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -217,7 +199,10 @@ export default function ServiceEditor({ siteId, service }) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
+      >
         {/* Left Core Area */}
         <div className="lg:col-span-2 space-y-6">
           {/* Main Attributes Card */}
@@ -227,10 +212,13 @@ export default function ServiceEditor({ siteId, service }) {
                 Service Description
               </h2>
             </div>
-            
+
             <div className="space-y-4">
               <div>
-                <label htmlFor="title" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="title"
+                  className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+                >
                   Service Title <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -246,7 +234,10 @@ export default function ServiceEditor({ siteId, service }) {
               </div>
 
               <div>
-                <label htmlFor="description" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="description"
+                  className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+                >
                   Detailed Description
                 </label>
                 <textarea
@@ -268,12 +259,18 @@ export default function ServiceEditor({ siteId, service }) {
               <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase mb-1">
                 Call to Action Setup
               </h2>
-              <p className="text-[10px] text-slate-400">Configure CTA redirection buttons linked directly to this service card.</p>
+              <p className="text-[10px] text-slate-400">
+                Configure CTA redirection buttons linked directly to this
+                service card.
+              </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="ctaButtonText" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="ctaButtonText"
+                  className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+                >
                   CTA Button Label
                 </label>
                 <input
@@ -288,7 +285,10 @@ export default function ServiceEditor({ siteId, service }) {
               </div>
 
               <div>
-                <label htmlFor="ctaButtonLink" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="ctaButtonLink"
+                  className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+                >
                   CTA Button Path/Link
                 </label>
                 <div className="relative">
@@ -322,7 +322,10 @@ export default function ServiceEditor({ siteId, service }) {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="status" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="status"
+                  className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+                >
                   Publish Status
                 </label>
                 <div className="relative">
@@ -342,8 +345,30 @@ export default function ServiceEditor({ siteId, service }) {
                 </div>
               </div>
 
+              {/* Visibility Toggle */}
+              <label className="flex items-center justify-between p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-700">
+                    Visible on Site
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Show this service on the public site
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  name="visible"
+                  checked={formData.visible}
+                  onChange={handleChange}
+                  className="rounded text-indigo-600 h-4.5 w-4.5 border-slate-300 focus:ring-indigo-500/20"
+                />
+              </label>
+
               <div>
-                <label htmlFor="price" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="price"
+                  className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+                >
                   Pricing Label
                 </label>
                 <input
@@ -358,7 +383,10 @@ export default function ServiceEditor({ siteId, service }) {
               </div>
 
               <div>
-                <label htmlFor="sortOrder" className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label
+                  htmlFor="sortOrder"
+                  className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+                >
                   Order Priority Weight
                 </label>
                 <input
@@ -379,7 +407,9 @@ export default function ServiceEditor({ siteId, service }) {
               <h2 className="text-sm font-bold text-slate-800 tracking-wide uppercase mb-1">
                 Featured Cover Image
               </h2>
-              <p className="text-[10px] text-slate-400">Visual visual presentation card cover image.</p>
+              <p className="text-[10px] text-slate-400">
+                Visual presentation card cover image.
+              </p>
             </div>
 
             <div className="space-y-4">
@@ -402,7 +432,10 @@ export default function ServiceEditor({ siteId, service }) {
                       type="button"
                       onClick={() => {
                         setFeaturedImageUrl("");
-                        setFormData((prev) => ({ ...prev, featuredImageId: null }));
+                        setFormData((prev) => ({
+                          ...prev,
+                          featuredImageId: null,
+                        }));
                       }}
                       className="px-3 py-1.5 bg-rose-600 text-white hover:bg-rose-700 rounded-lg text-[10px] font-bold shadow-sm transition"
                     >
@@ -420,8 +453,12 @@ export default function ServiceEditor({ siteId, service }) {
                     <ImageIcon size={20} />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-slate-700 block">Select Cover Cover Image</span>
-                    <span className="text-[10px] text-slate-400 block mt-0.5">JPEG, PNG or WebP up to 5MB</span>
+                    <span className="text-xs font-bold text-slate-700 block">
+                      Select Cover Image
+                    </span>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                      JPEG, PNG or WebP up to 5MB
+                    </span>
                   </div>
                 </button>
               )}
@@ -459,31 +496,22 @@ export default function ServiceEditor({ siteId, service }) {
         </div>
       </form>
 
-      {/* FAQs Panel for Active service pages */}
+      {/* FAQs Panel - inline JSON array editing */}
       {isEditMode && (
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-xs space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
             <div>
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <HelpCircle size={18} className="text-indigo-600" />
-                Service Frequently Asked Questions (FAQs)
+                FAQs
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Configure context-specific questions and answers mapped directly to the route: <code className="bg-slate-50 px-1.5 py-0.5 rounded font-mono text-slate-600">/services/{service.id}</code>
+                Frequently asked questions stored as JSON on this service.
               </p>
             </div>
             <button
               type="button"
-              onClick={() => {
-                setEditingFaq(null);
-                setFaqQuestion("");
-                setFaqAnswer("");
-                setFaqSortOrder(0);
-                setFaqShowHide(true);
-                setFaqSchemaMarkup(false);
-                setFaqError(null);
-                setShowFaqModal(true);
-              }}
+              onClick={openAddFaq}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition duration-200 self-start sm:self-auto"
             >
               <Plus size={14} />
@@ -491,67 +519,43 @@ export default function ServiceEditor({ siteId, service }) {
             </button>
           </div>
 
-          {faqsLoading ? (
-            <div className="flex flex-col items-center justify-center py-10 gap-2 text-slate-400">
-              <Loader2 size={24} className="animate-spin text-indigo-600" />
-              <span className="text-xs font-semibold">Loading service FAQs...</span>
-            </div>
-          ) : faqs.length === 0 ? (
+          {faqs.length === 0 ? (
             <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/30">
               <HelpCircle className="mx-auto text-slate-300 mb-2" size={32} />
-              <p className="text-xs font-bold text-slate-600">No FAQs mapped to this service yet.</p>
-              <p className="text-[10px] text-slate-400 mt-1">Click the Add FAQ button above to create one.</p>
+              <p className="text-xs font-bold text-slate-600">
+                No FAQs for this service yet.
+              </p>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Click the Add FAQ button above to create one.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
-              {faqs.map((faq) => (
-                <div 
-                  key={faq.id} 
+              {faqs.map((faq, index) => (
+                <div
+                  key={index}
                   className="group border border-slate-100 hover:border-slate-200 rounded-2xl p-5 bg-slate-50/20 hover:bg-white hover:shadow-xs transition duration-200 flex flex-col md:flex-row md:items-start md:justify-between gap-4"
                 >
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">
-                        Weight: {faq.sortOrder}
+                        #{index + 1}
                       </span>
-                      {faq.showHide ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 text-[10px] font-bold">
-                          <Eye size={10} />
-                          Visible
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-50 text-slate-400 border border-slate-200 text-[10px] font-bold">
-                          <EyeOff size={10} />
-                          Hidden
-                        </span>
-                      )}
-                      {faq.schemaMarkup && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold">
-                          <Sparkles size={10} />
-                          JSON-LD Schema Active
-                        </span>
-                      )}
                     </div>
-                    
                     <div>
-                      <h4 className="font-bold text-slate-800 text-sm">{faq.question}</h4>
-                      <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">{faq.answer}</p>
+                      <h4 className="font-bold text-slate-800 text-sm">
+                        {faq.question}
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">
+                        {faq.answer}
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex gap-2 shrink-0 self-end md:self-start opacity-90 md:opacity-0 group-hover:opacity-100 transition duration-200">
                     <button
                       type="button"
-                      onClick={() => {
-                        setEditingFaq(faq);
-                        setFaqQuestion(faq.question);
-                        setFaqAnswer(faq.answer);
-                        setFaqSortOrder(faq.sortOrder);
-                        setFaqShowHide(faq.showHide);
-                        setFaqSchemaMarkup(faq.schemaMarkup);
-                        setFaqError(null);
-                        setShowFaqModal(true);
-                      }}
+                      onClick={() => openEditFaq(index)}
                       className="inline-flex items-center gap-1 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg text-[10px] font-bold shadow-xs transition"
                     >
                       <Edit size={10} />
@@ -559,7 +563,7 @@ export default function ServiceEditor({ siteId, service }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeleteFaq(faq.id)}
+                      onClick={() => handleDeleteFaq(index)}
                       className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[10px] font-bold shadow-xs transition"
                     >
                       <Trash2 size={10} />
@@ -587,18 +591,18 @@ export default function ServiceEditor({ siteId, service }) {
       {/* FAQ Edit/Create Modal */}
       {showFaqModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300" 
-            onClick={() => setShowFaqModal(false)} 
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300"
+            onClick={() => setShowFaqModal(false)}
           />
-          <form 
-            onSubmit={handleSaveFaq} 
+          <form
+            onSubmit={handleSaveFaq}
             className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 z-10 border border-slate-100 transform transition-all duration-300 scale-100 flex flex-col gap-4 animate-fade-in"
           >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
                 <HelpCircle size={18} className="text-indigo-600" />
-                {editingFaq ? "Modify FAQ" : "Add Service FAQ"}
+                {editingFaqIndex !== null ? "Edit FAQ" : "Add FAQ"}
               </h3>
               <button
                 type="button"
@@ -618,7 +622,9 @@ export default function ServiceEditor({ siteId, service }) {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Question Text</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Question
+                </label>
                 <input
                   type="text"
                   required
@@ -630,7 +636,9 @@ export default function ServiceEditor({ siteId, service }) {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Answer Text</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Answer
+                </label>
                 <textarea
                   required
                   value={faqAnswer}
@@ -639,46 +647,6 @@ export default function ServiceEditor({ siteId, service }) {
                   rows={4}
                   className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 resize-none"
                 />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Display Sort Weight</label>
-                  <input
-                    type="number"
-                    value={faqSortOrder}
-                    onChange={(e) => setFaqSortOrder(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                <label className="flex-1 flex items-center justify-between p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-700">Display FAQ</span>
-                    <span className="text-[10px] text-slate-400">Make FAQ visible on page</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={faqShowHide}
-                    onChange={(e) => setFaqShowHide(e.target.checked)}
-                    className="rounded text-indigo-600 h-4.5 w-4.5 border-slate-300 focus:ring-indigo-500/20"
-                  />
-                </label>
-
-                <label className="flex-1 flex items-center justify-between p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition border-slate-200">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-700">Inject Schema</span>
-                    <span className="text-[10px] text-slate-400">SEO Schema JSON-LD markup</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={faqSchemaMarkup}
-                    onChange={(e) => setFaqSchemaMarkup(e.target.checked)}
-                    className="rounded text-indigo-600 h-4.5 w-4.5 border-slate-300 focus:ring-indigo-500/20"
-                  />
-                </label>
               </div>
             </div>
 
@@ -704,4 +672,3 @@ export default function ServiceEditor({ siteId, service }) {
     </div>
   );
 }
-

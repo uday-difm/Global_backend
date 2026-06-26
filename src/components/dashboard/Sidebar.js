@@ -127,6 +127,18 @@ const sections = [
         minRole: "ADMIN",
       },
       {
+        href: "/newsletter",
+        label: "Newsletter",
+        icon: Mail,
+        minRole: "EDITOR",
+      },
+      {
+        href: "/seo",
+        label: "SEO",
+        icon: BarChart2,
+        minRole: "EDITOR",
+      },
+      {
         href: "/contact",
         label: "Contact",
         icon: Phone,

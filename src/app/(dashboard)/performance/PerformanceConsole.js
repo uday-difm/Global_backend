@@ -25,6 +25,7 @@ export default function PerformanceConsole({ siteId, user }) {
   const [healthError, setHealthError] = useState(null);
 
   // Config state
+  const [lazyLoading, setLazyLoading] = useState(true);
   const [lazyLoadImages, setLazyLoadImages] = useState(true);
   const [lazyLoadVideos, setLazyLoadVideos] = useState(true);
   const [compressImages, setCompressImages] = useState(true);
@@ -72,6 +73,7 @@ export default function PerformanceConsole({ siteId, user }) {
       const data = await res.json();
       if (res.ok && data.success) {
         const cfg = data.performanceConfig;
+        setLazyLoading(cfg.lazyLoading ?? true);
         setLazyLoadImages(cfg.lazyLoadImages ?? true);
         setLazyLoadVideos(cfg.lazyLoadVideos ?? true);
         setCompressImages(cfg.compressImagesOnUpload ?? true);
@@ -99,6 +101,7 @@ export default function PerformanceConsole({ siteId, user }) {
           "x-site-id": siteId,
         },
         body: JSON.stringify({
+          lazyLoading,
           lazyLoadImages,
           lazyLoadVideos,
           compressImagesOnUpload: compressImages,
@@ -142,7 +145,8 @@ export default function PerformanceConsole({ siteId, user }) {
   };
 
   const deleteSpecificLog = async (logId) => {
-    if (!confirm("Are you sure you want to dismiss this error log entry?")) return;
+    if (!confirm("Are you sure you want to dismiss this error log entry?"))
+      return;
     try {
       const res = await fetch(`/api/admin/performance/error-logs?id=${logId}`, {
         method: "DELETE",
@@ -157,7 +161,11 @@ export default function PerformanceConsole({ siteId, user }) {
   };
 
   const clearAllLogs = async () => {
-    if (!confirm("CRITICAL: Are you sure you want to wipe all system error logs? This action is permanent.")) {
+    if (
+      !confirm(
+        "CRITICAL: Are you sure you want to wipe all system error logs? This action is permanent.",
+      )
+    ) {
       return;
     }
     try {
@@ -259,7 +267,8 @@ export default function PerformanceConsole({ siteId, user }) {
                   Site Diagnostics Diagnostics
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  Active diagnostic parameters, server resource metrics, and database latencies.
+                  Active diagnostic parameters, server resource metrics, and
+                  database latencies.
                 </p>
               </div>
 
@@ -268,7 +277,10 @@ export default function PerformanceConsole({ siteId, user }) {
                 disabled={healthLoading}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-lg hover:bg-gray-50 font-semibold text-gray-600 transition"
               >
-                <RefreshCw size={12} className={healthLoading ? "animate-spin" : ""} />
+                <RefreshCw
+                  size={12}
+                  className={healthLoading ? "animate-spin" : ""}
+                />
                 Refresh Check
               </button>
             </div>
@@ -281,7 +293,9 @@ export default function PerformanceConsole({ siteId, user }) {
             )}
 
             {healthLoading && !healthData ? (
-              <div className="py-12 text-center text-xs text-gray-400">Performing diagnostic testing...</div>
+              <div className="py-12 text-center text-xs text-gray-400">
+                Performing diagnostic testing...
+              </div>
             ) : healthData ? (
               <div className="space-y-6">
                 {/* Diagnostics Status Metrics Grid */}
@@ -312,13 +326,18 @@ export default function PerformanceConsole({ siteId, user }) {
                           {healthData.checks.system.memoryUsedPercent}%
                         </span>
                         <span className="text-gray-400">
-                          Free: {formatBytes(healthData.checks.system.freeMemoryBytes)}
+                          Free:{" "}
+                          {formatBytes(
+                            healthData.checks.system.freeMemoryBytes,
+                          )}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
                         <div
                           className="bg-blue-600 h-full rounded-full transition-all"
-                          style={{ width: `${healthData.checks.system.memoryUsedPercent}%` }}
+                          style={{
+                            width: `${healthData.checks.system.memoryUsedPercent}%`,
+                          }}
                         />
                       </div>
                     </div>
@@ -348,31 +367,41 @@ export default function PerformanceConsole({ siteId, user }) {
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                     <div className="border-r pr-2 last:border-r-0">
-                      <div className="text-[10px] font-bold text-gray-400 uppercase">Pages</div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase">
+                        Pages
+                      </div>
                       <div className="text-lg font-bold text-gray-900 mt-1">
                         {healthData.checks.database.counts.pages ?? 0}
                       </div>
                     </div>
                     <div className="border-r pr-2 last:border-r-0">
-                      <div className="text-[10px] font-bold text-gray-400 uppercase">Blogs</div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase">
+                        Blogs
+                      </div>
                       <div className="text-lg font-bold text-gray-900 mt-1">
                         {healthData.checks.database.counts.posts ?? 0}
                       </div>
                     </div>
                     <div className="border-r pr-2 last:border-r-0">
-                      <div className="text-[10px] font-bold text-gray-400 uppercase">Media Assets</div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase">
+                        Media Assets
+                      </div>
                       <div className="text-lg font-bold text-gray-900 mt-1">
                         {healthData.checks.database.counts.mediaAssets ?? 0}
                       </div>
                     </div>
                     <div className="border-r pr-2 last:border-r-0">
-                      <div className="text-[10px] font-bold text-gray-400 uppercase">Analytics Logs</div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase">
+                        Analytics Logs
+                      </div>
                       <div className="text-lg font-bold text-gray-900 mt-1">
                         {healthData.checks.database.counts.visitorHistory ?? 0}
                       </div>
                     </div>
                     <div className="pr-2 last:border-r-0">
-                      <div className="text-[10px] font-bold text-gray-400 uppercase">Error Exceptions</div>
+                      <div className="text-[10px] font-bold text-gray-400 uppercase">
+                        Error Exceptions
+                      </div>
                       <div className="text-lg font-bold text-gray-900 mt-1">
                         {healthData.checks.database.counts.systemErrors ?? 0}
                       </div>
@@ -383,7 +412,9 @@ export default function PerformanceConsole({ siteId, user }) {
                 {/* Configuration items */}
                 <div className="border rounded-xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex justify-between items-center py-2 border-b sm:border-b-0 sm:border-r sm:pr-4">
-                    <span className="text-xs text-gray-500 font-semibold">Cloudinary Status</span>
+                    <span className="text-xs text-gray-500 font-semibold">
+                      Cloudinary Status
+                    </span>
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                         healthData.checks.cloudinary.status === "Configured"
@@ -396,7 +427,9 @@ export default function PerformanceConsole({ siteId, user }) {
                   </div>
 
                   <div className="flex justify-between items-center py-2 sm:pl-4">
-                    <span className="text-xs text-gray-500 font-semibold">Environment Node Mode</span>
+                    <span className="text-xs text-gray-500 font-semibold">
+                      Environment Node Mode
+                    </span>
                     <span className="font-mono text-xs uppercase font-bold text-slate-600">
                       {healthData.checks.environment.nodeEnv}
                     </span>
@@ -416,7 +449,8 @@ export default function PerformanceConsole({ siteId, user }) {
                 Asset Optimization Settings
               </h2>
               <p className="text-xs text-gray-500 mt-1">
-                Enable lazy loading for images and videos, auto-compress uploads, defer scripts, and set TTL caching values.
+                Enable lazy loading for images and videos, auto-compress
+                uploads, defer scripts, and set TTL caching values.
               </p>
             </div>
 
@@ -434,8 +468,10 @@ export default function PerformanceConsole({ siteId, user }) {
               </div>
             )}
 
-            {configLoading && !lazyLoadImages ? (
-              <div className="py-12 text-center text-xs text-gray-400">Loading optimizer settings...</div>
+            {configLoading && !lazyLoading && !lazyLoadImages ? (
+              <div className="py-12 text-center text-xs text-gray-400">
+                Loading optimizer settings...
+              </div>
             ) : (
               <form onSubmit={saveConfig} className="space-y-6 max-w-2xl pt-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -446,6 +482,24 @@ export default function PerformanceConsole({ siteId, user }) {
                     </h3>
 
                     <div className="space-y-3">
+                      <label className="flex items-center gap-3 cursor-pointer border-b border-gray-100 pb-2">
+                        <input
+                          type="checkbox"
+                          checked={lazyLoading}
+                          onChange={(e) => setLazyLoading(e.target.checked)}
+                          className="rounded border-gray-300 text-blue-600 h-4 w-4"
+                        />
+                        <div>
+                          <span className="text-xs font-bold text-gray-700 block">
+                            Enable Lazy Loading
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            Master toggle to enable or disable all lazy loading
+                            features globally.
+                          </span>
+                        </div>
+                      </label>
+
                       <label className="flex items-center gap-3 cursor-pointer">
                         <input
                           type="checkbox"
@@ -454,8 +508,12 @@ export default function PerformanceConsole({ siteId, user }) {
                           className="rounded border-gray-300 text-blue-600 h-4 w-4"
                         />
                         <div>
-                          <span className="text-xs font-bold text-gray-700 block">Lazy Load Images</span>
-                          <span className="text-[10px] text-gray-400">Appends loading="lazy" to all front-facing images.</span>
+                          <span className="text-xs font-bold text-gray-700 block">
+                            Lazy Load Images
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            Appends loading="lazy" to all front-facing images.
+                          </span>
                         </div>
                       </label>
 
@@ -467,8 +525,12 @@ export default function PerformanceConsole({ siteId, user }) {
                           className="rounded border-gray-300 text-blue-600 h-4 w-4"
                         />
                         <div>
-                          <span className="text-xs font-bold text-gray-700 block">Lazy Load Videos</span>
-                          <span className="text-[10px] text-gray-400">Defers video preloading until play is interacted.</span>
+                          <span className="text-xs font-bold text-gray-700 block">
+                            Lazy Load Videos
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            Defers video preloading until play is interacted.
+                          </span>
                         </div>
                       </label>
                     </div>
@@ -489,8 +551,12 @@ export default function PerformanceConsole({ siteId, user }) {
                           className="rounded border-gray-300 text-blue-600 h-4 w-4"
                         />
                         <div>
-                          <span className="text-xs font-bold text-gray-700 block">Compress Uploaded Images</span>
-                          <span className="text-[10px] text-gray-400">Automatically compress images to WebP on upload.</span>
+                          <span className="text-xs font-bold text-gray-700 block">
+                            Compress Uploaded Images
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            Automatically compress images to WebP on upload.
+                          </span>
                         </div>
                       </label>
 
@@ -502,8 +568,12 @@ export default function PerformanceConsole({ siteId, user }) {
                           className="rounded border-gray-300 text-blue-600 h-4 w-4"
                         />
                         <div>
-                          <span className="text-xs font-bold text-gray-700 block">Defer Non-Essential Scripts</span>
-                          <span className="text-[10px] text-gray-400">Append defer tag to external analytics scripts.</span>
+                          <span className="text-xs font-bold text-gray-700 block">
+                            Defer Non-Essential Scripts
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            Append defer tag to external analytics scripts.
+                          </span>
                         </div>
                       </label>
                     </div>
@@ -527,11 +597,14 @@ export default function PerformanceConsole({ siteId, user }) {
                       min="1"
                       max="365"
                       value={cachingDays}
-                      onChange={(e) => setCachingDays(parseInt(e.target.value, 10))}
+                      onChange={(e) =>
+                        setCachingDays(parseInt(e.target.value, 10))
+                      }
                       className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                     />
                     <p className="text-[9px] text-gray-400 leading-normal">
-                      Specifies Cache-Control max-age header values in static media asset retrieval API routes.
+                      Specifies Cache-Control max-age header values in static
+                      media asset retrieval API routes.
                     </p>
                   </div>
                 </div>
@@ -542,7 +615,9 @@ export default function PerformanceConsole({ siteId, user }) {
                   className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition"
                 >
                   <Save size={13} />
-                  {configLoading ? "Saving Configurations..." : "Save Optimization Settings"}
+                  {configLoading
+                    ? "Saving Configurations..."
+                    : "Save Optimization Settings"}
                 </button>
               </form>
             )}
@@ -559,7 +634,8 @@ export default function PerformanceConsole({ siteId, user }) {
                   Captured System Exceptions ({filteredLogs.length})
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  Trace runtime exceptions, API server crashes, and database validation errors.
+                  Trace runtime exceptions, API server crashes, and database
+                  validation errors.
                 </p>
               </div>
 
@@ -569,7 +645,10 @@ export default function PerformanceConsole({ siteId, user }) {
                   disabled={logsLoading}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-lg hover:bg-gray-50 font-semibold text-gray-600 transition"
                 >
-                  <RefreshCw size={12} className={logsLoading ? "animate-spin" : ""} />
+                  <RefreshCw
+                    size={12}
+                    className={logsLoading ? "animate-spin" : ""}
+                  />
                   Refresh
                 </button>
 
@@ -592,7 +671,9 @@ export default function PerformanceConsole({ siteId, user }) {
             )}
 
             {logsLoading && errorLogs.length === 0 ? (
-              <div className="py-12 text-center text-xs text-gray-400">Fetching crash trace list...</div>
+              <div className="py-12 text-center text-xs text-gray-400">
+                Fetching crash trace list...
+              </div>
             ) : (
               <div className="space-y-4">
                 {/* Search bar */}
@@ -611,9 +692,14 @@ export default function PerformanceConsole({ siteId, user }) {
                   {filteredLogs.map((log) => {
                     const isExpanded = expandedLogId === log.id;
                     return (
-                      <div key={log.id} className="border rounded-xl overflow-hidden bg-white shadow-xs">
+                      <div
+                        key={log.id}
+                        className="border rounded-xl overflow-hidden bg-white shadow-xs"
+                      >
                         <div
-                          onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
+                          onClick={() =>
+                            setExpandedLogId(isExpanded ? null : log.id)
+                          }
                           className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50/50 select-none transition"
                         >
                           <div className="space-y-1 pr-4 flex-1">
@@ -644,7 +730,10 @@ export default function PerformanceConsole({ siteId, user }) {
                             >
                               <Trash2 size={13} />
                             </button>
-                            <ListCollapse size={14} className={`text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                            <ListCollapse
+                              size={14}
+                              className={`text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                            />
                           </div>
                         </div>
 
@@ -652,7 +741,9 @@ export default function PerformanceConsole({ siteId, user }) {
                           <div className="border-t bg-gray-50/50 p-4 space-y-3">
                             {log.stack && (
                               <div className="space-y-1">
-                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">Stack trace:</span>
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                                  Stack trace:
+                                </span>
                                 <pre className="p-3 bg-slate-900 text-slate-100 rounded-lg text-[10px] font-mono overflow-x-auto max-h-60 leading-normal select-all">
                                   {log.stack}
                                 </pre>
@@ -660,7 +751,9 @@ export default function PerformanceConsole({ siteId, user }) {
                             )}
                             <div className="flex justify-between items-center text-[10px] text-gray-400">
                               <span>Log ID: {log.id}</span>
-                              {log.siteId && <span>Site context: {log.siteId}</span>}
+                              {log.siteId && (
+                                <span>Site context: {log.siteId}</span>
+                              )}
                             </div>
                           </div>
                         )}
