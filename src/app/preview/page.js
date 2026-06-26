@@ -9,7 +9,8 @@ import ContactFormSection from "@/components/ContactFormSection";
 function SafeImage({ src, alt, ...props }) {
   if (!src) return null;
 
-  const isLocal = src.startsWith("/") || src.startsWith(".") || src.startsWith("..");
+  const isLocal =
+    src.startsWith("/") || src.startsWith(".") || src.startsWith("..");
   const isCloudinary = src.includes("res.cloudinary.com");
 
   if (isLocal || isCloudinary) {
@@ -133,24 +134,49 @@ function TextBlock({ content }) {
   );
 }
 
+function formatPrice(price) {
+  if (!price) return "Contact Us";
+  const trimmed = String(price).trim();
+  const isNumeric = !isNaN(trimmed) && !isNaN(parseFloat(trimmed));
+  const hasCurrencySymbol = /[\$\€\£\¥\₹]/.test(trimmed);
+  if (isNumeric && !hasCurrencySymbol) {
+    return `$${trimmed}`;
+  }
+  return trimmed;
+}
+
 function ServicesSection({ content }) {
   const items = content?.items || [];
   return (
     <section className="py-16 bg-slate-50 text-slate-800 border-t border-b">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Our Services</h2>
-          <p className="text-slate-500 mt-2 text-sm">Professional services customized to help you grow your brand identity.</p>
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+            Our Services
+          </h2>
+          <p className="text-slate-500 mt-2 text-sm">
+            Professional services customized to help you grow your brand
+            identity.
+          </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {items.map((item) => (
-            <div key={item.id} className="bg-white rounded-xl shadow-xs border hover:shadow-md transition-all duration-200 p-6 flex flex-col justify-between">
+            <div
+              key={item.id}
+              className="bg-white rounded-xl shadow-xs border hover:shadow-md transition-all duration-200 p-6 flex flex-col justify-between"
+            >
               <div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">{item.title}</h3>
-                <p className="text-xs text-slate-500 leading-relaxed mb-4">{item.description}</p>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">
+                  {item.title}
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed mb-4">
+                  {item.description}
+                </p>
               </div>
               <div className="border-t pt-4 flex items-center justify-between mt-4">
-                <span className="font-mono text-sm font-bold text-blue-600">{item.price || "Contact Us"}</span>
+                <span className="font-mono text-sm font-bold text-blue-600">
+                  {formatPrice(item.price)}
+                </span>
                 {item.ctaButtonText && (
                   <a
                     href={item.ctaButtonLink || "/"}
@@ -174,8 +200,12 @@ function TeamSection({ content }) {
     <section className="py-16 bg-white text-slate-800">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Meet Our Team</h2>
-          <p className="text-slate-500 mt-2 text-sm">Our group of expert professionals and leaders.</p>
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+            Meet Our Team
+          </h2>
+          <p className="text-slate-500 mt-2 text-sm">
+            Our group of expert professionals and leaders.
+          </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {items.map((member) => (
@@ -194,9 +224,17 @@ function TeamSection({ content }) {
                   </div>
                 )}
               </div>
-              <h3 className="font-bold text-slate-900 text-base">{member.name}</h3>
-              <p className="text-xs text-indigo-650 font-semibold mb-1">{member.role}</p>
-              {member.bio && <p className="text-[11px] text-slate-400 max-w-xs mx-auto line-clamp-2 px-2">{member.bio}</p>}
+              <h3 className="font-bold text-slate-900 text-base">
+                {member.name}
+              </h3>
+              <p className="text-xs text-indigo-650 font-semibold mb-1">
+                {member.role}
+              </p>
+              {member.bio && (
+                <p className="text-[11px] text-slate-400 max-w-xs mx-auto line-clamp-2 px-2">
+                  {member.bio}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -211,31 +249,47 @@ function TestimonialsSection({ content }) {
     <section className="py-16 bg-indigo-900 text-white">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="text-3xl font-extrabold tracking-tight">Client Feedback</h2>
-          <p className="text-indigo-200 mt-2 text-sm">Hear directly what our global partners say about us.</p>
+          <h2 className="text-3xl font-extrabold tracking-tight">
+            Client Feedback
+          </h2>
+          <p className="text-indigo-200 mt-2 text-sm">
+            Hear directly what our global partners say about us.
+          </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {items.map((item) => (
-            <div key={item.id} className="bg-indigo-950/40 p-6 rounded-xl border border-indigo-850 backdrop-blur-xs flex flex-col justify-between">
+            <div
+              key={item.id}
+              className="bg-indigo-950/40 p-6 rounded-xl border border-indigo-850 backdrop-blur-xs flex flex-col justify-between"
+            >
               <div>
                 <div className="flex gap-1 mb-4 text-amber-400 font-mono text-sm">
                   {Array.from({ length: item.rating || 5 }).map((_, idx) => (
                     <span key={idx}>★</span>
                   ))}
                 </div>
-                <p className="text-slate-200 text-xs italic leading-relaxed mb-6">"{item.content}"</p>
+                <p className="text-slate-200 text-xs italic leading-relaxed mb-6">
+                  "{item.content}"
+                </p>
               </div>
               <div className="flex items-center gap-3 border-t border-indigo-850 pt-4">
                 {item.clientImage ? (
                   <div className="relative w-8 h-8 rounded-full overflow-hidden">
-                    <SafeImage src={item.clientImage} alt={item.clientName} fill style={{ objectFit: "cover" }} />
+                    <SafeImage
+                      src={item.clientImage}
+                      alt={item.clientName}
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
                   </div>
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-indigo-800 flex items-center justify-center text-[10px] font-bold">
                     {item.clientName.charAt(0)}
                   </div>
                 )}
-                <span className="font-semibold text-xs text-white">{item.clientName}</span>
+                <span className="font-semibold text-xs text-white">
+                  {item.clientName}
+                </span>
               </div>
             </div>
           ))}
@@ -251,17 +305,26 @@ function FaqSection({ content }) {
     <section className="py-16 bg-white text-slate-800">
       <div className="max-w-3xl mx-auto px-6">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">FAQ</h2>
-          <p className="text-slate-500 mt-2 text-sm">Common questions and detailed answers.</p>
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
+            FAQ
+          </h2>
+          <p className="text-slate-500 mt-2 text-sm">
+            Common questions and detailed answers.
+          </p>
         </div>
         <div className="space-y-4">
           {items.map((faq) => (
-            <div key={faq.id} className="border rounded-lg p-5 hover:bg-slate-50/50 transition">
+            <div
+              key={faq.id}
+              className="border rounded-lg p-5 hover:bg-slate-50/50 transition"
+            >
               <h3 className="font-bold text-slate-900 text-sm mb-2 flex items-start gap-2">
                 <span className="text-blue-600">Q.</span>
                 {faq.question}
               </h3>
-              <p className="text-slate-650 text-xs pl-6 leading-relaxed">{faq.answer}</p>
+              <p className="text-slate-650 text-xs pl-6 leading-relaxed">
+                {faq.answer}
+              </p>
             </div>
           ))}
         </div>
@@ -274,8 +337,14 @@ function CtaSection({ content }) {
   return (
     <section className="py-12 bg-linear-to-r from-blue-600 to-indigo-600 text-white">
       <div className="max-w-5xl mx-auto px-6 text-center">
-        <h2 className="text-2xl md:text-3xl font-bold mb-4">{content?.title || "Ready to scale up?"}</h2>
-        {content?.subtitle && <p className="text-sm text-blue-100 max-w-2xl mx-auto mb-6">{content.subtitle}</p>}
+        <h2 className="text-2xl md:text-3xl font-bold mb-4">
+          {content?.title || "Ready to scale up?"}
+        </h2>
+        {content?.subtitle && (
+          <p className="text-sm text-blue-100 max-w-2xl mx-auto mb-6">
+            {content.subtitle}
+          </p>
+        )}
         {content?.primaryButtonText && (
           <a
             href={content.primaryButtonUrl || "/"}
@@ -299,7 +368,8 @@ function BlogsSection({ content }) {
             {content?.title || "Latest Articles"}
           </h2>
           <p className="text-slate-500 mt-2 text-sm">
-            {content?.description || "Stay updated with our latest news and corporate insights."}
+            {content?.description ||
+              "Stay updated with our latest news and corporate insights."}
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -339,9 +409,14 @@ function BlogsSection({ content }) {
                   </p>
                 )}
                 <div className="text-[10px] text-slate-400 font-semibold mt-4 pt-4 border-t flex justify-between">
-                  <span>By {post.author ? post.author.email.split("@")[0] : "Author"}</span>
                   <span>
-                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString("en-US", {
+                    By{" "}
+                    {post.author ? post.author.email.split("@")[0] : "Author"}
+                  </span>
+                  <span>
+                    {new Date(
+                      post.publishedAt || post.createdAt,
+                    ).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
@@ -393,10 +468,10 @@ export default async function PreviewPage({ searchParams }) {
   }
 
   // Fetch Site and settings
-  const site = await prisma.site.findUnique({
+  const site = (await prisma.site.findUnique({
     where: { id: siteId },
-    select: { name: true }
-  }) || { name: "Default Website" };
+    select: { name: true },
+  })) || { name: "Default Website" };
 
   const settings = await prisma.globalSettings.findUnique({
     where: { siteId },
@@ -444,9 +519,20 @@ export default async function PreviewPage({ searchParams }) {
       // Fetch dynamic collection list items
       const type = String(s.type || "").toUpperCase();
       if (type === "SERVICES") {
-        content.items = await prisma.service.findMany({
+        const services = await prisma.service.findMany({
           where: { siteId, status: "ACTIVE", deletedAt: null },
           orderBy: { sortOrder: "asc" },
+        });
+        content.items = services.map((s) => {
+          if (s.price) {
+            const trimmed = String(s.price).trim();
+            const isNumeric = !isNaN(trimmed) && !isNaN(parseFloat(trimmed));
+            const hasCurrencySymbol = /[\$\€\£\¥\₹]/.test(trimmed);
+            if (isNumeric && !hasCurrencySymbol) {
+              return { ...s, price: `$${trimmed}` };
+            }
+          }
+          return s;
         });
       } else if (type === "TEAM") {
         content.items = await prisma.teamMember.findMany({
@@ -482,7 +568,7 @@ export default async function PreviewPage({ searchParams }) {
       }
 
       return { ...s, content };
-    })
+    }),
   );
   const headerSettings = settings?.header || {};
   const footerSettings = settings?.footer || {};
@@ -494,14 +580,18 @@ export default async function PreviewPage({ searchParams }) {
   const isTransparent = headerSettings.transparent ?? false;
 
   const paddingYClass =
-    headerSettings.paddingY === "small" ? "py-2" :
-      headerSettings.paddingY === "large" ? "py-6" :
-        "py-4";
+    headerSettings.paddingY === "small"
+      ? "py-2"
+      : headerSettings.paddingY === "large"
+        ? "py-6"
+        : "py-4";
 
   const shadowClass =
-    headerSettings.shadowSize === "none" ? "shadow-none" :
-      headerSettings.shadowSize === "medium" ? "shadow" :
-        "shadow-xs";
+    headerSettings.shadowSize === "none"
+      ? "shadow-none"
+      : headerSettings.shadowSize === "medium"
+        ? "shadow"
+        : "shadow-xs";
 
   const borderClass = headerSettings.borderBottom !== false ? "border-b" : "";
 
@@ -513,15 +603,21 @@ export default async function PreviewPage({ searchParams }) {
         </span>
       );
     }
-    const logoSrc = websiteSettings.logoUrl || "/next.svg";
+    const logoSrc =
+      headerSettings.logoUrl || websiteSettings.logoUrl || "/next.svg";
+
     return (
       <img
         src={logoSrc}
         alt="Logo"
         style={{
-          width: headerSettings.logoWidth ? `${headerSettings.logoWidth}px` : "auto",
-          height: headerSettings.logoHeight ? `${headerSettings.logoHeight}px` : "40px",
-          objectFit: "contain"
+          width: headerSettings.logoWidth
+            ? `${headerSettings.logoWidth}px`
+            : "auto",
+          height: headerSettings.logoHeight
+            ? `${headerSettings.logoHeight}px`
+            : "40px",
+          objectFit: "contain",
         }}
       />
     );
@@ -535,23 +631,30 @@ export default async function PreviewPage({ searchParams }) {
     rightLinks = navigation.slice(mid);
   }
 
-  const ctaButton = headerSettings.ctaText && headerSettings.ctaLink ? (
-    <a
-      href={headerSettings.ctaLink}
-      className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold whitespace-nowrap shadow-sm transition"
-    >
-      {headerSettings.ctaText}
-    </a>
-  ) : null;
+  const ctaButton =
+    headerSettings.ctaText && headerSettings.ctaLink ? (
+      <a
+        href={headerSettings.ctaLink}
+        className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-bold whitespace-nowrap shadow-sm transition"
+      >
+        {headerSettings.ctaText}
+      </a>
+    ) : null;
 
   const renderHeaderContent = () => {
     switch (headerSettings.layout) {
       case "logo-center":
         return (
-          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between relative`}>
+          <div
+            className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between relative`}
+          >
             <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
               {navigation.map((link, idx) => (
-                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                <a
+                  key={idx}
+                  href={link.url}
+                  className="hover:text-blue-600 transition"
+                >
                   {link.label}
                 </a>
               ))}
@@ -570,21 +673,29 @@ export default async function PreviewPage({ searchParams }) {
 
       case "logo-split":
         return (
-          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}>
+          <div
+            className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}
+          >
             <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
               {leftLinks.map((link, idx) => (
-                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                <a
+                  key={idx}
+                  href={link.url}
+                  className="hover:text-blue-600 transition"
+                >
                   {link.label}
                 </a>
               ))}
             </nav>
-            <div className="shrink-0 flex items-center">
-              {renderLogo()}
-            </div>
+            <div className="shrink-0 flex items-center">{renderLogo()}</div>
             <div className="flex items-center gap-6">
               <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
                 {rightLinks.map((link, idx) => (
-                  <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  <a
+                    key={idx}
+                    href={link.url}
+                    className="hover:text-blue-600 transition"
+                  >
                     {link.label}
                   </a>
                 ))}
@@ -598,7 +709,9 @@ export default async function PreviewPage({ searchParams }) {
 
       case "logo-right":
         return (
-          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}>
+          <div
+            className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}
+          >
             <div className="flex items-center gap-3">
               {ctaButton}
               <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[9px] font-bold uppercase shrink-0">
@@ -607,27 +720,33 @@ export default async function PreviewPage({ searchParams }) {
             </div>
             <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
               {navigation.map((link, idx) => (
-                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                <a
+                  key={idx}
+                  href={link.url}
+                  className="hover:text-blue-600 transition"
+                >
                   {link.label}
                 </a>
               ))}
             </nav>
-            <div className="shrink-0 flex items-center">
-              {renderLogo()}
-            </div>
+            <div className="shrink-0 flex items-center">{renderLogo()}</div>
           </div>
         );
 
       case "stacked":
         return (
-          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex flex-col items-center gap-3`}>
-            <div className="shrink-0 flex items-center">
-              {renderLogo()}
-            </div>
+          <div
+            className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex flex-col items-center gap-3`}
+          >
+            <div className="shrink-0 flex items-center">{renderLogo()}</div>
             <div className="w-full flex justify-between items-center pt-2 border-t border-slate-100">
               <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
                 {navigation.map((link, idx) => (
-                  <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                  <a
+                    key={idx}
+                    href={link.url}
+                    className="hover:text-blue-600 transition"
+                  >
                     {link.label}
                   </a>
                 ))}
@@ -645,13 +764,17 @@ export default async function PreviewPage({ searchParams }) {
       case "logo-left":
       default:
         return (
-          <div className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}>
-            <div className="flex items-center gap-3">
-              {renderLogo()}
-            </div>
+          <div
+            className={`max-w-7xl mx-auto px-6 ${paddingYClass} flex items-center justify-between`}
+          >
+            <div className="flex items-center gap-3">{renderLogo()}</div>
             <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-650">
               {navigation.map((link, idx) => (
-                <a key={idx} href={link.url} className="hover:text-blue-600 transition">
+                <a
+                  key={idx}
+                  href={link.url}
+                  className="hover:text-blue-600 transition"
+                >
                   {link.label}
                 </a>
               ))}
@@ -669,25 +792,30 @@ export default async function PreviewPage({ searchParams }) {
     <div className="min-h-screen bg-slate-50 text-slate-950 flex flex-col justify-between">
       {/* Preview Banner */}
       <div className="bg-amber-500 text-white text-center py-1.5 text-[10px] font-bold uppercase tracking-wider sticky top-0 z-50 shadow-sm">
-        ⚡ Preview Mode &mdash; Viewing Draft Layout for "{page.title || page.slug}"
+        ⚡ Preview Mode &mdash; Viewing Draft Layout for "
+        {page.title || page.slug}"
       </div>
 
       {/* Announcement Bar */}
-      {headerSettings.announcementBar?.enabled && headerSettings.announcementBar?.text && (
-        <a
-          href={headerSettings.announcementBar.link || "#"}
-          style={{
-            backgroundColor: headerSettings.announcementBar.bgColor || "#2563eb",
-            color: headerSettings.announcementBar.textColor || "#ffffff"
-          }}
-          className="w-full py-1.5 px-4 text-center text-[10px] font-bold tracking-wide truncate block text-decoration-none z-40 relative"
-        >
-          {headerSettings.announcementBar.text}
-        </a>
-      )}
+      {headerSettings.announcementBar?.enabled &&
+        headerSettings.announcementBar?.text && (
+          <a
+            href={headerSettings.announcementBar.link || "#"}
+            style={{
+              backgroundColor:
+                headerSettings.announcementBar.bgColor || "#2563eb",
+              color: headerSettings.announcementBar.textColor || "#ffffff",
+            }}
+            className="w-full py-1.5 px-4 text-center text-[10px] font-bold tracking-wide truncate block text-decoration-none z-40 relative"
+          >
+            {headerSettings.announcementBar.text}
+          </a>
+        )}
 
       {/* Dynamic Header */}
-      <header className={`${isTransparent ? "absolute w-full bg-transparent" : "bg-white"} ${borderClass} ${shadowClass} z-40 ${isSticky ? "sticky top-[28px] md:top-[32px]" : "relative"}`}>
+      <header
+        className={`${isTransparent ? "absolute w-full bg-transparent" : "bg-white"} ${borderClass} ${shadowClass} z-40 ${isSticky ? "sticky top-[28px] md:top-[32px]" : "relative"}`}
+      >
         {renderHeaderContent()}
       </header>
 
@@ -698,20 +826,30 @@ export default async function PreviewPage({ searchParams }) {
           .map((s) => {
             const type = String(s.type || "").toUpperCase();
             if (type === "HERO") return <Hero key={s.id} content={s.content} />;
-            if (type === "TEXT_BLOCK") return <TextBlock key={s.id} content={s.content} />;
-            if (type === "SERVICES") return <ServicesSection key={s.id} content={s.content} />;
-            if (type === "TEAM") return <TeamSection key={s.id} content={s.content} />;
-            if (type === "TESTIMONIALS") return <TestimonialsSection key={s.id} content={s.content} />;
-            if (type === "FAQ") return <FaqSection key={s.id} content={s.content} />;
-            if (type === "CTA") return <CtaSection key={s.id} content={s.content} />;
-            if (type === "BLOGS") return <BlogsSection key={s.id} content={s.content} />;
+            if (type === "TEXT_BLOCK")
+              return <TextBlock key={s.id} content={s.content} />;
+            if (type === "SERVICES")
+              return <ServicesSection key={s.id} content={s.content} />;
+            if (type === "TEAM")
+              return <TeamSection key={s.id} content={s.content} />;
+            if (type === "TESTIMONIALS")
+              return <TestimonialsSection key={s.id} content={s.content} />;
+            if (type === "FAQ")
+              return <FaqSection key={s.id} content={s.content} />;
+            if (type === "CTA")
+              return <CtaSection key={s.id} content={s.content} />;
+            if (type === "BLOGS")
+              return <BlogsSection key={s.id} content={s.content} />;
             if (type === "CONTACT_FORM") {
               return (
                 <ContactFormSection
                   key={s.id}
                   siteId={siteId}
                   content={s.content}
-                  recaptchaSiteKey={settings?.securityControls?.recaptchaSiteKey || process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                  recaptchaSiteKey={
+                    settings?.securityControls?.recaptchaSiteKey ||
+                    process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+                  }
                 />
               );
             }
@@ -735,21 +873,28 @@ export default async function PreviewPage({ searchParams }) {
           <div>
             <h4 className="text-white font-bold text-sm mb-4">{site.name}</h4>
             <p className="text-xs text-slate-500 leading-relaxed">
-              Powered by the Global Backend Headless CMS. High performance modular setups.
+              Powered by the Global Backend Headless CMS. High performance
+              modular setups.
             </p>
           </div>
           <div>
             <h5 className="text-white font-bold text-xs mb-3">Links</h5>
             <div className="flex flex-col gap-2 text-xs">
               {navigation.slice(0, 4).map((link, idx) => (
-                <a key={idx} href={link.url} className="hover:text-white transition">
+                <a
+                  key={idx}
+                  href={link.url}
+                  className="hover:text-white transition"
+                >
                   {link.label}
                 </a>
               ))}
             </div>
           </div>
           <div>
-            <h5 className="text-white font-bold text-xs mb-3 font-mono">Status</h5>
+            <h5 className="text-white font-bold text-xs mb-3 font-mono">
+              Status
+            </h5>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-950 px-2 py-0.5 text-[9px] font-bold text-amber-400 border border-amber-900 uppercase tracking-wider">
               <span className="h-1 w-1 rounded-full bg-amber-500 animate-pulse" />
               Previewing Draft
@@ -758,7 +903,8 @@ export default async function PreviewPage({ searchParams }) {
           <div>
             <h5 className="text-white font-bold text-xs mb-3">Copyright</h5>
             <p className="text-[10px] text-slate-550 leading-relaxed">
-              {footerSettings.copyright || `© ${new Date().getFullYear()} ${site.name}. All rights reserved.`}
+              {footerSettings.copyright ||
+                `© ${new Date().getFullYear()} ${site.name}. All rights reserved.`}
             </p>
           </div>
         </div>

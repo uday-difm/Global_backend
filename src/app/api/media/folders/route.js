@@ -3,7 +3,7 @@ import { getSiteId } from "@/lib/siteGuard";
 import { mediaService } from "@/services/media.service";
 import { requireAuth } from "@/lib/requireAuth";
 import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 async function getAuthenticatedUser() {
   const user = await requireAuth();
@@ -25,7 +25,7 @@ export async function GET(request) {
     const parentId = searchParams.get("parentId") || "root";
 
     const folders = await mediaService.getFolders(siteId, parentId);
-    return NextResponse.json({ folders });
+    return NextResponse.json(apiSuccess({ folders }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -61,7 +61,7 @@ export async function POST(request) {
     }
 
     const folder = await mediaService.createFolder(siteId, name.trim(), parentIdVal);
-    return NextResponse.json({ folder }, { status: 201 });
+    return NextResponse.json(apiSuccess({ folder }), { status: 201 });
   } catch (err) {
     return handleApiError(err);
   }

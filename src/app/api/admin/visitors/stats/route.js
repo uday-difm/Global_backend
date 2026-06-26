@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { analyticsService } from "@/services/analytics.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -20,7 +20,7 @@ export async function GET(req) {
       analyticsService.getTimeSeries(auth.siteId, days),
     ]);
 
-    return NextResponse.json({ success: true, stats, timeSeries });
+    return NextResponse.json(apiSuccess({ stats, timeSeries }));
   } catch (err) {
     return handleApiError(err);
   }

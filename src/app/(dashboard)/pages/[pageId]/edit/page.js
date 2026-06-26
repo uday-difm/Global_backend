@@ -31,12 +31,22 @@ export default async function PageEditorPage({ params }) {
     );
   }
 
+  const settings = await prisma.globalSettings.findUnique({
+    where: { siteId: page.siteId },
+    select: { websiteSettings: true },
+  });
+  const frontendUrl =
+    settings?.websiteSettings?.domain ||
+    process.env.FRONTEND_URL ||
+    "http://localhost:3001";
+
   // render the client editor and pass siteId
   return (
     <PageEditorClient
       pageId={page.id}
       siteId={page.siteId}
       pageTitle={page.title}
+      frontendUrl={frontendUrl}
     />
   );
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { z } from "zod";
+import { apiSuccess } from "@/core/errors";
 
 const RedirectCreateSchema = z.object({
   source: z.string().min(1),
@@ -20,7 +21,7 @@ export async function GET(req) {
       where: { siteId: auth.siteId }
     });
 
-    return NextResponse.json({ success: true, redirects });
+    return NextResponse.json(apiSuccess({ redirects }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
@@ -36,7 +37,7 @@ export async function POST(req) {
     const body = await req.json();
     const parsed = RedirectCreateSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Validation failed", details: parsed.error.issues || parsed.error.errors }, { status: 400 });
     }
 
     const { source, target, type } = parsed.data;
@@ -64,7 +65,7 @@ export async function POST(req) {
       }
     });
 
-    return NextResponse.json({ success: true, redirect }, { status: 201 });
+    return NextResponse.json(apiSuccess({ redirect }), { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

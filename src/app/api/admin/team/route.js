@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { teamMemberService } from "@/services/teamMember.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -11,7 +11,7 @@ export async function GET(req) {
     }
 
     const team = await teamMemberService.getTeamMembers(auth.siteId);
-    return NextResponse.json({ success: true, teamMembers: team });
+    return NextResponse.json(apiSuccess({ teamMembers: team }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -27,7 +27,7 @@ export async function POST(req) {
     const body = await req.json();
     const teamMember = await teamMemberService.create(auth.siteId, body, auth.user.id);
 
-    return NextResponse.json({ success: true, teamMember }, { status: 201 });
+    return NextResponse.json(apiSuccess({ teamMember }), { status: 201 });
   } catch (err) {
     return handleApiError(err);
   }

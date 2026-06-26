@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { pageService } from "@/services/page.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -14,7 +14,7 @@ export async function GET(req) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ pages });
+    return NextResponse.json(apiSuccess({ pages }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -41,7 +41,7 @@ export async function POST(req) {
       seoDescription,
     }, auth.user.id);
 
-    return NextResponse.json({ page: newPage }, { status: 201 });
+    return NextResponse.json(apiSuccess({ page: newPage }), { status: 201 });
   } catch (err) {
     return handleApiError(err);
   }

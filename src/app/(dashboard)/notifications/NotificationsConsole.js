@@ -15,19 +15,35 @@ import {
   Filter,
   Eye,
   Check,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
 
-export default function NotificationsConsole({ siteId, initialConfig, initialAlerts }) {
+export default function NotificationsConsole({
+  siteId,
+  initialConfig,
+  initialAlerts,
+}) {
   // Configuration Settings State
-  const [newLeadEmail, setNewLeadEmail] = useState(initialConfig.newLead?.email ?? true);
-  const [newLeadDash, setNewLeadDash] = useState(initialConfig.newLead?.dashboard ?? true);
+  const [newLeadEmail, setNewLeadEmail] = useState(
+    initialConfig.newLead?.email ?? true,
+  );
+  const [newLeadDash, setNewLeadDash] = useState(
+    initialConfig.newLead?.dashboard ?? true,
+  );
 
-  const [failedFormEmail, setFailedFormEmail] = useState(initialConfig.failedForm?.email ?? true);
-  const [failedFormDash, setFailedFormDash] = useState(initialConfig.failedForm?.dashboard ?? true);
+  const [failedFormEmail, setFailedFormEmail] = useState(
+    initialConfig.failedForm?.email ?? true,
+  );
+  const [failedFormDash, setFailedFormDash] = useState(
+    initialConfig.failedForm?.dashboard ?? true,
+  );
 
-  const [blogEmail, setBlogEmail] = useState(initialConfig.blogAlert?.email ?? true);
-  const [blogDash, setBlogDash] = useState(initialConfig.blogAlert?.dashboard ?? true);
+  const [blogEmail, setBlogEmail] = useState(
+    initialConfig.blogAlert?.email ?? true,
+  );
+  const [blogDash, setBlogDash] = useState(
+    initialConfig.blogAlert?.dashboard ?? true,
+  );
 
   const [saving, setSaving] = useState(false);
   const [configSuccess, setConfigSuccess] = useState(null);
@@ -50,7 +66,7 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
     const payload = {
       newLead: { email: newLeadEmail, dashboard: newLeadDash },
       failedForm: { email: failedFormEmail, dashboard: failedFormDash },
-      blogAlert: { email: blogEmail, dashboard: blogDash }
+      blogAlert: { email: blogEmail, dashboard: blogDash },
     };
 
     try {
@@ -58,13 +74,14 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "x-site-id": siteId
+          "x-site-id": siteId,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to update notification settings");
+      if (!res.ok)
+        throw new Error(json.error || "Failed to update notification settings");
 
       setConfigSuccess("Notification configurations saved successfully!");
       setTimeout(() => setConfigSuccess(null), 3000);
@@ -81,11 +98,13 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
       const res = await fetch(`/api/admin/notifications/read?id=${id}`, {
         method: "PUT",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
       if (res.ok) {
-        setAlerts(prev => prev.map(a => a.id === id ? { ...a, isRead: true } : a));
+        setAlerts((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, isRead: true } : a)),
+        );
       }
     } catch (e) {
       console.error(e);
@@ -98,11 +117,11 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
       const res = await fetch("/api/admin/notifications/read", {
         method: "PUT",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
       if (res.ok) {
-        setAlerts(prev => prev.map(a => ({ ...a, isRead: true })));
+        setAlerts((prev) => prev.map((a) => ({ ...a, isRead: true })));
       }
     } catch (e) {
       console.error(e);
@@ -116,11 +135,11 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
       const res = await fetch(`/api/admin/notifications?id=${id}`, {
         method: "DELETE",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
       if (res.ok) {
-        setAlerts(prev => prev.filter(a => a.id !== id));
+        setAlerts((prev) => prev.filter((a) => a.id !== id));
       }
     } catch (e) {
       console.error(e);
@@ -129,13 +148,18 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
 
   // Clear all alerts
   const handleClearAllAlerts = async () => {
-    if (!confirm("Are you sure you want to clear your entire system alerts history? This cannot be undone.")) return;
+    if (
+      !confirm(
+        "Are you sure you want to clear your entire system alerts history? This cannot be undone.",
+      )
+    )
+      return;
     try {
       const res = await fetch("/api/admin/notifications", {
         method: "DELETE",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
       if (res.ok) {
         setAlerts([]);
@@ -151,8 +175,8 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
     try {
       const res = await fetch("/api/admin/notifications", {
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
       if (res.ok) {
         const json = await res.json();
@@ -165,23 +189,31 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
     }
   };
 
-  // Filter and Search Alerts
+  // Filter and Search Alerts (unread first)
   const filteredAlerts = useMemo(() => {
-    return alerts.filter(a => {
-      const matchType = filterType === "all" || a.type === filterType;
-      const matchStatus = 
-        filterStatus === "all" || 
-        (filterStatus === "unread" && !a.isRead) || 
-        (filterStatus === "read" && a.isRead);
-      
-      const q = searchQuery.toLowerCase();
-      const matchQuery = 
-        !q || 
-        a.title.toLowerCase().includes(q) || 
-        a.message.toLowerCase().includes(q);
+    return alerts
+      .filter((a) => {
+        const matchType = filterType === "all" || a.type === filterType;
+        const matchStatus =
+          filterStatus === "all" ||
+          (filterStatus === "unread" && !a.isRead) ||
+          (filterStatus === "read" && a.isRead);
 
-      return matchType && matchStatus && matchQuery;
-    });
+        const q = searchQuery.toLowerCase();
+        const matchQuery =
+          !q ||
+          a.title.toLowerCase().includes(q) ||
+          a.message.toLowerCase().includes(q);
+
+        return matchType && matchStatus && matchQuery;
+      })
+      .sort((a, b) => {
+        // Unread first, then sort by newest
+        if (a.isRead !== b.isRead) {
+          return a.isRead ? 1 : -1;
+        }
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
   }, [alerts, searchQuery, filterType, filterStatus]);
 
   const getAlertIcon = (type) => {
@@ -206,14 +238,18 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
           Notifications & Alerts Center
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          Configure real-time system alerts channels and manage notifications history logs.
+          Configure real-time system alerts channels and manage notifications
+          history logs.
         </p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         {/* Left Columns: Config and Switchboards */}
         <div className="xl:col-span-1 space-y-6">
-          <form onSubmit={handleSaveConfig} className="border bg-white rounded-xl shadow-sm p-6 space-y-6">
+          <form
+            onSubmit={handleSaveConfig}
+            className="border bg-white rounded-xl shadow-sm p-6 space-y-6"
+          >
             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider border-b pb-2.5">
               Alert Trigger Settings
             </h3>
@@ -372,7 +408,10 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
                   className="inline-flex items-center gap-1 px-3 py-1.5 border rounded-lg hover:bg-white text-gray-600 font-semibold transition disabled:opacity-50"
                   title="Refresh Log Feed"
                 >
-                  <RefreshCw size={13} className={loadingHistory ? "animate-spin" : ""} />
+                  <RefreshCw
+                    size={13}
+                    className={loadingHistory ? "animate-spin" : ""}
+                  />
                   Refresh
                 </button>
               </div>
@@ -381,7 +420,10 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
             {/* Filter toolbar */}
             <div className="border-b px-6 py-3 flex flex-wrap gap-3 items-center">
               <div className="relative flex-1 min-w-[200px]">
-                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search
+                  size={14}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+                />
                 <input
                   type="text"
                   value={searchQuery}
@@ -469,7 +511,9 @@ export default function NotificationsConsole({ siteId, initialConfig, initialAle
 
               {filteredAlerts.length === 0 && (
                 <div className="py-20 text-center text-gray-400 italic text-xs">
-                  {alerts.length === 0 ? "No system alerts history recorded." : "No alerts match your filter criteria."}
+                  {alerts.length === 0
+                    ? "No system alerts history recorded."
+                    : "No alerts match your filter criteria."}
                 </div>
               )}
             </div>

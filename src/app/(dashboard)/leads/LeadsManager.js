@@ -465,6 +465,7 @@ function EmailConfigTab({ siteId, initialConfig }) {
   const [autoBody, setAutoBody] = useState(ar.body || "");
   const [adminEnabled, setAdminEnabled] = useState(aa.enabled !== false);
   const [adminEmail, setAdminEmail] = useState(aa.email || "");
+  const [recipientOverride, setRecipientOverride] = useState(es.recipientOverride || "");
 
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -479,7 +480,7 @@ function EmailConfigTab({ siteId, initialConfig }) {
         headers: { "Content-Type": "application/json", "x-site-id": siteId },
         body: JSON.stringify({
           emailSettings: {
-            host, port, username, password, formEmail,
+            host, port, username, password, formEmail, recipientOverride,
             autoReplyTemplate: { enabled: autoEnabled, subject: autoSubject, body: autoBody },
             adminAlerts: { enabled: adminEnabled, email: adminEmail },
           },
@@ -547,6 +548,9 @@ function EmailConfigTab({ siteId, initialConfig }) {
           </Field>
           <Field label="From Email Address" hint="Shown as sender on all form-related emails">
             <input type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="noreply@yoursite.com" className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" />
+          </Field>
+          <Field label="Form Submission Notification Recipient Override" hint="Override recipient email for contact/lead notification alerts instead of global SMTP defaults">
+            <input type="email" value={recipientOverride} onChange={(e) => setRecipientOverride(e.target.value)} placeholder="recipient@yoursite.com" className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" />
           </Field>
         </div>
         <div className="flex gap-3 pt-2">

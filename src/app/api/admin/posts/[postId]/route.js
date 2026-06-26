@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { postService } from "@/services/post.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req, { params }) {
   try {
@@ -20,7 +20,7 @@ export async function GET(req, { params }) {
       }
     });
 
-    return NextResponse.json({ post });
+    return NextResponse.json(apiSuccess({ post }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -36,8 +36,28 @@ export async function PATCH(req, { params }) {
     const { postId } = await params;
     const body = await req.json();
 
-    const post = await postService.update(auth.siteId, postId, body, auth.user.id);
-    return NextResponse.json({ post });
+    let { canonicalUrl, ogImage } = body;
+    if (canonicalUrl !== undefined && canonicalUrl !== null) {
+      if (typeof canonicalUrl !== "string") {
+        return NextResponse.json({ error: "canonicalUrl must be a string" }, { status: 400 });
+      }
+      canonicalUrl = canonicalUrl.trim() || null;
+    }
+    if (ogImage !== undefined && ogImage !== null) {
+      if (typeof ogImage !== "string") {
+        return NextResponse.json({ error: "ogImage must be a string" }, { status: 400 });
+      }
+      ogImage = ogImage.trim() || null;
+    }
+
+    const postData = {
+      ...body,
+      canonicalUrl,
+      ogImage,
+    };
+
+    const post = await postService.update(auth.siteId, postId, postData, auth.user.id);
+    return NextResponse.json(apiSuccess({ post }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -53,7 +73,7 @@ export async function DELETE(req, { params }) {
     const { postId } = await params;
     await postService.delete(auth.siteId, postId, auth.user.id);
 
-    return NextResponse.json({ message: "Post deleted successfully" });
+    return NextResponse.json(apiSuccess({ message: "Post deleted successfully" }));
   } catch (err) {
     return handleApiError(err);
   }

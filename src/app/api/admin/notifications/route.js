@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkSitePermission } from "@/lib/apiAuth";
 import prisma from "@/lib/prisma";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "EDITOR");
@@ -20,7 +20,7 @@ export async function GET(req) {
       where: { siteId: auth.siteId, isRead: false }
     });
 
-    return NextResponse.json({ success: true, alerts, unreadCount });
+    return NextResponse.json(apiSuccess({ alerts, unreadCount }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -52,7 +52,7 @@ export async function DELETE(req) {
       });
     }
 
-    return NextResponse.json({ success: true, message: "Notifications cleared successfully" });
+    return NextResponse.json(apiSuccess({ message: "Notifications cleared successfully" }));
   } catch (err) {
     return handleApiError(err);
   }

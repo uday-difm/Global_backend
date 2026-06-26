@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/requireAuth";
 import { ROLE_LEVEL } from "@/lib/rbac";
 import bcrypt from "bcryptjs";
 import { logAction } from "@/lib/audit";
+import { apiSuccess } from "@/core/errors";
 
 async function checkAdminAuth() {
   const user = await requireAuth();
@@ -76,10 +77,7 @@ export async function POST(req, { params }) {
       targetEmail: target.email,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: `Password successfully reset to '${newPassword}'`,
-    });
+    return NextResponse.json(apiSuccess({ message: `Password successfully reset to '${newPassword}'` }));
   } catch (error) {
     console.error("Reset Password API Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

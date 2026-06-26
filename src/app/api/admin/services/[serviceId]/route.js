@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { serviceService } from "@/services/service.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req, { params }) {
   try {
@@ -12,7 +12,7 @@ export async function GET(req, { params }) {
 
     const { serviceId } = await params;
     const service = await serviceService.getById(auth.siteId, serviceId);
-    return NextResponse.json({ service });
+    return NextResponse.json(apiSuccess({ service }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -28,7 +28,7 @@ export async function PATCH(req, { params }) {
     const { serviceId } = await params;
     const body = await req.json();
     const service = await serviceService.update(auth.siteId, serviceId, body, auth.user.id);
-    return NextResponse.json({ service });
+    return NextResponse.json(apiSuccess({ service }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -44,7 +44,7 @@ export async function DELETE(req, { params }) {
     const { serviceId } = await params;
     await serviceService.delete(auth.siteId, serviceId, auth.user.id);
 
-    return NextResponse.json({ message: "Service deleted successfully" });
+    return NextResponse.json(apiSuccess({ message: "Service deleted successfully" }));
   } catch (err) {
     return handleApiError(err);
   }

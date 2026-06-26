@@ -3,7 +3,7 @@ import { getSiteId } from "@/lib/siteGuard";
 import { mediaService } from "@/services/media.service";
 import { requireAuth } from "@/lib/requireAuth";
 import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 async function getAuthenticatedUser() {
   const user = await requireAuth();
@@ -35,10 +35,7 @@ export async function POST(request) {
 
     const media = await mediaService.uploadMedia(siteId, buffer, file.name, file.type, folderId);
 
-    return NextResponse.json({
-      success: true,
-      media,
-    });
+    return NextResponse.json(apiSuccess({ media }));
   } catch (err) {
     return handleApiError(err);
   }

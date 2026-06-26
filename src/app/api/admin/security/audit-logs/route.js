@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "ADMIN");
@@ -19,7 +20,7 @@ export async function GET(req) {
       }
     });
 
-    return NextResponse.json({ success: true, auditLogs: logs });
+    return NextResponse.json(apiSuccess({ auditLogs: logs }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

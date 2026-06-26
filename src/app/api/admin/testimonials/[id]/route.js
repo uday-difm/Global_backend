@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { testimonialService } from "@/services/testimonial.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req, { params }) {
   try {
@@ -12,7 +12,7 @@ export async function GET(req, { params }) {
 
     const { id } = await params;
     const testimonial = await testimonialService.getById(auth.siteId, id);
-    return NextResponse.json({ success: true, testimonial });
+    return NextResponse.json(apiSuccess({ testimonial }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -29,7 +29,7 @@ export async function PATCH(req, { params }) {
     const body = await req.json();
 
     const testimonial = await testimonialService.update(auth.siteId, id, body, auth.user.id);
-    return NextResponse.json({ success: true, testimonial });
+    return NextResponse.json(apiSuccess({ testimonial }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -45,7 +45,7 @@ export async function DELETE(req, { params }) {
     const { id } = await params;
     await testimonialService.delete(auth.siteId, id, auth.user.id);
 
-    return NextResponse.json({ success: true, message: "Testimonial deleted successfully" });
+    return NextResponse.json(apiSuccess({ message: "Testimonial deleted successfully" }));
   } catch (err) {
     return handleApiError(err);
   }

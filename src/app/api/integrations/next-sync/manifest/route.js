@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { apiSuccess } from "@/core/errors";
 
 /*
   POST /api/integrations/next-sync/manifest
@@ -151,9 +152,10 @@ export async function POST(req) {
             siteId: parsed.siteId,
             title: r.title ?? slug,
             slug,
-            status: "DRAFT",
+            status: "PUBLISHED",
             isDiscovered: true,
             isManagedBySync: true,
+            isHardcoded: true,
             sourceRoute: slug,
           },
         });
@@ -165,6 +167,8 @@ export async function POST(req) {
           data: {
             title: r.title ?? existing.title,
             isDiscovered: true,
+            isHardcoded: true,
+            status: "PUBLISHED",
             sourceRoute: existing.sourceRoute || slug,
           },
         });
@@ -199,6 +203,31 @@ export async function POST(req) {
       });
     }
 
+    // ── Cleanup: delete synced pages that no longer exist in the frontend ──
+    const incomingSlugs = new Set(
+      parsed.routes.map((r) =>
+        r.slug.startsWith("/") ? r.slug : `/${r.slug}`,
+      ),
+    );
+    const existingSyncedRoutes = await prisma.syncedRoute.findMany({
+      where: { frontendProjectId },
+      select: { route: true, pageId: true },
+    });
+
+    const deleted = [];
+    for (const sr of existingSyncedRoutes) {
+      if (!incomingSlugs.has(sr.route) && sr.pageId) {
+        await prisma.page.update({
+          where: { id: sr.pageId },
+          data: { deletedAt: new Date() },
+        });
+        await prisma.syncedRoute.deleteMany({
+          where: { frontendProjectId, route: sr.route },
+        });
+        deleted.push({ route: sr.route, pageId: sr.pageId });
+      }
+    }
+
     if (auth.frontendProject) {
       await prisma.frontendProject.update({
         where: { id: auth.frontendProject.id },
@@ -219,14 +248,16 @@ export async function POST(req) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      created,
-      updated,
-      syncedRoutes,
-      manifestHash,
-      frontendProjectId,
-    });
+    return NextResponse.json(
+      apiSuccess({
+        created,
+        updated,
+        deleted,
+        syncedRoutes,
+        manifestHash,
+        frontendProjectId,
+      }),
+    );
   } catch (err) {
     console.error("Manifest POST error:", err);
     if (err instanceof z.ZodError) {

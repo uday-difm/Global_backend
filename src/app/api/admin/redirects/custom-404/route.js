@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { settingsService } from "@/services/settings.service";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 import { z } from "zod";
 
 const Custom404Schema = z.object({
@@ -34,7 +34,7 @@ export async function GET(req) {
       redirectDelay: 5
     };
 
-    return NextResponse.json({ success: true, custom404 });
+    return NextResponse.json(apiSuccess({ custom404 }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -50,7 +50,7 @@ export async function PUT(req) {
     const body = await req.json();
     const parsed = Custom404Schema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Validation failed", details: parsed.error.issues || parsed.error.errors }, { status: 400 });
     }
 
     const websiteSettings = await settingsService.getSettingsField(auth.siteId, "websiteSettings") || {};
@@ -66,7 +66,7 @@ export async function PUT(req) {
       auth.user.id
     );
 
-    return NextResponse.json({ success: true, custom404: result?.custom404 || parsed.data });
+    return NextResponse.json(apiSuccess({ custom404: result?.custom404 || parsed.data }));
   } catch (err) {
     return handleApiError(err);
   }

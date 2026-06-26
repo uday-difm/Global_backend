@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { authService } from "@/services/auth.service";
 import { requireAuth } from "@/lib/requireAuth";
 import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 import QRCode from "qrcode";
 
 async function getAuthenticatedUser() {
@@ -30,7 +30,7 @@ export async function POST(req) {
       qrCode = await QRCode.toDataURL(otpauthUrl);
     }
     
-    return NextResponse.json({ secret, qrCode });
+    return NextResponse.json(apiSuccess({ secret, qrCode }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -45,7 +45,7 @@ export async function PATCH(req) {
 
     const { token } = await req.json();
     await authService.verifyAndEnable2FA(user.id, token);
-    return NextResponse.json({ message: "2FA Enabled" });
+    return NextResponse.json(apiSuccess({ message: "2FA Enabled" }));
   } catch (err) {
     return handleApiError(err);
   }

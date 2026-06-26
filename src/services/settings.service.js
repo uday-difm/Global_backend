@@ -38,13 +38,22 @@ export class SettingsService extends BaseService {
     if (fieldName === "ctaConfig" && data) {
       const parsed = CtaConfigSchema.safeParse(data);
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.errors);
+        throw new ValidationError(parsed.error.issues || parsed.error.errors);
       }
       data = parsed.data;
     }
 
+    let payloadData = data;
+    if (fieldName === "footer" || fieldName === "header") {
+      const existing = await settingsRepository.findBySiteId(siteId);
+      payloadData = {
+        ...(existing?.[fieldName] || {}),
+        ...data,
+      };
+    }
+
     const updated = await settingsRepository.upsertSettings(siteId, {
-      [fieldName]: data,
+      [fieldName]: payloadData,
     });
 
     if (userId) {
@@ -77,14 +86,16 @@ export class SettingsService extends BaseService {
     if (data.ctaConfig) {
       const parsed = CtaConfigSchema.safeParse(data.ctaConfig);
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.errors);
+        throw new ValidationError(parsed.error.issues || parsed.error.errors);
       }
       data.ctaConfig = parsed.data;
     }
 
+    const existing = await settingsRepository.findBySiteId(siteId);
+
     const updatePayload = {
-      header: data.header !== undefined ? data.header : undefined,
-      footer: data.footer !== undefined ? data.footer : undefined,
+      header: data.header !== undefined ? { ...(existing?.header || {}), ...data.header } : undefined,
+      footer: data.footer !== undefined ? { ...(existing?.footer || {}), ...data.footer } : undefined,
       analytics: data.analytics !== undefined ? data.analytics : undefined,
       scripts: data.scripts !== undefined ? data.scripts : undefined,
       ctaConfig: data.ctaConfig !== undefined ? data.ctaConfig : undefined,

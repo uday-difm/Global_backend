@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { analyticsService } from "@/services/analytics.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 // Returns who is online right now (last 2 minutes)
 export async function GET(req) {
@@ -16,7 +16,7 @@ export async function GET(req) {
       analyticsService.getLiveVisitorsCount(auth.siteId),
     ]);
 
-    return NextResponse.json({ success: true, liveCount, liveVisitors });
+    return NextResponse.json(apiSuccess({ liveCount, liveVisitors }));
   } catch (err) {
     return handleApiError(err);
   }

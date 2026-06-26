@@ -5,6 +5,8 @@ import { canAssignRole, ROLES } from "@/lib/rbac";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { logAction } from "@/lib/audit";
+import { apiSuccess } from "@/core/errors";
+
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const UserSchema = z.object({
@@ -121,7 +123,7 @@ export async function POST(req) {
     // Validation error
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { error: "Validation failed", details: error.issues || error.errors },
         { status: 400 },
       );
     }

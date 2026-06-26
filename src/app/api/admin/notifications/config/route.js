@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { notificationService } from "@/services/notification.service";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 import { z } from "zod";
 
 const ChannelConfigSchema = z.object({
@@ -23,7 +23,7 @@ export async function GET(req) {
 
   try {
     const config = await notificationService.getNotificationConfig(auth.siteId);
-    return NextResponse.json({ success: true, config });
+    return NextResponse.json(apiSuccess({ config }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -39,11 +39,11 @@ export async function PUT(req) {
     const body = await req.json();
     const parsed = NotificationsConfigSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Validation failed", details: parsed.error.issues || parsed.error.errors }, { status: 400 });
     }
 
     await notificationService.updateNotificationConfig(auth.siteId, parsed.data);
-    return NextResponse.json({ success: true, config: parsed.data });
+    return NextResponse.json(apiSuccess({ config: parsed.data }));
   } catch (err) {
     return handleApiError(err);
   }

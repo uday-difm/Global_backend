@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "ADMIN");
@@ -15,10 +16,7 @@ export async function GET(req) {
       take: 100,
     });
 
-    return NextResponse.json({
-      success: true,
-      errorLogs,
-    });
+    return NextResponse.json(apiSuccess({ errorLogs }));
   } catch (err) {
     return NextResponse.json(
       { error: "Internal Server Error", message: err.message },
@@ -41,18 +39,12 @@ export async function DELETE(req) {
       await prisma.systemErrorLog.delete({
         where: { id: logId, siteId: auth.siteId },
       });
-      return NextResponse.json({
-        success: true,
-        message: "Error log entry deleted successfully",
-      });
+      return NextResponse.json(apiSuccess({ message: "Error log entry deleted successfully" }));
     } else {
       await prisma.systemErrorLog.deleteMany({
         where: { siteId: auth.siteId },
       });
-      return NextResponse.json({
-        success: true,
-        message: "System error logs cleared successfully",
-      });
+      return NextResponse.json(apiSuccess({ message: "System error logs cleared successfully" }));
     }
   } catch (err) {
     return NextResponse.json(

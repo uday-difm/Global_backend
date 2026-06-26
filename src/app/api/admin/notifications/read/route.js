@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkSitePermission } from "@/lib/apiAuth";
 import prisma from "@/lib/prisma";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function PUT(req) {
   const auth = await checkSitePermission(req, "EDITOR");
@@ -25,7 +25,7 @@ export async function PUT(req) {
       });
     }
 
-    return NextResponse.json({ success: true, message: "Notifications marked as read" });
+    return NextResponse.json(apiSuccess({ message: "Notifications marked as read" }));
   } catch (err) {
     return handleApiError(err);
   }

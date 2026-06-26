@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -25,14 +26,14 @@ export async function GET(req) {
         }
       });
 
-      return NextResponse.json({ success: true, redirect });
+      return NextResponse.json(apiSuccess({ redirect }));
     }
 
     const redirects = await prisma.redirect.findMany({
       where: { siteId }
     });
 
-    return NextResponse.json({ success: true, redirects });
+    return NextResponse.json(apiSuccess({ redirects }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

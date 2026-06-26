@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req, context) {
   const params = await context.params;
@@ -19,7 +20,7 @@ export async function GET(req, context) {
     const navigation = settings?.navigation || {};
     const menuItems = navigation[menuType] || [];
 
-    return NextResponse.json({ success: true, menuType, items: menuItems });
+    return NextResponse.json(apiSuccess({ menuType, items: menuItems }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
@@ -56,7 +57,7 @@ export async function PUT(req, context) {
       create: { siteId: auth.siteId, navigation: updatedNavigation }
     });
 
-    return NextResponse.json({ success: true, menuType, items: updated.navigation[menuType] });
+    return NextResponse.json(apiSuccess({ menuType, items: updated.navigation[menuType] }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

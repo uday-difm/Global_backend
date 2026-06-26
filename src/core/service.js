@@ -12,7 +12,7 @@ export class BaseService {
     if (this.validatorSchema) {
       const parsed = this.validatorSchema.safeParse(data);
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.errors);
+        throw new ValidationError(parsed.error.issues || parsed.error.errors);
       }
       return parsed.data;
     }

@@ -68,6 +68,7 @@ export class CMSClient {
     location?: string;
     deviceInfo?: string;
     trafficSource?: string;
+    duration?: number;
   }): Promise<any>;
 
   // --- Compliance Consent ---
@@ -90,5 +91,8 @@ export class CMSClient {
 
   // --- Next.js Sync Manifest ---
   syncRoutes(routes: RouteSyncPayload[], integrationKey: string): Promise<any>;
+
+  // --- Robots.txt configuration ---
+  getRobotsTxt(): Promise<string>;
 }
 export default CMSClient;

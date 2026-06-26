@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -15,10 +16,7 @@ export async function GET(req) {
       select: { contactDetails: true }
     });
 
-    return NextResponse.json({
-      success: true,
-      contactDetails: settings?.contactDetails || null
-    });
+    return NextResponse.json(apiSuccess({ contactDetails: settings?.contactDetails || null }));
   } catch (err) {
     console.error("GET /api/contact/details error:", err);
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });

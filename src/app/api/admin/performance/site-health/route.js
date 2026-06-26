@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
 import os from "os";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "ADMIN");
@@ -67,9 +68,7 @@ export async function GET(req) {
     console.error("DB count queries failed inside site-health:", dbCountErr);
   }
 
-  return NextResponse.json({
-    success: true,
-    status: dbStatus === "Connected" ? "healthy" : "degraded",
+  return NextResponse.json(apiSuccess({ status: dbStatus === "Connected" ? "healthy" : "degraded",
     checks: {
       database: {
         status: dbStatus,
@@ -90,6 +89,5 @@ export async function GET(req) {
         uptimeSeconds: systemUptime,
       },
     },
-    responseTime: `${Date.now() - start}ms`,
-  });
+    responseTime: `${Date.now() - start}ms` }));
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { postService } from "@/services/post.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -19,7 +19,7 @@ export async function GET(req) {
       categoryId,
     });
 
-    return NextResponse.json({ posts });
+    return NextResponse.json(apiSuccess({ posts }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -33,8 +33,29 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const post = await postService.create(auth.siteId, body, auth.user.id);
-    return NextResponse.json({ post }, { status: 201 });
+
+    let { canonicalUrl, ogImage } = body;
+    if (canonicalUrl !== undefined && canonicalUrl !== null) {
+      if (typeof canonicalUrl !== "string") {
+        return NextResponse.json({ error: "canonicalUrl must be a string" }, { status: 400 });
+      }
+      canonicalUrl = canonicalUrl.trim() || null;
+    }
+    if (ogImage !== undefined && ogImage !== null) {
+      if (typeof ogImage !== "string") {
+        return NextResponse.json({ error: "ogImage must be a string" }, { status: 400 });
+      }
+      ogImage = ogImage.trim() || null;
+    }
+
+    const postData = {
+      ...body,
+      canonicalUrl,
+      ogImage,
+    };
+
+    const post = await postService.create(auth.siteId, postData, auth.user.id);
+    return NextResponse.json(apiSuccess({ post }), { status: 201 });
   } catch (err) {
     return handleApiError(err);
   }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { faqService } from "@/services/faq.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -11,7 +11,7 @@ export async function GET(req) {
     }
 
     const faqs = await faqService.getFaqs(auth.siteId, { includePage: true });
-    return NextResponse.json({ success: true, faqs });
+    return NextResponse.json(apiSuccess({ faqs }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -26,7 +26,7 @@ export async function POST(req) {
 
     const body = await req.json();
     const faq = await faqService.create(auth.siteId, body, auth.user.id);
-    return NextResponse.json({ success: true, faq }, { status: 201 });
+    return NextResponse.json(apiSuccess({ faq }), { status: 201 });
   } catch (err) {
     return handleApiError(err);
   }

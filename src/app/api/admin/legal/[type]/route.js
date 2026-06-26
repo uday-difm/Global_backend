@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { legalPageService } from "@/services/legalPage.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req, context) {
   try {
@@ -13,7 +13,7 @@ export async function GET(req, context) {
     }
 
     const legalPage = await legalPageService.getPageByType(auth.siteId, type);
-    return NextResponse.json({ success: true, legalPage: legalPage || null });
+    return NextResponse.json(apiSuccess({ legalPage: legalPage || null }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -31,7 +31,7 @@ export async function PUT(req, context) {
     const body = await req.json();
     const legalPage = await legalPageService.savePage(auth.siteId, type, body, auth.user.id);
 
-    return NextResponse.json({ success: true, legalPage });
+    return NextResponse.json(apiSuccess({ legalPage }));
   } catch (err) {
     return handleApiError(err);
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { apiSuccess } from "@/core/errors";
 
 export async function POST(req) {
   try {
@@ -14,7 +15,7 @@ export async function POST(req) {
     });
 
     // Return false for unknown emails to prevent enumeration
-    return NextResponse.json({ twoFARequired: user?.twoFAEnabled ?? false });
+    return NextResponse.json(apiSuccess({ twoFARequired: user?.twoFAEnabled ?? false }));
   } catch (err) {
     console.error("Pre-login check error:", err);
     return NextResponse.json(

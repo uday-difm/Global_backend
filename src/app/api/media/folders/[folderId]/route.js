@@ -3,7 +3,7 @@ import { getSiteId } from "@/lib/siteGuard";
 import { mediaService } from "@/services/media.service";
 import { requireAuth } from "@/lib/requireAuth";
 import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 async function getAuthenticatedUser() {
   const user = await requireAuth();
@@ -24,7 +24,7 @@ export async function DELETE(request, { params }) {
     const { folderId } = await params;
 
     await mediaService.deleteFolder(siteId, folderId);
-    return NextResponse.json({ success: true, message: "Folder deleted successfully" });
+    return NextResponse.json(apiSuccess({ message: "Folder deleted successfully" }));
   } catch (err) {
     return handleApiError(err);
   }

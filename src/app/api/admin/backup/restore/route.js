@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { backupService } from "@/services/backup.service";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function POST(req) {
   const auth = await checkSitePermission(req, "ADMIN");
@@ -19,12 +19,9 @@ export async function POST(req) {
       result = await backupService.restoreBackup(auth.siteId, backup);
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: backup && (backup.media || backup.folders)
+    return NextResponse.json(apiSuccess({ message: backup && (backup.media || backup.folders)
         ? "Site media snapshot restored successfully from backup"
-        : "Site database restored successfully from backup" 
-    });
+        : "Site database restored successfully from backup" }));
   } catch (err) {
     return handleApiError(err);
   }

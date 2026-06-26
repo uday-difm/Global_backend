@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { faqService } from "@/services/faq.service";
 import { getSiteId } from "@/lib/siteGuard";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -14,7 +14,7 @@ export async function GET(req) {
       showHide: true,
       includePage: true,
     });
-    return NextResponse.json({ success: true, faqs });
+    return NextResponse.json(apiSuccess({ faqs }));
   } catch (err) {
     return handleApiError(err);
   }

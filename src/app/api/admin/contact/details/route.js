@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "EDITOR");
@@ -14,7 +15,7 @@ export async function GET(req) {
       select: { contactDetails: true }
     });
 
-    return NextResponse.json({ success: true, contactDetails: settings?.contactDetails || null });
+    return NextResponse.json(apiSuccess({ contactDetails: settings?.contactDetails || null }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
@@ -36,7 +37,7 @@ export async function PUT(req) {
       create: { siteId: auth.siteId, contactDetails: body }
     });
 
-    return NextResponse.json({ success: true, contactDetails: settings.contactDetails });
+    return NextResponse.json(apiSuccess({ contactDetails: settings.contactDetails }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

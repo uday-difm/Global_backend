@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -18,10 +19,7 @@ export async function GET(req) {
       select: { ctaConfig: true },
     });
 
-    return NextResponse.json({
-      success: true,
-      ctaConfig: settings?.ctaConfig || null,
-    });
+    return NextResponse.json(apiSuccess({ ctaConfig: settings?.ctaConfig || null }));
   } catch (err) {
     console.error("GET /api/cta error:", err);
     return NextResponse.json(

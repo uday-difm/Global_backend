@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "EDITOR");
@@ -75,12 +76,9 @@ export async function GET(req) {
       });
     });
 
-    return NextResponse.json({
-      success: true,
-      scannedPagesCount: pages.length,
+    return NextResponse.json(apiSuccess({ scannedPagesCount: pages.length,
       scannedPostsCount: posts.length,
-      brokenLinks
-    });
+      brokenLinks }));
   } catch (err) {
     console.error("Broken links scan error:", err);
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });

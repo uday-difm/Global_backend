@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSiteId } from "@/lib/siteGuard";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,7 @@ export async function GET(req) {
       },
     });
 
-    return NextResponse.json({ success: true, posts });
+    return NextResponse.json(apiSuccess({ posts }));
   } catch (err) {
     return handleApiError(err);
   }

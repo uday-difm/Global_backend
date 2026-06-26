@@ -36,7 +36,7 @@ export class NotificationService extends BaseService {
         where: { siteId },
         select: { emailSettings: true }
       });
-      const adminEmail = settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
+      const adminEmail = settings?.emailSettings?.recipientOverride || settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
       if (adminEmail) {
         try {
           const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
@@ -78,7 +78,7 @@ export class NotificationService extends BaseService {
         where: { siteId },
         select: { emailSettings: true }
       });
-      const adminEmail = settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
+      const adminEmail = settings?.emailSettings?.recipientOverride || settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
       if (adminEmail) {
         try {
           const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
@@ -120,7 +120,7 @@ export class NotificationService extends BaseService {
         where: { siteId },
         select: { emailSettings: true }
       });
-      const adminEmail = settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
+      const adminEmail = settings?.emailSettings?.recipientOverride || settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
       if (adminEmail) {
         try {
           const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);

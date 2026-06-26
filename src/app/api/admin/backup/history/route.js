@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { backupService } from "@/services/backup.service";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "ADMIN");
@@ -11,7 +11,7 @@ export async function GET(req) {
 
   try {
     const backupHistory = await backupService.getBackupHistory(auth.siteId);
-    return NextResponse.json({ success: true, backupHistory });
+    return NextResponse.json(apiSuccess({ backupHistory }));
   } catch (err) {
     return handleApiError(err);
   }

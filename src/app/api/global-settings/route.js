@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getSiteId } from "@/lib/siteGuard";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(request) {
   try {

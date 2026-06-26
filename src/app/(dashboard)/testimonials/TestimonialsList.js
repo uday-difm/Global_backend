@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Edit2, Trash2, X, Star } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Star, Image as ImageIcon } from "lucide-react";
+import MediaPickerModal from "@/components/media/MediaPickerModal";
 
 export default function TestimonialsList({ siteId, initialTestimonials }) {
   const [testimonials, setTestimonials] = useState(initialTestimonials);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null); // Null for create, object for edit
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const [clientName, setClientName] = useState("");
   const [clientImage, setClientImage] = useState("");
@@ -268,13 +270,23 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     Client Image URL
                   </label>
-                  <input
-                    type="url"
-                    value={clientImage}
-                    onChange={(e) => setClientImage(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm"
-                    placeholder="https://..."
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={clientImage}
+                      onChange={(e) => setClientImage(e.target.value)}
+                      className="flex-1 rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm"
+                      placeholder="https://..."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowMediaPicker(true)}
+                      className="px-3.5 py-2 border rounded-lg hover:bg-gray-50 text-xs font-bold text-gray-650 transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+                    >
+                      <ImageIcon size={14} />
+                      Library
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -355,6 +367,20 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Media Picker Modal */}
+      {showMediaPicker && (
+        <MediaPickerModal
+          title="Select Client Image"
+          filter="images"
+          onSelect={(media) => {
+            setClientImage(media.secureUrl || media.url);
+            setShowMediaPicker(false);
+          }}
+          onClose={() => setShowMediaPicker(false)}
+          siteId={siteId}
+        />
       )}
     </div>
   );

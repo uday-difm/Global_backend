@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { apiSuccess } from "@/core/errors";
 
 export async function POST(req) {
   try {
@@ -44,7 +45,7 @@ export async function POST(req) {
       }
     });
 
-    return NextResponse.json({ success: true, message: "Consent recorded successfully" });
+    return NextResponse.json(apiSuccess({ message: "Consent recorded successfully" }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

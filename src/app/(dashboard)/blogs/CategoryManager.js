@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Tag, Pencil, Trash2, Check, X, Plus, Loader2, FolderOpen } from "lucide-react";
+import {
+  Tag,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  Plus,
+  Loader2,
+  FolderOpen,
+} from "lucide-react";
 
 export default function CategoryManager({ initialCategories = [], siteId }) {
   const [categories, setCategories] = useState(initialCategories);
@@ -22,15 +31,18 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
     try {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-site-id": siteId,
+        },
         body: JSON.stringify({ name: name.trim() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create category");
       setCategories((prev) =>
         [...prev, { ...data.category, _count: { posts: 0 } }].sort((a, b) =>
-          a.name.localeCompare(b.name)
-        )
+          a.name.localeCompare(b.name),
+        ),
       );
       setName("");
     } catch (err) {
@@ -41,7 +53,10 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
   }
 
   async function handleRename(id) {
-    if (!editingName.trim() || editingName.trim() === categories.find((c) => c.id === id)?.name) {
+    if (
+      !editingName.trim() ||
+      editingName.trim() === categories.find((c) => c.id === id)?.name
+    ) {
       setEditingId(null);
       return;
     }
@@ -49,7 +64,10 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
     try {
       const res = await fetch(`/api/admin/categories/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-site-id": siteId,
+        },
         body: JSON.stringify({ name: editingName.trim() }),
       });
       const data = await res.json();
@@ -57,7 +75,7 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
       setCategories((prev) =>
         prev
           .map((c) => (c.id === id ? { ...c, name: data.category.name } : c))
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .sort((a, b) => a.name.localeCompare(b.name)),
       );
       setEditingId(null);
       setEditingName("");
@@ -71,7 +89,7 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
   async function handleDelete(id, catName) {
     if (
       !confirm(
-        `Delete "${catName}"? This removes the category tag from all posts — posts will not be deleted.`
+        `Delete "${catName}"? This removes the category tag from all posts — posts will not be deleted.`,
       )
     )
       return;
@@ -80,6 +98,9 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
     try {
       const res = await fetch(`/api/admin/categories/${id}`, {
         method: "DELETE",
+        headers: {
+          "x-site-id": siteId,
+        },
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to delete category");
@@ -105,7 +126,9 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
         </div>
         <div>
           <h2 className="text-sm font-bold text-slate-800">Categories</h2>
-          <p className="text-[10px] text-slate-400">{categories.length} total</p>
+          <p className="text-[10px] text-slate-400">
+            {categories.length} total
+          </p>
         </div>
       </div>
 
@@ -133,7 +156,11 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
           disabled={loading || !name.trim()}
           className="inline-flex items-center gap-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-[10px] font-bold rounded-xl transition-colors"
         >
-          {loading ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+          {loading ? (
+            <Loader2 size={11} className="animate-spin" />
+          ) : (
+            <Plus size={11} />
+          )}
           Add
         </button>
       </form>
@@ -143,7 +170,9 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
         {categories.length === 0 ? (
           <div className="flex flex-col items-center py-10 gap-2 text-slate-300">
             <FolderOpen size={28} />
-            <p className="text-xs font-semibold text-slate-400">No categories yet.</p>
+            <p className="text-xs font-semibold text-slate-400">
+              No categories yet.
+            </p>
           </div>
         ) : (
           categories.map((cat) => (
@@ -159,8 +188,13 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
                     value={editingName}
                     onChange={(e) => setEditingName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") { e.preventDefault(); handleRename(cat.id); }
-                      if (e.key === "Escape") { setEditingId(null); }
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleRename(cat.id);
+                      }
+                      if (e.key === "Escape") {
+                        setEditingId(null);
+                      }
                     }}
                     autoFocus
                     className="flex-1 rounded-lg border border-indigo-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20"
@@ -172,7 +206,11 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
                     className="p-1 text-green-600 hover:text-green-800 transition"
                     title="Save"
                   >
-                    {renaming ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                    {renaming ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Check size={12} />
+                    )}
                   </button>
                   <button
                     type="button"
@@ -187,7 +225,9 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
                 /* Normal display */
                 <>
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs font-semibold text-slate-700 truncate">{cat.name}</span>
+                    <span className="text-xs font-semibold text-slate-700 truncate">
+                      {cat.name}
+                    </span>
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 shrink-0">
                       {cat._count?.posts ?? 0}
                     </span>

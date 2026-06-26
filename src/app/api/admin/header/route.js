@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { settingsService } from "@/services/settings.service";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "EDITOR");
@@ -11,7 +11,7 @@ export async function GET(req) {
 
   try {
     const header = await settingsService.getSettingsField(auth.siteId, "header");
-    return NextResponse.json({ success: true, header });
+    return NextResponse.json(apiSuccess({ header }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -32,7 +32,7 @@ export async function PUT(req) {
       auth.user.id
     );
 
-    return NextResponse.json({ success: true, header: result });
+    return NextResponse.json(apiSuccess({ header: result }));
   } catch (err) {
     return handleApiError(err);
   }

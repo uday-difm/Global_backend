@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { pageService } from "@/services/page.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function POST(req, { params }) {
   try {
@@ -17,6 +17,10 @@ export async function POST(req, { params }) {
       return NextResponse.json({ error: "Forbidden: Page belongs to another site" }, { status: 403 });
     }
 
+    if (page.isHardcoded) {
+      return NextResponse.json({ error: "Forbidden: Cannot reorder sections on hardcoded pages" }, { status: 400 });
+    }
+
     const body = await req.json();
     const { orderedIds } = body;
 
@@ -25,7 +29,7 @@ export async function POST(req, { params }) {
     }
 
     await pageService.reorderSections(auth.siteId, pageId, orderedIds);
-    return NextResponse.json({ success: true });
+    return NextResponse.json(apiSuccess({ success: true }));
   } catch (err) {
     return handleApiError(err);
   }

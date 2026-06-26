@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req, context) {
   try {
@@ -30,17 +31,14 @@ export async function GET(req, context) {
     });
 
     if (page) {
-      return NextResponse.json({
-        success: true,
-        type: "page",
+      return NextResponse.json(apiSuccess({ type: "page",
         seo: {
           title: page.seoTitle || page.title,
           description: page.seoDescription || null,
           canonical: page.canonicalUrl || `${process.env.NEXT_PUBLIC_APP_URL || ""}${formattedSlug}`,
           ogImage: page.ogImage || null,
           jsonLd: page.jsonLd
-        }
-      });
+        } }));
     }
 
     // 2. Try to find a blog Post (without leading / for blog slugs in some databases, so let's check both formats)
@@ -65,15 +63,12 @@ export async function GET(req, context) {
     });
 
     if (post) {
-      return NextResponse.json({
-        success: true,
-        type: "post",
+      return NextResponse.json(apiSuccess({ type: "post",
         seo: {
           title: post.seoTitle || post.title,
           description: post.seoDescription || post.excerpt || null,
           canonical: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blogs/${targetPostSlug}`
-        }
-      });
+        } }));
     }
 
     return NextResponse.json({ error: "Content not found" }, { status: 404 });

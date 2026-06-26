@@ -5,6 +5,7 @@ import { mediaRepository } from "@/repositories/media.repository";
 import { mediaFolderRepository } from "@/repositories/mediaFolder.repository";
 import { BaseService } from "@/core/service";
 import { NotFoundError, ValidationError } from "@/core/errors";
+import prisma from "@/lib/prisma";
 
 export class MediaService extends BaseService {
   constructor() {
@@ -77,11 +78,43 @@ export class MediaService extends BaseService {
     return { success: true };
   }
 
+  async _cascadeMediaUrlUpdate(siteId, oldUrl, oldSecureUrl, newUrl, newSecureUrl) {
+    if (!oldUrl && !oldSecureUrl) return;
+    if (oldUrl === newUrl && oldSecureUrl === newSecureUrl) return;
+
+    const urlsToFind = [oldUrl, oldSecureUrl].filter(Boolean);
+    if (urlsToFind.length === 0) return;
+
+    // Update TeamMember table
+    await prisma.teamMember.updateMany({
+      where: {
+        siteId,
+        photo: { in: urlsToFind },
+      },
+      data: {
+        photo: newSecureUrl || newUrl,
+      },
+    });
+
+    // Update Testimonial table
+    await prisma.testimonial.updateMany({
+      where: {
+        siteId,
+        clientImage: { in: urlsToFind },
+      },
+      data: {
+        clientImage: newSecureUrl || newUrl,
+      },
+    });
+  }
+
   async replaceMedia(siteId, mediaId, buffer, fileName, mimeType) {
     const media = await mediaRepository.findUnique(siteId, mediaId);
     if (!media) {
       throw new NotFoundError("Media");
     }
+    const oldUrl = media.url;
+    const oldSecureUrl = media.secureUrl;
 
     try {
       await cloudinary.uploader.destroy(media.publicId);
@@ -107,6 +140,8 @@ export class MediaService extends BaseService {
       isDocument: !mimeType.startsWith("image/") && !mimeType.startsWith("video/"),
     });
 
+    await this._cascadeMediaUrlUpdate(siteId, oldUrl, oldSecureUrl, updated.url, updated.secureUrl);
+
     return updated;
   }
 
@@ -115,6 +150,8 @@ export class MediaService extends BaseService {
     if (!media) {
       throw new NotFoundError("Media");
     }
+    const oldUrl = media.url;
+    const oldSecureUrl = media.secureUrl;
 
     const updateData = {};
     if (newName !== undefined && newName.trim() !== "") updateData.fileName = newName.trim();
@@ -124,6 +161,9 @@ export class MediaService extends BaseService {
     }
 
     const updated = await mediaRepository.update(siteId, mediaId, updateData);
+
+    await this._cascadeMediaUrlUpdate(siteId, oldUrl, oldSecureUrl, updated.url, updated.secureUrl);
+
     return updated;
   }
 

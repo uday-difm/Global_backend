@@ -2,6 +2,7 @@ import { pageRepository } from "@/repositories/page.repository";
 import { sectionRepository } from "@/repositories/section.repository";
 import { BaseService } from "@/core/service";
 import { NotFoundError, ValidationError } from "@/core/errors";
+import { versionService } from "@/services/version.service";
 
 const RESERVED_SLUGS = [
   // Next.js standard/special routes
@@ -40,7 +41,7 @@ const RESERVED_SLUGS = [
   "team",
   "testimonials",
   "users",
-  "visitors"
+  "visitors",
 ];
 
 export class PageService extends BaseService {
@@ -93,9 +94,11 @@ export class PageService extends BaseService {
     }
 
     const updateData = {};
-    if (sectionData.content !== undefined) updateData.content = sectionData.content;
+    if (sectionData.content !== undefined)
+      updateData.content = sectionData.content;
     if (sectionData.name !== undefined) updateData.name = sectionData.name;
-    if (sectionData.isVisible !== undefined) updateData.isVisible = sectionData.isVisible;
+    if (sectionData.isVisible !== undefined)
+      updateData.isVisible = sectionData.isVisible;
 
     return sectionRepository.update(siteId, sectionId, updateData);
   }
@@ -146,18 +149,22 @@ export class PageService extends BaseService {
     if (data.slug) {
       const cleanSlug = this.slugify(data.slug);
       if (RESERVED_SLUGS.includes(cleanSlug.toLowerCase())) {
-        throw new ValidationError(`The slug "${data.slug}" is reserved for system use.`);
+        throw new ValidationError(
+          `The slug "${data.slug}" is reserved for system use.`,
+        );
       }
 
       // Check if slug is used by another page in this site
       const existing = await pageRepository.findFirst(siteId, {
         where: {
           slug: { in: [cleanSlug, `/${cleanSlug}`] },
-          id: { not: id }
-        }
+          id: { not: id },
+        },
       });
       if (existing) {
-        throw new ValidationError(`The slug "${data.slug}" is already in use by another page.`);
+        throw new ValidationError(
+          `The slug "${data.slug}" is already in use by another page.`,
+        );
       }
       updateData.slug = cleanSlug;
     }
@@ -169,20 +176,39 @@ export class PageService extends BaseService {
       updateData.publishedAt = null;
       updateData.publishedBy = null;
     }
+    const updated = await super.update(siteId, id, updateData, userId, options);
 
-    return super.update(siteId, id, updateData, userId, options);
+    // Save version snapshot
+    try {
+      await versionService.save(siteId, "PAGE", id, updated, userId);
+    } catch (err) {
+      console.error("Failed to save page version:", err);
+    }
+
+    return updated;
   }
 
   async create(siteId, data, userId = null, options = {}) {
-    const baseSlug = (data.slug && this.slugify(data.slug)) || this.slugify(data.title || "page");
+    const baseSlug =
+      (data.slug && this.slugify(data.slug)) ||
+      this.slugify(data.title || "page");
     const slug = await this.generateUniqueSlug(siteId, baseSlug);
-    
+
     const pageData = {
       ...data,
       slug,
     };
 
-    return super.create(siteId, pageData, userId, options);
+    const created = await super.create(siteId, pageData, userId, options);
+
+    // Save initial version snapshot
+    try {
+      await versionService.save(siteId, "PAGE", created.id, created, userId);
+    } catch (err) {
+      console.error("Failed to save initial page version:", err);
+    }
+
+    return created;
   }
 
   slugify(text = "") {
@@ -191,7 +217,7 @@ export class PageService extends BaseService {
       .toLowerCase()
       .trim()
       .replace(/\s+/g, "-")
-      .replace(/[^\w\-]+/g, "")
+      .replace(/[^\w\-\/]+/g, "")
       .replace(/\-\-+/g, "-");
   }
 
@@ -200,7 +226,9 @@ export class PageService extends BaseService {
     let i = 0;
     while (
       RESERVED_SLUGS.includes(candidate.toLowerCase()) ||
-      (await pageRepository.findFirst(siteId, { where: { slug: { in: [candidate, `/${candidate}`] } } }))
+      (await pageRepository.findFirst(siteId, {
+        where: { slug: { in: [candidate, `/${candidate}`] } },
+      }))
     ) {
       i += 1;
       candidate = `${baseSlug}-${i}`;

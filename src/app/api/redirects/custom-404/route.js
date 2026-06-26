@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -26,7 +27,7 @@ export async function GET(req) {
       redirectDelay: 5
     };
 
-    return NextResponse.json({ success: true, custom404 });
+    return NextResponse.json(apiSuccess({ custom404 }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

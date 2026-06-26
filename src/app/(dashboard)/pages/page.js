@@ -7,11 +7,19 @@ import PublishToggle from "./PublishToggle";
 import DeletePageButton from "./DeletePageButton";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
-import { FileText, Eye, Edit2, FilePlus2, CheckCircle, RefreshCw } from "lucide-react";
+import {
+  FileText,
+  Eye,
+  Edit2,
+  FilePlus2,
+  CheckCircle,
+  RefreshCw,
+} from "lucide-react";
 
 export const metadata = {
   title: "Pages Management | CMS Admin",
-  description: "Create pages, edit layouts, modify text/images, and toggle publishing statuses.",
+  description:
+    "Create pages, edit layouts, modify text/images, and toggle publishing statuses.",
 };
 
 export default async function PagesAdmin() {
@@ -19,14 +27,27 @@ export default async function PagesAdmin() {
   if (!user) return null;
 
   const site = await getSiteForUser(user);
+
   if (!site) {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold text-gray-900">Pages</h1>
-        <p className="mt-4 text-sm text-red-655">No active tenant site configured for your profile.</p>
+        <p className="mt-4 text-sm text-red-655">
+          No active tenant site configured for your profile.
+        </p>
       </div>
     );
   }
+
+  // Fetch frontend URL from settings
+  const settings = await prisma.globalSettings.findUnique({
+    where: { siteId: site.id },
+    select: { websiteSettings: true },
+  });
+  const frontendUrl =
+    settings?.websiteSettings?.domain ||
+    process.env.FRONTEND_URL ||
+    "http://localhost:3001";
 
   // Retrieve all pages under this site
   const pages = await prisma.page.findMany({
@@ -44,9 +65,13 @@ export default async function PagesAdmin() {
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Pages Manager</h1>
+          <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">
+            Pages Manager
+          </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Site: <span className="font-semibold text-gray-800">{site.name}</span> ({site.domain || site.id})
+            Site:{" "}
+            <span className="font-semibold text-gray-800">{site.name}</span> (
+            {site.domain || site.id})
           </p>
         </div>
         <div className="shrink-0">
@@ -61,8 +86,12 @@ export default async function PagesAdmin() {
             <FileText size={20} />
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Pages</div>
-            <div className="text-2xl font-bold text-gray-900 mt-0.5">{totalPages}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              Total Pages
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mt-0.5">
+              {totalPages}
+            </div>
           </div>
         </div>
 
@@ -71,8 +100,12 @@ export default async function PagesAdmin() {
             <CheckCircle size={20} />
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Published</div>
-            <div className="text-2xl font-bold text-gray-900 mt-0.5">{publishedPages}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              Published
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mt-0.5">
+              {publishedPages}
+            </div>
           </div>
         </div>
 
@@ -81,8 +114,12 @@ export default async function PagesAdmin() {
             <FilePlus2 size={20} />
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Drafts</div>
-            <div className="text-2xl font-bold text-gray-900 mt-0.5">{draftPages}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              Drafts
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mt-0.5">
+              {draftPages}
+            </div>
           </div>
         </div>
       </div>
@@ -110,8 +147,19 @@ export default async function PagesAdmin() {
                         <FileText size={16} />
                       </div>
                       <div>
-                        <span className="font-semibold text-gray-900 block">{p.title}</span>
-                        <span className="text-[10px] text-gray-400 font-mono block">ID: {p.id}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900 block">
+                            {p.title}
+                          </span>
+                          {p.isHardcoded && (
+                            <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-800 ring-1 ring-inset ring-amber-600/20 uppercase tracking-wider shrink-0">
+                              🔒 Hardcoded Frontend Route
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-gray-400 font-mono block">
+                          ID: {p.id}
+                        </span>
                       </div>
                     </div>
                   </td>
@@ -123,7 +171,11 @@ export default async function PagesAdmin() {
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {p.status === "PUBLISHED" ? (
+                    {p.isHardcoded ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-0.5 text-[10px] font-bold text-slate-500 border border-slate-200 uppercase tracking-wider">
+                        Always Active
+                      </span>
+                    ) : p.status === "PUBLISHED" ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-[10px] font-bold text-green-700 border border-green-200 uppercase tracking-wider">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-600 animate-pulse" />
                         Published
@@ -152,7 +204,15 @@ export default async function PagesAdmin() {
 
                     {/* Preview button */}
                     <a
-                      href={`/preview?pageId=${encodeURIComponent(p.id)}&siteId=${encodeURIComponent(site.id)}`}
+                      href={(() => {
+                        const base = (
+                          frontendUrl || "http://localhost:3001"
+                        ).replace(/\/$/, "");
+                        const path = p.slug ? p.slug.replace(/^\//, "") : "";
+                        return path
+                          ? `${base}/${path}?preview=true`
+                          : `${base}/?preview=true`;
+                      })()}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold shadow-sm transition"
@@ -162,10 +222,18 @@ export default async function PagesAdmin() {
                     </a>
 
                     {/* Publish/Draft toggle */}
-                    <PublishToggle pageId={p.id} initialStatus={p.status} siteId={site.id} />
+                    {!p.isHardcoded && (
+                      <PublishToggle
+                        pageId={p.id}
+                        initialStatus={p.status}
+                        siteId={site.id}
+                      />
+                    )}
 
                     {/* Delete button */}
-                    <DeletePageButton pageId={p.id} siteId={site.id} />
+                    {!p.isHardcoded && (
+                      <DeletePageButton pageId={p.id} siteId={site.id} />
+                    )}
                   </td>
                 </tr>
               ))}

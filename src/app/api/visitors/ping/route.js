@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { analyticsService } from "@/services/analytics.service";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { siteId, visitorId, pageViewed, location, deviceInfo, trafficSource } = body;
+    const { siteId, visitorId, pageViewed, location, deviceInfo, trafficSource, duration } = body;
 
     if (!siteId || !visitorId || !pageViewed) {
       return NextResponse.json({ error: "siteId, visitorId and pageViewed are required" }, { status: 400 });
@@ -17,9 +17,10 @@ export async function POST(req) {
       location,
       deviceInfo,
       trafficSource,
+      duration: duration !== undefined ? Number(duration) : undefined,
     });
 
-    return NextResponse.json({ success: true, ...result });
+    return NextResponse.json(apiSuccess({ ...result }));
   } catch (err) {
     return handleApiError(err);
   }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function PUT(req, context) {
   const params = await context.params;
@@ -12,13 +13,15 @@ export async function PUT(req, context) {
 
   try {
     const decodedSlug = decodeURIComponent(pageSlug);
-    const formattedSlug = decodedSlug.startsWith("/") ? decodedSlug : `/${decodedSlug}`;
+    const formattedSlug = decodedSlug.startsWith("/")
+      ? decodedSlug
+      : `/${decodedSlug}`;
     const body = await req.json();
-    const { seoTitle, seoDescription, jsonLd } = body;
+    const { seoTitle, seoDescription, jsonLd, canonicalUrl, ogImage } = body;
 
     // 1. Try to find and update Page
     const page = await prisma.page.findUnique({
-      where: { siteId_slug: { siteId: auth.siteId, slug: formattedSlug } }
+      where: { siteId_slug: { siteId: auth.siteId, slug: formattedSlug } },
     });
 
     if (page) {
@@ -26,23 +29,26 @@ export async function PUT(req, context) {
         where: { id: page.id },
         data: {
           seoTitle: seoTitle !== undefined ? seoTitle : page.seoTitle,
-          seoDescription: seoDescription !== undefined ? seoDescription : page.seoDescription,
-          jsonLd: jsonLd !== undefined ? jsonLd : page.jsonLd
-        }
+          seoDescription:
+            seoDescription !== undefined ? seoDescription : page.seoDescription,
+          jsonLd: jsonLd !== undefined ? jsonLd : page.jsonLd,
+          canonicalUrl:
+            canonicalUrl !== undefined ? canonicalUrl : page.canonicalUrl,
+          ogImage: ogImage !== undefined ? ogImage : page.ogImage,
+        },
       });
-      return NextResponse.json({ success: true, type: "page", page: updatedPage });
+      return NextResponse.json(apiSuccess({ type: "page", page: updatedPage }));
     }
 
     // 2. Try to find and update blog Post
-    const postSlug = formattedSlug.startsWith("/") ? formattedSlug.substring(1) : formattedSlug;
+    const postSlug = formattedSlug.startsWith("/")
+      ? formattedSlug.substring(1)
+      : formattedSlug;
     const post = await prisma.post.findFirst({
       where: {
         siteId: auth.siteId,
-        OR: [
-          { slug: postSlug },
-          { slug: formattedSlug }
-        ]
-      }
+        OR: [{ slug: postSlug }, { slug: formattedSlug }],
+      },
     });
 
     if (post) {
@@ -50,14 +56,21 @@ export async function PUT(req, context) {
         where: { id: post.id },
         data: {
           seoTitle: seoTitle !== undefined ? seoTitle : post.seoTitle,
-          seoDescription: seoDescription !== undefined ? seoDescription : post.seoDescription
-        }
+          seoDescription:
+            seoDescription !== undefined ? seoDescription : post.seoDescription,
+          canonicalUrl:
+            canonicalUrl !== undefined ? canonicalUrl : post.canonicalUrl,
+          ogImage: ogImage !== undefined ? ogImage : post.ogImage,
+        },
       });
-      return NextResponse.json({ success: true, type: "post", post: updatedPost });
+      return NextResponse.json(apiSuccess({ type: "post", post: updatedPost }));
     }
 
     return NextResponse.json({ error: "Content not found" }, { status: 404 });
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error", message: err.message },
+      { status: 500 },
+    );
   }
 }

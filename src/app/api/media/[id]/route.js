@@ -3,7 +3,7 @@ import { getSiteId } from "@/lib/siteGuard";
 import { mediaService } from "@/services/media.service";
 import { requireAuth } from "@/lib/requireAuth";
 import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 async function getAuthenticatedUser() {
   const user = await requireAuth();
@@ -72,7 +72,7 @@ export async function PATCH(req, { params }) {
     const { altText, fileName, folderId } = body;
 
     const updatedMedia = await mediaService.renameMedia(siteId, id, fileName, altText, folderId);
-    return NextResponse.json({ success: true, media: updatedMedia });
+    return NextResponse.json(apiSuccess({ media: updatedMedia }));
   } catch (err) {
     return handleApiError(err);
   }

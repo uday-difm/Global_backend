@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "ADMIN");
@@ -21,7 +22,7 @@ export async function GET(req) {
       recaptchaSecretKey: controls.recaptchaSecretKey ? "********" : null
     };
 
-    return NextResponse.json({ success: true, securityControls: sanitized });
+    return NextResponse.json(apiSuccess({ securityControls: sanitized }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
@@ -63,7 +64,7 @@ export async function PUT(req) {
       recaptchaSecretKey: updated.securityControls.recaptchaSecretKey ? "********" : null
     };
 
-    return NextResponse.json({ success: true, securityControls: sanitized });
+    return NextResponse.json(apiSuccess({ securityControls: sanitized }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

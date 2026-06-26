@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { analyticsService } from "@/services/analytics.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -18,16 +18,13 @@ export async function GET(req) {
     const total = await analyticsService.count(auth.siteId);
     const logs = await analyticsService.getVisitorLogs(auth.siteId, { skip, take: limit });
 
-    return NextResponse.json({
-      success: true,
-      logs,
+    return NextResponse.json(apiSuccess({ logs,
       pagination: {
         page,
         limit,
         total,
         totalPages: Math.ceil(total / limit)
-      }
-    });
+      } }));
   } catch (err) {
     return handleApiError(err);
   }

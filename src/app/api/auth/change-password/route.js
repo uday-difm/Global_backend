@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { authService } from "@/services/auth.service";
 import { requireAuth } from "@/lib/requireAuth";
 import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function POST(req) {
   try {
@@ -30,7 +30,7 @@ export async function POST(req) {
       await authService.changePassword(user.id, currentPassword, newPassword);
     }
 
-    return NextResponse.json({ message: "Success" });
+    return NextResponse.json(apiSuccess({ message: "Success" }));
   } catch (err) {
     return handleApiError(err);
   }

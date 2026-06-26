@@ -2,37 +2,41 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
 import crypto from "crypto";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
-  const auth = await checkSitePermission(req, "ADMIN");
-  if (auth.error) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
-
   try {
+    const auth = await checkSitePermission(req, "ADMIN");
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const keys = await prisma.apiKey.findMany({
       where: { siteId: auth.siteId },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ success: true, apiKeys: keys });
+    return NextResponse.json(apiSuccess({ apiKeys: keys }));
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return handleApiError(err);
   }
 }
 
 export async function POST(req) {
-  const auth = await checkSitePermission(req, "ADMIN");
-  if (auth.error) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
-
   try {
+    const auth = await checkSitePermission(req, "ADMIN");
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const body = await req.json();
     const { name } = body;
 
     if (!name) {
-      return NextResponse.json({ error: "Key name is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Key name is required" },
+        { status: 400 },
+      );
     }
 
     // Generate random secure API key
@@ -43,32 +47,35 @@ export async function POST(req) {
         siteId: auth.siteId,
         name,
         key: rawKey,
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
-    return NextResponse.json({ success: true, apiKey }, { status: 201 });
+    return NextResponse.json(apiSuccess({ apiKey }), { status: 201 });
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return handleApiError(err);
   }
 }
 
 export async function DELETE(req) {
-  const auth = await checkSitePermission(req, "ADMIN");
-  if (auth.error) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
-  }
-
   try {
+    const auth = await checkSitePermission(req, "ADMIN");
+    if (auth.error) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "ID is required to delete key" }, { status: 400 });
+      return NextResponse.json(
+        { error: "ID is required to delete key" },
+        { status: 400 },
+      );
     }
 
     const key = await prisma.apiKey.findFirst({
-      where: { id, siteId: auth.siteId }
+      where: { id, siteId: auth.siteId },
     });
 
     if (!key) {
@@ -77,8 +84,10 @@ export async function DELETE(req) {
 
     await prisma.apiKey.delete({ where: { id } });
 
-    return NextResponse.json({ success: true, message: "API key revoked successfully" });
+    return NextResponse.json(
+      apiSuccess({ message: "API key revoked successfully" }),
+    );
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return handleApiError(err);
   }
 }

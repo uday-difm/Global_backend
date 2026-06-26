@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function POST(req) {
   try {
@@ -37,7 +38,7 @@ export async function POST(req) {
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });
 
-    return NextResponse.json({ success: true, siteId });
+    return NextResponse.json(apiSuccess({ siteId }));
   } catch (err) {
     console.error("switch-site POST error:", err);
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { backupService } from "@/services/backup.service";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function POST(req) {
   const auth = await checkSitePermission(req, "ADMIN");
@@ -16,12 +16,9 @@ export async function POST(req) {
     const size = JSON.stringify(backupData).length;
     const backupId = await backupService.logBackupHistory(siteId, "database", size);
 
-    return NextResponse.json({
-      success: true,
-      backupId,
+    return NextResponse.json(apiSuccess({ backupId,
       message: "Database backup completed successfully",
-      backup: backupData
-    });
+      backup: backupData }));
   } catch (err) {
     return handleApiError(err);
   }

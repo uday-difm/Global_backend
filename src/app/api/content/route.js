@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { pageService } from "@/services/page.service";
 import prisma from "@/lib/prisma";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +20,8 @@ export async function GET(req) {
 
     const page = await pageService.getPageWithSections(siteId, slug);
 
-    if (page.status !== "PUBLISHED") {
+    const preview = searchParams.get("preview") === "true";
+    if (!preview && page.status !== "PUBLISHED") {
       return NextResponse.json(
         { error: "Page not found or is not published" },
         { status: 404 },
@@ -63,9 +64,20 @@ export async function GET(req) {
         // Dynamically fetch items for component-specific lists
         const type = String(s.type || "").toUpperCase();
         if (type === "SERVICES") {
-          content.items = await prisma.service.findMany({
+          const services = await prisma.service.findMany({
             where: { siteId, status: "ACTIVE", deletedAt: null },
             orderBy: { sortOrder: "asc" },
+          });
+          content.items = services.map((s) => {
+            if (s.price) {
+              const trimmed = String(s.price).trim();
+              const isNumeric = !isNaN(trimmed) && !isNaN(parseFloat(trimmed));
+              const hasCurrencySymbol = /[\$\€\£\¥\₹]/.test(trimmed);
+              if (isNumeric && !hasCurrencySymbol) {
+                return { ...s, price: `$${trimmed}` };
+              }
+            }
+            return s;
           });
         } else if (type === "TEAM") {
           content.items = await prisma.teamMember.findMany({
@@ -100,14 +112,16 @@ export async function GET(req) {
             include: {
               author: { select: { id: true, email: true } },
               categories: { select: { id: true, name: true, slug: true } },
-              featuredImage: { select: { id: true, url: true, secureUrl: true, altText: true } },
+              featuredImage: {
+                select: { id: true, url: true, secureUrl: true, altText: true },
+              },
             },
           });
           content.items = postsRes;
         }
 
         return { ...s, content };
-      })
+      }),
     );
 
     const seo = {

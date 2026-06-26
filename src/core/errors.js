@@ -1,5 +1,32 @@
 import { ZodError } from "zod";
 
+// ---------------------------------------------------------------------------
+// Standard response helpers — all API routes must use these for consistency.
+// Shape: { data: any, meta: object, error: null }
+// ---------------------------------------------------------------------------
+
+/**
+ * Wrap a single item or named object in the standard envelope.
+ * @param {any} data — the payload (object, array, or primitive)
+ * @param {object} meta — optional metadata (pagination, counts, etc.)
+ */
+export function apiSuccess(data, meta = {}) {
+  return { data, meta, error: null };
+}
+
+/**
+ * Wrap a list of items with pagination metadata.
+ * @param {Array} items — the list
+ * @param {object} meta — must include at minimum { total }
+ */
+export function apiList(items, meta = {}) {
+  return { data: items, meta, error: null };
+}
+
+// ---------------------------------------------------------------------------
+// Error classes
+// ---------------------------------------------------------------------------
+
 export class AppError extends Error {
   constructor(message, code = "INTERNAL_ERROR", status = 500, details = null) {
     super(message);
@@ -56,7 +83,7 @@ export function handleApiError(err) {
         success: false,
         error: "Validation failed",
         code: "VALIDATION_ERROR",
-        details: err.errors,
+        details: err.issues || err.errors,
       },
       { status: 400 },
     );

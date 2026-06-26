@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { securityService } from "@/services/security.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function POST(req) {
   try {
@@ -17,7 +17,7 @@ export async function POST(req) {
 
     const ipBlocklist = await securityService.blockIp(auth.siteId, ip, auth.user.id);
 
-    return NextResponse.json({ success: true, message: `IP ${ip} blocked successfully`, ipBlocklist });
+    return NextResponse.json(apiSuccess({ message: `IP ${ip} blocked successfully`, ipBlocklist }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -39,7 +39,7 @@ export async function DELETE(req) {
 
     const updatedBlocklist = await securityService.unblockIp(auth.siteId, ip, auth.user.id);
 
-    return NextResponse.json({ success: true, message: `IP ${ip} unblocked successfully`, ipBlocklist: updatedBlocklist });
+    return NextResponse.json(apiSuccess({ message: `IP ${ip} unblocked successfully`, ipBlocklist: updatedBlocklist }));
   } catch (err) {
     return handleApiError(err);
   }

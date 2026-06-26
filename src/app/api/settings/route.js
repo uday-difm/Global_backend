@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -15,7 +16,7 @@ export async function GET(req) {
       select: { websiteSettings: true }
     });
 
-    return NextResponse.json({ success: true, websiteSettings: settings?.websiteSettings || null });
+    return NextResponse.json(apiSuccess({ websiteSettings: settings?.websiteSettings || null }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

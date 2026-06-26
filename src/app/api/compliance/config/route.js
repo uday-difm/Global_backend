@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -15,7 +16,7 @@ export async function GET(req) {
       select: { compliance: true }
     });
 
-    return NextResponse.json({ success: true, compliance: settings?.compliance || null });
+    return NextResponse.json(apiSuccess({ compliance: settings?.compliance || null }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

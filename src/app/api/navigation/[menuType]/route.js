@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req, context) {
   try {
@@ -20,7 +21,7 @@ export async function GET(req, context) {
     const navigation = settings?.navigation || {};
     const menuItems = navigation[menuType] || [];
 
-    return NextResponse.json({ success: true, menuType, items: menuItems });
+    return NextResponse.json(apiSuccess({ menuType, items: menuItems }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

@@ -22,7 +22,8 @@ import {
 export default function SecurityConsole({ siteId, user }) {
   // Tabs: "password", "2fa", "history", "audit"
   const [activeTab, setActiveTab] = useState("password");
-  const isAdmin = user?.globalRole === "SUPERADMIN" || user?.globalRole === "ADMIN";
+  const isAdmin =
+    user?.globalRole === "SUPERADMIN" || user?.globalRole === "ADMIN";
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -66,14 +67,16 @@ export default function SecurityConsole({ siteId, user }) {
     setControlsError(null);
     try {
       const res = await fetch("/api/admin/security/config", {
-        headers: { "x-site-id": siteId }
+        headers: { "x-site-id": siteId },
       });
       const json = await res.json();
       if (res.ok) {
         setRecaptchaSiteKey(json.securityControls?.recaptchaSiteKey || "");
         setRecaptchaSecretKey(json.securityControls?.recaptchaSecretKey || "");
         setRateLimitRps(json.securityControls?.rateLimitRps || 60);
-        setSessionTimeoutMinutes(json.securityControls?.sessionTimeoutMinutes || 30);
+        setSessionTimeoutMinutes(
+          json.securityControls?.sessionTimeoutMinutes || 30,
+        );
         setIpBlocklist(json.securityControls?.ipBlocklist || []);
       }
     } catch (err) {
@@ -94,18 +97,19 @@ export default function SecurityConsole({ siteId, user }) {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "x-site-id": siteId
+          "x-site-id": siteId,
         },
         body: JSON.stringify({
           recaptchaSiteKey,
           recaptchaSecretKey,
           rateLimitRps: parseInt(rateLimitRps, 10) || 60,
           sessionTimeoutMinutes: parseInt(sessionTimeoutMinutes, 10) || 30,
-          ipBlocklist
-        })
+          ipBlocklist,
+        }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to update security controls");
+      if (!res.ok)
+        throw new Error(json.error || "Failed to update security controls");
       setControlsSuccess("Security configurations saved successfully!");
       if (json.securityControls?.recaptchaSecretKey) {
         setRecaptchaSecretKey(json.securityControls.recaptchaSecretKey);
@@ -123,11 +127,15 @@ export default function SecurityConsole({ siteId, user }) {
     e.preventDefault();
     if (!newIpToBlock) return;
 
-    const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^(([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})?::(([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})?$/;
-    
+    const ipv4Regex =
+      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    const ipv6Regex =
+      /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^(([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})?::(([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4})?$/;
+
     if (!ipv4Regex.test(newIpToBlock) && !ipv6Regex.test(newIpToBlock)) {
-      setControlsError("Invalid IP address format. Please enter a valid IPv4 or IPv6 address.");
+      setControlsError(
+        "Invalid IP address format. Please enter a valid IPv4 or IPv6 address.",
+      );
       return;
     }
 
@@ -139,9 +147,9 @@ export default function SecurityConsole({ siteId, user }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-site-id": siteId
+          "x-site-id": siteId,
         },
-        body: JSON.stringify({ ip: newIpToBlock })
+        body: JSON.stringify({ ip: newIpToBlock }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to block IP");
@@ -162,12 +170,15 @@ export default function SecurityConsole({ siteId, user }) {
     setControlsError(null);
     setControlsSuccess(null);
     try {
-      const res = await fetch(`/api/admin/security/ip-block?ip=${ipToUnblock}`, {
-        method: "DELETE",
-        headers: {
-          "x-site-id": siteId
-        }
-      });
+      const res = await fetch(
+        `/api/admin/security/ip-block?ip=${ipToUnblock}`,
+        {
+          method: "DELETE",
+          headers: {
+            "x-site-id": siteId,
+          },
+        },
+      );
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to unblock IP");
       setIpBlocklist(json.ipBlocklist || []);
@@ -227,7 +238,8 @@ export default function SecurityConsole({ siteId, user }) {
     try {
       const res = await fetch("/api/auth/2fa", { method: "POST" });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Failed to generate 2FA secret");
+      if (!res.ok)
+        throw new Error(json.error || "Failed to generate 2FA secret");
 
       setTwoFaSecret(json.secret);
       setTwoFaQrCode(json.qrCode || "");
@@ -271,7 +283,9 @@ export default function SecurityConsole({ siteId, user }) {
   const fetchLoginHistory = async () => {
     setHistoryLoading(true);
     try {
-      const res = await fetch("/api/admin/security/login-history");
+      const res = await fetch("/api/admin/security/login-history", {
+        headers: { "x-site-id": siteId },
+      });
       const json = await res.json();
       if (res.ok) {
         setLoginHistory(json.loginHistory || []);
@@ -288,7 +302,9 @@ export default function SecurityConsole({ siteId, user }) {
     if (!isAdmin) return;
     setAuditLoading(true);
     try {
-      const res = await fetch(`/api/admin/security/audit-logs?site_id=${siteId}`);
+      const res = await fetch("/api/admin/security/audit-logs", {
+        headers: { "x-site-id": siteId },
+      });
       const json = await res.json();
       if (res.ok) {
         setAuditLogs(json.auditLogs || []);
@@ -391,7 +407,8 @@ export default function SecurityConsole({ siteId, user }) {
                 Change Account Password
               </h2>
               <p className="text-xs text-gray-500 mt-1">
-                Keep your credentials secure. It is recommended to choose a strong password.
+                Keep your credentials secure. It is recommended to choose a
+                strong password.
               </p>
             </div>
 
@@ -409,7 +426,10 @@ export default function SecurityConsole({ siteId, user }) {
               </div>
             )}
 
-            <form onSubmit={handleChangePassword} className="space-y-4 max-w-md pt-2">
+            <form
+              onSubmit={handleChangePassword}
+              className="space-y-4 max-w-md pt-2"
+            >
               <div>
                 <label className="block text-xs font-semibold text-gray-500 mb-1">
                   Current Password
@@ -494,7 +514,9 @@ export default function SecurityConsole({ siteId, user }) {
                   2FA Protection is Enabled
                 </div>
                 <p className="text-xs text-gray-600 leading-relaxed">
-                  Your login sessions are secured with Two-Factor authentication. Every sign-in request will demand your OTP token from your mobile authenticator app.
+                  Your login sessions are secured with Two-Factor
+                  authentication. Every sign-in request will demand your OTP
+                  token from your mobile authenticator app.
                 </p>
               </div>
             ) : (
@@ -502,7 +524,9 @@ export default function SecurityConsole({ siteId, user }) {
                 {twoFaStep === 1 ? (
                   <div className="space-y-4">
                     <p className="text-xs text-gray-600 leading-relaxed">
-                      Two-Factor authentication is currently <strong>disabled</strong> on your profile. Enroll to add high-security multi-factor validation.
+                      Two-Factor authentication is currently{" "}
+                      <strong>disabled</strong> on your profile. Enroll to add
+                      high-security multi-factor validation.
                     </p>
                     <button
                       onClick={handleStart2Fa}
@@ -513,7 +537,10 @@ export default function SecurityConsole({ siteId, user }) {
                     </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleVerify2Fa} className="space-y-5 border p-5 rounded-xl bg-gray-50/50">
+                  <form
+                    onSubmit={handleVerify2Fa}
+                    className="space-y-5 border p-5 rounded-xl bg-gray-50/50"
+                  >
                     <div className="flex items-center gap-2 font-bold text-gray-800 text-sm">
                       <QrCode size={18} className="text-blue-600" />
                       Step 1: Scan Authenticator Setup Code
@@ -521,15 +548,20 @@ export default function SecurityConsole({ siteId, user }) {
 
                     <div className="space-y-3">
                       <p className="text-xs text-gray-650 leading-relaxed">
-                        Scan this QR code using Google Authenticator, Microsoft Authenticator, or 1Password:
+                        Scan this QR code using Google Authenticator, Microsoft
+                        Authenticator, or 1Password:
                       </p>
-                      
+
                       {twoFaQrCode && (
                         <div className="flex justify-center p-3 bg-white border rounded-xl w-fit mx-auto shadow-sm">
-                          <img src={twoFaQrCode} alt="2FA enrollment QR code" className="w-36 h-36" />
+                          <img
+                            src={twoFaQrCode}
+                            alt="2FA enrollment QR code"
+                            className="w-36 h-36"
+                          />
                         </div>
                       )}
-                      
+
                       <p className="text-xs text-gray-600">
                         Or enter the configuration key manually:
                       </p>
@@ -547,7 +579,8 @@ export default function SecurityConsole({ siteId, user }) {
                         Step 2: Enter Verification Code
                       </div>
                       <p className="text-xs text-gray-600">
-                        Input the 6-digit verification code generated by your app:
+                        Input the 6-digit verification code generated by your
+                        app:
                       </p>
                       <div className="flex gap-3">
                         <input
@@ -564,7 +597,9 @@ export default function SecurityConsole({ siteId, user }) {
                           disabled={twoFaLoading}
                           className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition"
                         >
-                          {twoFaLoading ? "Verifying..." : "Verify & Enable 2FA"}
+                          {twoFaLoading
+                            ? "Verifying..."
+                            : "Verify & Enable 2FA"}
                         </button>
                       </div>
                     </div>
@@ -594,13 +629,18 @@ export default function SecurityConsole({ siteId, user }) {
                 disabled={historyLoading}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-lg hover:bg-gray-50 font-semibold text-gray-600 transition"
               >
-                <RefreshCw size={12} className={historyLoading ? "animate-spin" : ""} />
+                <RefreshCw
+                  size={12}
+                  className={historyLoading ? "animate-spin" : ""}
+                />
                 Refresh
               </button>
             </div>
 
             {historyLoading ? (
-              <div className="py-12 text-center text-xs text-gray-400">Loading history logs...</div>
+              <div className="py-12 text-center text-xs text-gray-400">
+                Loading history logs...
+              </div>
             ) : (
               <div className="overflow-x-auto border rounded-xl shadow-sm">
                 <table className="min-w-full divide-y divide-gray-100 text-xs text-left">
@@ -616,9 +656,16 @@ export default function SecurityConsole({ siteId, user }) {
                   <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
                     {loginHistory.map((log) => (
                       <tr key={log.id} className="hover:bg-gray-50/50">
-                        <td className="px-4 py-3 font-semibold text-gray-900">{log.user?.email}</td>
-                        <td className="px-4 py-3 font-mono">{log.ipAddress || "unknown"}</td>
-                        <td className="px-4 py-3 truncate max-w-[200px]" title={log.userAgent}>
+                        <td className="px-4 py-3 font-semibold text-gray-900">
+                          {log.user?.email}
+                        </td>
+                        <td className="px-4 py-3 font-mono">
+                          {log.ipAddress || "unknown"}
+                        </td>
+                        <td
+                          className="px-4 py-3 truncate max-w-[200px]"
+                          title={log.userAgent}
+                        >
                           {log.userAgent || "unknown"}
                         </td>
                         <td className="px-4 py-3">
@@ -632,12 +679,17 @@ export default function SecurityConsole({ siteId, user }) {
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-400">{new Date(log.createdAt).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-gray-400">
+                          {new Date(log.createdAt).toLocaleString()}
+                        </td>
                       </tr>
                     ))}
                     {loginHistory.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                        <td
+                          colSpan={5}
+                          className="px-4 py-8 text-center text-gray-400"
+                        >
                           No login attempts recorded.
                         </td>
                       </tr>
@@ -659,7 +711,8 @@ export default function SecurityConsole({ siteId, user }) {
                   System Activity & Audit Logs
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  Full security log tracing actions across pages, users, backups, and settings.
+                  Full security log tracing actions across pages, users,
+                  backups, and settings.
                 </p>
               </div>
 
@@ -668,13 +721,18 @@ export default function SecurityConsole({ siteId, user }) {
                 disabled={auditLoading}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-lg hover:bg-gray-50 font-semibold text-gray-600 transition"
               >
-                <RefreshCw size={12} className={auditLoading ? "animate-spin" : ""} />
+                <RefreshCw
+                  size={12}
+                  className={auditLoading ? "animate-spin" : ""}
+                />
                 Refresh
               </button>
             </div>
 
             {auditLoading ? (
-              <div className="py-12 text-center text-xs text-gray-400">Loading audit history...</div>
+              <div className="py-12 text-center text-xs text-gray-400">
+                Loading audit history...
+              </div>
             ) : (
               <div className="overflow-x-auto border rounded-xl shadow-sm">
                 <table className="min-w-full divide-y divide-gray-100 text-xs text-left">
@@ -690,20 +748,32 @@ export default function SecurityConsole({ siteId, user }) {
                   <tbody className="divide-y divide-gray-100 font-medium text-gray-700">
                     {auditLogs.map((log) => (
                       <tr key={log.id} className="hover:bg-gray-50/50">
-                        <td className="px-4 py-3 font-semibold text-gray-900">{log.user?.email || "unknown"}</td>
+                        <td className="px-4 py-3 font-semibold text-gray-900">
+                          {log.user?.email || "unknown"}
+                        </td>
                         <td className="px-4 py-3 text-slate-500 uppercase text-[10px] tracking-wide">
                           {log.user?.globalRole || "VIEWER"}
                         </td>
-                        <td className="px-4 py-3 font-mono font-bold text-blue-600">{log.action}</td>
-                        <td className="px-4 py-3 font-mono text-[10px] text-gray-500 max-w-[250px] truncate" title={JSON.stringify(log.meta)}>
+                        <td className="px-4 py-3 font-mono font-bold text-blue-600">
+                          {log.action}
+                        </td>
+                        <td
+                          className="px-4 py-3 font-mono text-[10px] text-gray-500 max-w-[250px] truncate"
+                          title={JSON.stringify(log.meta)}
+                        >
                           {log.meta ? JSON.stringify(log.meta) : "—"}
                         </td>
-                        <td className="px-4 py-3 text-gray-400">{new Date(log.createdAt).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-gray-400">
+                          {new Date(log.createdAt).toLocaleString()}
+                        </td>
                       </tr>
                     ))}
                     {auditLogs.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
+                        <td
+                          colSpan={5}
+                          className="px-4 py-8 text-center text-gray-400"
+                        >
                           No audit activities recorded.
                         </td>
                       </tr>
@@ -724,7 +794,9 @@ export default function SecurityConsole({ siteId, user }) {
                 Global Security Controls Configuration
               </h2>
               <p className="text-xs text-gray-500 mt-1">
-                Configure Google reCAPTCHA integrations, global request rate limiting rules, session timeout conditions, and network IP blocking filters.
+                Configure Google reCAPTCHA integrations, global request rate
+                limiting rules, session timeout conditions, and network IP
+                blocking filters.
               </p>
             </div>
 
@@ -743,20 +815,23 @@ export default function SecurityConsole({ siteId, user }) {
             )}
 
             {controlsLoading && !recaptchaSiteKey && !rateLimitRps ? (
-              <div className="py-12 text-center text-xs text-gray-400">Loading configurations...</div>
+              <div className="py-12 text-center text-xs text-gray-400">
+                Loading configurations...
+              </div>
             ) : (
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-                
                 {/* Left Columns: Config Form */}
-                <form onSubmit={handleSaveControls} className="xl:col-span-2 space-y-6">
-                  
+                <form
+                  onSubmit={handleSaveControls}
+                  className="xl:col-span-2 space-y-6"
+                >
                   {/* Rate Limits & Timeout Card */}
                   <div className="border p-5 rounded-xl space-y-4 bg-gray-50/20">
                     <h3 className="font-bold text-xs uppercase tracking-wider text-gray-700 border-b pb-1.5 flex items-center gap-1.5">
                       <Sliders size={14} className="text-blue-600" />
                       Rate Limiting & Session Rules
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
@@ -771,7 +846,10 @@ export default function SecurityConsole({ siteId, user }) {
                           onChange={(e) => setRateLimitRps(e.target.value)}
                           className="w-full rounded-lg border border-gray-200 bg-white p-2.5 outline-none focus:border-blue-600 text-sm font-mono"
                         />
-                        <p className="text-[9px] text-gray-400 mt-1">Maximum allowed requests per second per client IP address.</p>
+                        <p className="text-[9px] text-gray-400 mt-1">
+                          Maximum allowed requests per second per client IP
+                          address.
+                        </p>
                       </div>
 
                       <div>
@@ -784,10 +862,15 @@ export default function SecurityConsole({ siteId, user }) {
                           min="5"
                           max="1440"
                           value={sessionTimeoutMinutes}
-                          onChange={(e) => setSessionTimeoutMinutes(e.target.value)}
+                          onChange={(e) =>
+                            setSessionTimeoutMinutes(e.target.value)
+                          }
                           className="w-full rounded-lg border border-gray-200 bg-white p-2.5 outline-none focus:border-blue-600 text-sm font-mono"
                         />
-                        <p className="text-[9px] text-gray-400 mt-1">Automatically logs out inactive user sessions after this window.</p>
+                        <p className="text-[9px] text-gray-400 mt-1">
+                          Automatically logs out inactive user sessions after
+                          this window.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -820,7 +903,9 @@ export default function SecurityConsole({ siteId, user }) {
                         <input
                           type="password"
                           value={recaptchaSecretKey}
-                          onChange={(e) => setRecaptchaSecretKey(e.target.value)}
+                          onChange={(e) =>
+                            setRecaptchaSecretKey(e.target.value)
+                          }
                           placeholder="Provide secret key or '********' to retain current key"
                           className="w-full rounded-lg border border-gray-200 bg-white p-2.5 outline-none focus:border-blue-600 text-xs font-mono"
                         />
@@ -841,15 +926,19 @@ export default function SecurityConsole({ siteId, user }) {
                 {/* Right Columns: IP Blocking Panel */}
                 <div className="xl:col-span-1 space-y-6">
                   {/* Block IP Form */}
-                  <form onSubmit={handleBlockIp} className="border p-5 rounded-xl space-y-4 bg-gray-50/20">
+                  <form
+                    onSubmit={handleBlockIp}
+                    className="border p-5 rounded-xl space-y-4 bg-gray-50/20"
+                  >
                     <h3 className="font-bold text-xs uppercase tracking-wider text-gray-700 border-b pb-1.5 flex items-center gap-1.5">
                       <Globe size={14} className="text-blue-600" />
                       Block Network IP
                     </h3>
-                    
+
                     <div className="space-y-3">
                       <p className="text-[10px] text-gray-500 leading-normal">
-                        Enter an IPv4 or IPv6 network address to immediately blacklist and restrict site routing access.
+                        Enter an IPv4 or IPv6 network address to immediately
+                        blacklist and restrict site routing access.
                       </p>
                       <div className="flex gap-2">
                         <input
@@ -878,8 +967,13 @@ export default function SecurityConsole({ siteId, user }) {
                     </h4>
                     <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                       {ipBlocklist.map((ip) => (
-                        <div key={ip} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg border border-gray-150">
-                          <span className="font-mono text-xs text-gray-800 select-all">{ip}</span>
+                        <div
+                          key={ip}
+                          className="flex justify-between items-center p-2 bg-gray-50 rounded-lg border border-gray-150"
+                        >
+                          <span className="font-mono text-xs text-gray-800 select-all">
+                            {ip}
+                          </span>
                           <button
                             type="button"
                             onClick={() => handleUnblockIp(ip)}
@@ -899,7 +993,6 @@ export default function SecurityConsole({ siteId, user }) {
                     </div>
                   </div>
                 </div>
-
               </div>
             )}
           </div>

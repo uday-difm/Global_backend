@@ -160,11 +160,8 @@ function LoginAndProjectLanding() {
         });
 
         if (!res || res.error) {
-          const errMsg =
-            res?.error === "CredentialsSignin"
-              ? "Invalid email or password."
-              : res?.error || "Invalid email or password.";
-          setError(errMsg);
+          setError("Invalid email or password.");
+
           if (recaptchaSiteKey && window.grecaptcha) {
             try {
               if (widgetIdRef.current !== null) {
@@ -246,7 +243,7 @@ function LoginAndProjectLanding() {
       });
       const preData = await preRes.json();
 
-      if (preData.twoFARequired) {
+      if (preData.data?.twoFARequired) {
         // Show 2FA input — reset captcha so user completes a fresh challenge
         setTwoFaRequired(true);
         setLoading(false);
@@ -268,11 +265,8 @@ function LoginAndProjectLanding() {
       });
 
       if (!res || res.error) {
-        const errMsg =
-          res?.error === "CredentialsSignin"
-            ? "Invalid email or password."
-            : res?.error || "Invalid email or password.";
-        setError(errMsg);
+        setError("Invalid email or password.");
+
         if (recaptchaSiteKey && window.grecaptcha) {
           try {
             if (widgetIdRef.current !== null) {

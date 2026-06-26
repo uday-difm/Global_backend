@@ -12,10 +12,13 @@ export class ComplianceService extends BaseService {
       where: { siteId },
       select: { compliance: true },
     });
-    return settings?.compliance || {
-      cookieConsentEnabled: true,
-      cookieConsentMessage: "This website uses cookies to improve your experience."
-    };
+    return (
+      settings?.compliance || {
+        cookieConsentEnabled: true,
+        cookieConsentMessage:
+          "This website uses cookies to improve your experience.",
+      }
+    );
   }
 
   async updateConsentConfig(siteId, config) {
@@ -35,15 +38,23 @@ export class ComplianceService extends BaseService {
       where: { siteId, email },
     });
 
+    const deletedNewsletter = await prisma.newsletter.deleteMany({
+      where: { siteId, email },
+    });
+
+    // Anonymise visitor logs (no email field — skip as not applicable)
+
     await logAction(siteId, userId, "GDPR_DATA_DELETION", {
       targetEmail: email,
       deletedLeadsCount: deletedLeads.count,
       deletedSubmissionsCount: deletedSubmissions.count,
+      deletedNewsletterCount: deletedNewsletter.count,
     });
 
     return {
       purgedLeads: deletedLeads.count,
       purgedSubmissions: deletedSubmissions.count,
+      purgedNewsletter: deletedNewsletter.count,
     };
   }
 }

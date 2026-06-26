@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function PUT(req, context) {
   const params = await context.params;
@@ -30,7 +31,7 @@ export async function PUT(req, context) {
       }
     });
 
-    return NextResponse.json({ success: true, submission: updated });
+    return NextResponse.json(apiSuccess({ submission: updated }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
@@ -55,7 +56,7 @@ export async function DELETE(req, context) {
 
     await prisma.contactFormSubmission.delete({ where: { id } });
 
-    return NextResponse.json({ success: true, message: "Submission deleted successfully" });
+    return NextResponse.json(apiSuccess({ message: "Submission deleted successfully" }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

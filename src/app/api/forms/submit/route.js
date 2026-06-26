@@ -4,6 +4,7 @@ import { checkSitePermission } from "@/lib/apiAuth";
 import nodemailer from "nodemailer";
 import { z } from "zod";
 import { EventBus } from "@/core/events";
+import { apiSuccess } from "@/core/errors";
 
 const FormSubmitSchema = z.object({
   siteId: z.string().min(1),
@@ -27,7 +28,7 @@ export async function POST(req) {
           EventBus.emit("form.failed", {
             siteId,
             data: {
-              message: "Validation failed: " + parsed.error.errors.map(e => `${e.path.join(".")}: ${e.message}`).join(", "),
+              message: "Validation failed: " + (parsed.error.issues || parsed.error.errors).map(e => `${e.path.join(".")}: ${e.message}`).join(", "),
               payload: body
             }
           });
@@ -39,7 +40,7 @@ export async function POST(req) {
         {
           success: false,
           error: "Validation failed",
-          details: parsed.error.errors,
+          details: parsed.error.issues || parsed.error.errors,
         },
         { status: 400 },
       );
@@ -51,10 +52,7 @@ export async function POST(req) {
     // Bots fill in all fields; real users leave honeypot blank
     if (_hp && _hp.trim().length > 0) {
       // Silently accept but do not persist (anti-bot)
-      return NextResponse.json({
-        success: true,
-        message: "Form submitted successfully",
-      });
+      return NextResponse.json(apiSuccess({ message: "Form submitted successfully" }));
     }
 
     // Check if site exists
@@ -254,12 +252,9 @@ export async function POST(req) {
       console.error("Failed to emit submission events:", err);
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "Form submitted successfully",
+    return NextResponse.json(apiSuccess({ message: "Form submitted successfully",
       submissionId: submission.id,
-      leadId: lead.id,
-    });
+      leadId: lead.id }));
   } catch (err) {
     console.error("POST /api/forms/submit error:", err);
     return NextResponse.json(

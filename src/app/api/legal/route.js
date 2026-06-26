@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { legalPageService } from "@/services/legalPage.service";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   try {
@@ -11,7 +12,7 @@ export async function GET(req) {
     }
 
     const legalPages = await legalPageService.getAllActivePages(siteId);
-    return NextResponse.json({ success: true, legalPages });
+    return NextResponse.json(apiSuccess({ legalPages }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

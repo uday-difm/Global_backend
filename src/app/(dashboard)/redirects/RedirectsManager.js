@@ -260,6 +260,7 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Destination Path/URL</label>
                   <input
                     type="text"
+                    id="target-input"
                     required
                     value={target}
                     onChange={(e) => setTarget(e.target.value)}
@@ -646,8 +647,27 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                               {link.context}
                             </span>
                           </div>
-                          <div className="font-mono text-[10px] text-red-600 bg-white p-2 rounded-lg border border-red-100 truncate">
-                            {link.brokenLink}
+                          <div className="flex justify-between items-center gap-2">
+                            <div className="font-mono text-[10px] text-red-600 bg-white p-2 rounded-lg border border-red-100 truncate flex-1">
+                              {link.brokenLink}
+                            </div>
+                            <button
+                              onClick={() => {
+                                setSource(link.brokenLink);
+                                setTarget("");
+                                setActiveTab("redirects");
+                                setTimeout(() => {
+                                  const targetInput = document.getElementById("target-input");
+                                  if (targetInput) {
+                                    targetInput.focus();
+                                    targetInput.scrollIntoView({ behavior: "smooth", block: "center" });
+                                  }
+                                }, 100);
+                              }}
+                              className="px-2.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold shadow-xs transition shrink-0 cursor-pointer"
+                            >
+                              Create Redirect
+                            </button>
                           </div>
                         </div>
                       ))}

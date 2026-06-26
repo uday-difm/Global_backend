@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 import crypto from "crypto";
 
 export async function GET(req) {
@@ -16,7 +16,7 @@ export async function GET(req) {
       select: { integrationKey: true }
     });
 
-    return NextResponse.json({ success: true, integrationKey: site?.integrationKey || null });
+    return NextResponse.json(apiSuccess({ integrationKey: site?.integrationKey || null }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -37,7 +37,7 @@ export async function POST(req) {
       select: { id: true, integrationKey: true }
     });
 
-    return NextResponse.json({ success: true, integrationKey: site.integrationKey });
+    return NextResponse.json(apiSuccess({ integrationKey: site.integrationKey }));
   } catch (err) {
     return handleApiError(err);
   }

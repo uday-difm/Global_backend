@@ -3,7 +3,7 @@ import { pageService } from "@/services/page.service";
 import { sectionRepository } from "@/repositories/section.repository";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { tryValidateByType } from "@/lib/validators/section";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req, { params }) {
   try {
@@ -24,7 +24,7 @@ export async function GET(req, { params }) {
       orderBy: { order: "asc" }
     });
 
-    return NextResponse.json({ sections });
+    return NextResponse.json(apiSuccess({ sections }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -44,6 +44,10 @@ export async function POST(req, { params }) {
       return NextResponse.json({ error: "Forbidden: Page belongs to another site" }, { status: 403 });
     }
 
+    if (page.isHardcoded) {
+      return NextResponse.json({ error: "Forbidden: Cannot add sections to hardcoded pages" }, { status: 400 });
+    }
+
     const body = await req.json();
     const { type, content, name, order } = body;
 
@@ -54,7 +58,7 @@ export async function POST(req, { params }) {
     // Validate using existing validator schemas
     const v = tryValidateByType(type, body);
     if (!v.ok) {
-      return NextResponse.json({ error: "Validation failed", details: v.error.errors || String(v.error) }, { status: 400 });
+      return NextResponse.json({ error: "Validation failed", details: v.error.issues || v.error.errors || String(v.error) }, { status: 400 });
     }
 
     const section = await pageService.addSection(auth.siteId, pageId, {
@@ -64,7 +68,7 @@ export async function POST(req, { params }) {
       order
     });
 
-    return NextResponse.json({ section }, { status: 201 });
+    return NextResponse.json(apiSuccess({ section }), { status: 201 });
   } catch (err) {
     return handleApiError(err);
   }

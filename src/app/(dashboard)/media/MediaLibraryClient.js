@@ -8,17 +8,19 @@ import MediaDetailsModal from "@/components/media/MediaDetailsModal";
 
 export default function MediaLibraryClient({ siteId }) {
   const [currentFolderId, setCurrentFolderId] = useState("root");
-  const [folderHistory, setFolderHistory] = useState([{ id: "root", name: "Media Library" }]);
-  
+  const [folderHistory, setFolderHistory] = useState([
+    { id: "root", name: "Media Library" },
+  ]);
+
   const [media, setMedia] = useState([]);
   const [folders, setFolders] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Folder Creation States
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [folderCreating, setFolderCreating] = useState(false);
-  
+
   // Details Modal States
   const [selectedMediaId, setSelectedMediaId] = useState(null);
 
@@ -26,12 +28,22 @@ export default function MediaLibraryClient({ siteId }) {
     setLoading(true);
     try {
       // 1. Fetch files in current directory
-      const mediaRes = await fetch(`/api/media?folderId=${currentFolderId}&siteId=${siteId}`);
+      const mediaRes = await fetch(
+        `/api/media?folderId=${currentFolderId}&siteId=${siteId}`,
+        {
+          headers: { "x-site-id": siteId },
+        },
+      );
       const mediaData = await mediaRes.json();
       setMedia(Array.isArray(mediaData) ? mediaData : []);
 
       // 2. Fetch subfolders in current directory
-      const foldersRes = await fetch(`/api/media/folders?parentId=${currentFolderId}&siteId=${siteId}`);
+      const foldersRes = await fetch(
+        `/api/media/folders?parentId=${currentFolderId}&siteId=${siteId}`,
+        {
+          headers: { "x-site-id": siteId },
+        },
+      );
       const foldersData = await foldersRes.json();
       setFolders(foldersData.folders || []);
     } catch (error) {
@@ -75,9 +87,9 @@ export default function MediaLibraryClient({ siteId }) {
     try {
       const res = await fetch("/api/media/folders", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "x-site-id": siteId
+          "x-site-id": siteId,
         },
         body: JSON.stringify({
           name: newFolderName.trim(),
@@ -102,7 +114,11 @@ export default function MediaLibraryClient({ siteId }) {
 
   // Delete folder API trigger
   const handleDeleteFolder = async (id, name) => {
-    if (!confirm(`Are you sure you want to delete folder "${name}"? Files and subfolders inside it will be moved back to the parent directory.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete folder "${name}"? Files and subfolders inside it will be moved back to the parent directory.`,
+      )
+    ) {
       return;
     }
 
@@ -110,8 +126,8 @@ export default function MediaLibraryClient({ siteId }) {
       const res = await fetch(`/api/media/folders/${id}`, {
         method: "DELETE",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
 
       if (!res.ok) {
@@ -137,8 +153,8 @@ export default function MediaLibraryClient({ siteId }) {
       const res = await fetch(`/api/media/${id}`, {
         method: "DELETE",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
 
       if (!res.ok) {
@@ -160,7 +176,6 @@ export default function MediaLibraryClient({ siteId }) {
 
   return (
     <div className="space-y-6 p-6">
-      
       {/* Top Banner Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
@@ -178,8 +193,12 @@ export default function MediaLibraryClient({ siteId }) {
             <FolderPlus size={15} />
             Create Folder
           </button>
-          
-          <MediaUploader onUpload={loadContents} currentFolderId={currentFolderId} siteId={siteId} />
+
+          <MediaUploader
+            onUpload={loadContents}
+            currentFolderId={currentFolderId}
+            siteId={siteId}
+          />
         </div>
       </div>
 
@@ -223,11 +242,12 @@ export default function MediaLibraryClient({ siteId }) {
         </div>
       ) : (
         <div className="space-y-8">
-          
           {/* Folders Section */}
           {folders.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Directories</h3>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Directories
+              </h3>
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {folders.map((f) => (
                   <div
@@ -265,7 +285,9 @@ export default function MediaLibraryClient({ siteId }) {
 
           {/* Files Grid Section */}
           <div className="space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Files & Uploads</h3>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              Files & Uploads
+            </h3>
             <MediaGrid
               media={media}
               onDelete={deleteMedia}
@@ -273,21 +295,28 @@ export default function MediaLibraryClient({ siteId }) {
               onSelectMedia={setSelectedMediaId}
             />
           </div>
-
         </div>
       )}
 
       {/* Create Folder Modal */}
       {showFolderModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900 opacity-40" onClick={() => setShowFolderModal(false)} />
+          <div
+            className="absolute inset-0 bg-slate-900 opacity-40"
+            onClick={() => setShowFolderModal(false)}
+          />
           <form
             onSubmit={handleCreateFolder}
             className="relative bg-white rounded-lg shadow-xl border border-slate-200 max-w-sm w-full z-10 p-5 space-y-4"
           >
-            <h4 className="font-semibold text-slate-900 text-sm">Create New Folder</h4>
+            <h4 className="font-semibold text-slate-900 text-sm">
+              Create New Folder
+            </h4>
             <div>
-              <label htmlFor="folderName" className="block text-2xs font-semibold text-slate-700">
+              <label
+                htmlFor="folderName"
+                className="block text-2xs font-semibold text-slate-700"
+              >
                 Folder Name
               </label>
               <input
@@ -332,7 +361,6 @@ export default function MediaLibraryClient({ siteId }) {
           siteId={siteId}
         />
       )}
-
     </div>
   );
 }

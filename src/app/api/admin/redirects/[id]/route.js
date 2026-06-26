@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { z } from "zod";
+import { apiSuccess } from "@/core/errors";
 
 const RedirectUpdateSchema = z.object({
   source: z.string().optional(),
@@ -26,7 +27,7 @@ export async function GET(req, context) {
       return NextResponse.json({ error: "Redirect not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, redirect });
+    return NextResponse.json(apiSuccess({ redirect }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
@@ -52,7 +53,7 @@ export async function PATCH(req, context) {
     const body = await req.json();
     const parsed = RedirectUpdateSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Validation failed", details: parsed.error.issues || parsed.error.errors }, { status: 400 });
     }
 
     const updated = await prisma.redirect.update({
@@ -60,7 +61,7 @@ export async function PATCH(req, context) {
       data: parsed.data
     });
 
-    return NextResponse.json({ success: true, redirect: updated });
+    return NextResponse.json(apiSuccess({ redirect: updated }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
@@ -85,7 +86,7 @@ export async function DELETE(req, context) {
 
     await prisma.redirect.delete({ where: { id } });
 
-    return NextResponse.json({ success: true, message: "Redirect deleted successfully" });
+    return NextResponse.json(apiSuccess({ message: "Redirect deleted successfully" }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { teamMemberService } from "@/services/teamMember.service";
 import { checkSitePermission } from "@/lib/apiAuth";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export async function GET(req, context) {
   try {
@@ -13,7 +13,7 @@ export async function GET(req, context) {
     }
 
     const member = await teamMemberService.getById(auth.siteId, id);
-    return NextResponse.json({ success: true, teamMember: member });
+    return NextResponse.json(apiSuccess({ teamMember: member }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -31,7 +31,7 @@ export async function PATCH(req, context) {
     const body = await req.json();
     const member = await teamMemberService.update(auth.siteId, id, body, auth.user.id);
 
-    return NextResponse.json({ success: true, teamMember: member });
+    return NextResponse.json(apiSuccess({ teamMember: member }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -47,7 +47,7 @@ export async function DELETE(req, context) {
     }
 
     await teamMemberService.delete(auth.siteId, id, auth.user.id);
-    return NextResponse.json({ success: true, message: "Team member deleted successfully" });
+    return NextResponse.json(apiSuccess({ message: "Team member deleted successfully" }));
   } catch (err) {
     return handleApiError(err);
   }

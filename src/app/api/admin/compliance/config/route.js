@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkSitePermission } from "@/lib/apiAuth";
 import { complianceService } from "@/services/compliance.service";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 import { z } from "zod";
 
 const ComplianceConfigSchema = z.object({
@@ -39,7 +39,7 @@ export async function GET(req) {
       consentLogs: config.consentLogs || []
     };
 
-    return NextResponse.json({ success: true, config: responseConfig });
+    return NextResponse.json(apiSuccess({ config: responseConfig }));
   } catch (err) {
     return handleApiError(err);
   }
@@ -57,7 +57,7 @@ export async function PUT(req) {
 
     const parsed = ComplianceConfigSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Validation failed", details: parsed.error.errors }, { status: 400 });
+      return NextResponse.json({ error: "Validation failed", details: parsed.error.issues || parsed.error.errors }, { status: 400 });
     }
 
     const updatedConfig = {
@@ -66,7 +66,7 @@ export async function PUT(req) {
     };
 
     await complianceService.updateConsentConfig(auth.siteId, updatedConfig);
-    return NextResponse.json({ success: true, config: updatedConfig });
+    return NextResponse.json(apiSuccess({ config: updatedConfig }));
   } catch (err) {
     return handleApiError(err);
   }

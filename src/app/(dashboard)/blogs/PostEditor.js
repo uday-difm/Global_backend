@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+
 import { useRouter } from "next/navigation";
 import MediaPickerModal from "@/components/media/MediaPickerModal";
 import DynamicBlockEditor from "@/components/DynamicBlockEditor";
@@ -62,10 +63,20 @@ export default function PostEditor({
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
   const [showSeoPreview, setShowSeoPreview] = useState(false);
+  const [canonicalUrl, setCanonicalUrl] = useState("");
+  const [ogImage, setOgImage] = useState("");
+  const [mediaPickerTarget, setMediaPickerTarget] = useState("featuredImage"); // "featuredImage" or "ogImage"
 
   /* ─────────────── Submit state ─────────────── */
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  /* ─────────────── Autosave state ─────────────── */
+  const [autosaveStatus, setAutosaveStatus] = useState("idle"); // "idle" | "saving" | "saved" | "error"
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const autosaveTimer = useRef(null);
+  const initialLoadDone = useRef(false);
 
   /* ─────────────── Helpers ─────────────── */
   function slugify(text = "") {
@@ -117,6 +128,8 @@ export default function PostEditor({
       setAuthorId(post.authorId || "");
       setSeoTitle(post.seoTitle || "");
       setSeoDescription(post.seoDescription || "");
+      setCanonicalUrl(post.canonicalUrl || "");
+      setOgImage(post.ogImage || "");
 
       if (post.categories) {
         setSelectedCategoryIds(post.categories.map((c) => c.id));
@@ -138,6 +151,112 @@ export default function PostEditor({
       }
     }
   }, [post, isEditMode]);
+
+  /* ─────────────── Autosave ─────────────── */
+  // Mark dirty whenever content fields change (after initial load)
+  useEffect(() => {
+    if (initialLoadDone.current) {
+      setIsDirty(true);
+      setAutosaveStatus("idle");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    title,
+    slug,
+    excerpt,
+    content,
+    contentJson,
+    seoTitle,
+    seoDescription,
+    canonicalUrl,
+    ogImage,
+    selectedCategoryIds,
+    featuredImageId,
+    publishDate,
+    status,
+  ]);
+
+  // Mark initial load done after mount
+  useEffect(() => {
+    const t = setTimeout(() => {
+      initialLoadDone.current = true;
+    }, 500);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Autosave timer — fires every 30s if dirty and in edit mode
+  useEffect(() => {
+    if (!isEditMode || !isDirty) return;
+    autosaveTimer.current = setTimeout(() => {
+      autosaveDraft();
+    }, 30000);
+    return () => clearTimeout(autosaveTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isDirty,
+    title,
+    content,
+    contentJson,
+    seoTitle,
+    seoDescription,
+    selectedCategoryIds,
+  ]);
+
+  async function autosaveDraft() {
+    if (!isEditMode || !post?.id) return;
+    setAutosaveStatus("saving");
+    try {
+      const res = await fetch(`/api/admin/posts/${post.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-site-id": siteId },
+        body: JSON.stringify({
+          title,
+          slug,
+          excerpt,
+          content,
+          contentJson,
+          seoTitle: seoTitle || null,
+          seoDescription: seoDescription || null,
+          canonicalUrl: canonicalUrl || null,
+          ogImage: ogImage || null,
+          featuredImageId: featuredImageId || null,
+          categoryIds: selectedCategoryIds,
+          authorId: authorId || null,
+          // Never auto-publish — only save as current status
+        }),
+      });
+      if (res.ok) {
+        setAutosaveStatus("saved");
+        setLastSavedAt(new Date());
+        setIsDirty(false);
+        setTimeout(() => setAutosaveStatus("idle"), 5000);
+      } else {
+        setAutosaveStatus("error");
+      }
+    } catch {
+      setAutosaveStatus("error");
+    }
+  }
+
+  // Warn before navigating away with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  function formatSavedTime(date) {
+    if (!date) return "";
+    const secs = Math.floor((new Date() - date) / 1000);
+    if (secs < 10) return "just now";
+    if (secs < 60) return `${secs}s ago`;
+    return `${Math.floor(secs / 60)}m ago`;
+  }
 
   /* ─────────────── Event handlers ─────────────── */
   const handleTitleChange = (e) => {
@@ -178,10 +297,14 @@ export default function PostEditor({
     }
   };
 
-  const selectFeaturedImage = (media) => {
-    setFeaturedImageId(media.id);
-    setFeaturedImageUrl(media.secureUrl || media.url);
-    setFeaturedImageAlt(media.altText || "");
+  const handleSelectMedia = (media) => {
+    if (mediaPickerTarget === "ogImage") {
+      setOgImage(media.secureUrl || media.url);
+    } else {
+      setFeaturedImageId(media.id);
+      setFeaturedImageUrl(media.secureUrl || media.url);
+      setFeaturedImageAlt(media.altText || "");
+    }
     setShowMediaPicker(false);
   };
 
@@ -196,6 +319,12 @@ export default function PostEditor({
     setIsSubmitting(true);
     setError(null);
 
+    // If a future publish date is set, save as DRAFT so the cron job
+    // picks it up and publishes it when the time comes.
+    const hasFutureDate =
+      customPublishDate && publishDate && new Date(publishDate) > new Date();
+    const effectiveStatus = hasFutureDate ? "DRAFT" : status;
+
     const postData = {
       siteId,
       title,
@@ -203,12 +332,14 @@ export default function PostEditor({
       excerpt,
       content,
       contentJson, // Included BlockNote JSON
-      status,
+      status: effectiveStatus,
       authorId: authorId || null,
       featuredImageId: featuredImageId || null,
       categoryIds: selectedCategoryIds,
       seoTitle: seoTitle || null,
       seoDescription: seoDescription || null,
+      canonicalUrl: canonicalUrl || null,
+      ogImage: ogImage || null,
       publishedAt:
         customPublishDate && publishDate
           ? new Date(publishDate).toISOString()
@@ -262,6 +393,39 @@ export default function PostEditor({
 
   return (
     <div className="space-y-6">
+      {/* Autosave indicator */}
+      {isEditMode && (
+        <div
+          className={`flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-lg border ${
+            autosaveStatus === "saving"
+              ? "bg-blue-50 text-blue-600 border-blue-200"
+              : autosaveStatus === "saved"
+                ? "bg-green-50 text-green-600 border-green-200"
+                : autosaveStatus === "error"
+                  ? "bg-red-50 text-red-600 border-red-200"
+                  : isDirty
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : "bg-gray-50 text-gray-400 border-transparent"
+          }`}
+        >
+          {autosaveStatus === "saving" && (
+            <>
+              <Loader2 size={10} className="animate-spin" /> Autosaving...
+            </>
+          )}
+          {autosaveStatus === "saved" && (
+            <>
+              <CheckCircle size={10} /> Autosaved {formatSavedTime(lastSavedAt)}
+            </>
+          )}
+          {autosaveStatus === "error" && <>⚠ Autosave failed</>}
+          {autosaveStatus === "idle" && isDirty && <>● Unsaved changes</>}
+          {autosaveStatus === "idle" && !isDirty && lastSavedAt && (
+            <>Saved {formatSavedTime(lastSavedAt)}</>
+          )}
+        </div>
+      )}
+
       {error && (
         <div className="flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs font-semibold">
           <AlertCircle size={15} className="shrink-0 text-rose-50 mt-0.5" />
@@ -459,6 +623,77 @@ export default function PostEditor({
                 />
               </div>
             </div>
+
+            <div>
+              <label
+                htmlFor="canonicalUrl"
+                className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+              >
+                Canonical URL
+              </label>
+              <input
+                type="text"
+                id="canonicalUrl"
+                value={canonicalUrl}
+                onChange={(e) => setCanonicalUrl(e.target.value)}
+                placeholder="e.g. https://yourcompany.com/blog/my-post"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+              />
+              <div className="mt-1.5 h-0.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-200 ${canonicalUrl ? "bg-emerald-400" : "bg-slate-200"}`}
+                  style={{
+                    width: canonicalUrl ? "100%" : "0%",
+                  }}
+                />
+              </div>
+              <div className="mt-1 flex items-center justify-between text-[10px]">
+                <span
+                  className={
+                    canonicalUrl
+                      ? "text-emerald-600 font-semibold"
+                      : "text-slate-400"
+                  }
+                >
+                  {canonicalUrl
+                    ? "✓ Canonical URL set"
+                    : "Using default page URL"}
+                </span>
+                <span className="text-slate-400 font-mono">
+                  {canonicalUrl.length} chars
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="ogImage"
+                className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5"
+              >
+                OG Image URL
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  id="ogImage"
+                  value={ogImage}
+                  onChange={(e) => setOgImage(e.target.value)}
+                  placeholder="e.g. https://yourcompany.com/og-image.jpg"
+                  className="flex-1 rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs font-mono text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMediaPickerTarget("ogImage");
+                    setShowMediaPicker(true);
+                  }}
+                  className="px-3.5 py-2 border rounded-xl hover:bg-slate-50 text-xs font-bold text-slate-600 border-slate-200 transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+                >
+                  <ImageIcon size={12} />
+                  Library
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -539,43 +774,47 @@ export default function PostEditor({
               )}
             </div>
 
-            {/* Schedule toggle */}
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <div
-                className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${customPublishDate ? "bg-indigo-600" : "bg-slate-200"}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={customPublishDate}
-                  onChange={(e) => setCustomPublishDate(e.target.checked)}
-                  className="sr-only"
-                />
-                <span
-                  className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${customPublishDate ? "translate-x-3.5" : "translate-x-0"}`}
-                />
-              </div>
-              <span className="text-[10px] font-bold text-slate-600 group-hover:text-slate-800 transition">
-                Schedule / Custom Date
-              </span>
-            </label>
-
-            {customPublishDate && (
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                  Publish Date & Time
+            {/* Schedule toggle — shown only when status is DRAFT */}
+            {status === "DRAFT" && (
+              <>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <div
+                    className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${customPublishDate ? "bg-indigo-600" : "bg-slate-200"}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={customPublishDate}
+                      onChange={(e) => setCustomPublishDate(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${customPublishDate ? "translate-x-3.5" : "translate-x-0"}`}
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-600 group-hover:text-slate-800 transition">
+                    Schedule / Custom Date
+                  </span>
                 </label>
-                <input
-                  type="datetime-local"
-                  value={publishDate}
-                  onChange={(e) => setPublishDate(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
-                  required={customPublishDate}
-                />
-                <p className="text-[10px] text-slate-400 mt-1.5">
-                  A future date will schedule the post; a past date publishes
-                  immediately.
-                </p>
-              </div>
+
+                {customPublishDate && (
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                      Publish Date & Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={publishDate}
+                      onChange={(e) => setPublishDate(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/30 px-3.5 py-2.5 text-xs text-slate-700 outline-none hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200"
+                      required={customPublishDate}
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1.5">
+                      A future date will schedule the post; a past date
+                      publishes immediately.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Author */}
@@ -670,7 +909,10 @@ export default function PostEditor({
                   <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition duration-200 flex items-center justify-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setShowMediaPicker(true)}
+                      onClick={() => {
+                        setMediaPickerTarget("featuredImage");
+                        setShowMediaPicker(true);
+                      }}
                       className="px-3 py-1.5 bg-white text-slate-800 hover:bg-slate-50 rounded-lg text-[10px] font-bold shadow-sm transition"
                     >
                       Change
@@ -700,7 +942,10 @@ export default function PostEditor({
             ) : (
               <button
                 type="button"
-                onClick={() => setShowMediaPicker(true)}
+                onClick={() => {
+                  setMediaPickerTarget("featuredImage");
+                  setShowMediaPicker(true);
+                }}
                 className="w-full aspect-video border-2 border-dashed border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/5 rounded-xl flex flex-col items-center justify-center gap-2 text-center p-4 transition-all duration-200 cursor-pointer group"
               >
                 <div className="p-3 bg-slate-50 group-hover:bg-indigo-50 group-hover:text-indigo-600 text-slate-400 rounded-full transition">
@@ -857,9 +1102,13 @@ export default function PostEditor({
       {/* Media Picker Modal */}
       {showMediaPicker && (
         <MediaPickerModal
-          title="Select Featured Image"
+          title={
+            mediaPickerTarget === "ogImage"
+              ? "Select OG Image"
+              : "Select Featured Image"
+          }
           filter="images"
-          onSelect={selectFeaturedImage}
+          onSelect={handleSelectMedia}
           onClose={() => setShowMediaPicker(false)}
           siteId={siteId}
         />

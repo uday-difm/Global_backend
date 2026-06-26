@@ -7,6 +7,9 @@ import ClientScripts from "@/components/utils/ClientScripts"; // Import the new 
 import { ThemeProvider } from "next-themes";
 import SessionTimeoutHandler from "@/components/utils/SessionTimeoutHandler";
 
+// Initialize event listeners for emails, notifications, and webhooks
+import "@/core/listeners";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

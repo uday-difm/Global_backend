@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSiteId } from "@/lib/siteGuard";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -9,9 +9,14 @@ export async function GET(req, { params }) {
   try {
     const siteId = getSiteId(req);
     const { postId } = await params;
+    const { searchParams } = new URL(req.url);
+    const preview = searchParams.get("preview") === "true";
 
     if (!postId) {
-      return NextResponse.json({ error: "Post ID or slug is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Post ID or slug is required" },
+        { status: 400 },
+      );
     }
 
     // Try finding by CUID or ID first
@@ -19,9 +24,10 @@ export async function GET(req, { params }) {
       where: {
         id: postId,
         siteId,
-        status: "PUBLISHED",
+        ...(preview
+          ? {}
+          : { status: "PUBLISHED", publishedAt: { lte: new Date() } }),
         deletedAt: null,
-        publishedAt: { lte: new Date() },
       },
       include: {
         categories: true,
@@ -37,9 +43,10 @@ export async function GET(req, { params }) {
         where: {
           slug: postId,
           siteId,
-          status: "PUBLISHED",
+          ...(preview
+            ? {}
+            : { status: "PUBLISHED", publishedAt: { lte: new Date() } }),
           deletedAt: null,
-          publishedAt: { lte: new Date() },
         },
         include: {
           categories: true,
@@ -54,7 +61,7 @@ export async function GET(req, { params }) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, post });
+    return NextResponse.json(apiSuccess({ post }));
   } catch (err) {
     return handleApiError(err);
   }

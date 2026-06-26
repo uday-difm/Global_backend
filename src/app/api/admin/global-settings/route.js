@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthUserOrDevBypass } from "@/lib/apiAuth";
 import { userHasSiteRole } from "@/lib/siteAuth";
 import { settingsService } from "@/services/settings.service";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 import { z } from "zod";
 
 const SettingsSchema = z.object({

@@ -184,40 +184,36 @@ export class PostService extends BaseService {
     const now = new Date();
     const posts = await prisma.post.findMany({
       where: {
-        status: "PUBLISHED",
+        status: "DRAFT",
         publishedAt: { lte: now },
         deletedAt: null,
       },
     });
 
     console.log(
-      `⏰ Checking scheduled posts... Found ${posts.length} published posts.`,
+      `\u23f0 Checking scheduled posts... Found ${posts.length} draft posts to publish.`,
     );
 
     for (const post of posts) {
-      const alreadyNotified = await prisma.auditLog.count({
-        where: {
-          action: "POST_PUBLISHED_ALERT",
-          meta: {
-            path: ["postId"],
-            equals: post.id,
-          },
+      console.log(`\ud83d\udce2 Publishing scheduled post: ${post.title}`);
+
+      await prisma.post.update({
+        where: { id: post.id },
+        data: {
+          status: "PUBLISHED",
         },
       });
 
-      if (alreadyNotified === 0) {
-        console.log(`📢 Publishing scheduled post: ${post.title}`);
-        EventBus.emit("post.published", { siteId: post.siteId, data: post });
+      EventBus.emit("post.published", { siteId: post.siteId, data: post });
 
-        await prisma.auditLog.create({
-          data: {
-            siteId: post.siteId,
-            userId: post.authorId || "system",
-            action: "POST_PUBLISHED_ALERT",
-            meta: { postId: post.id },
-          },
-        });
-      }
+      await prisma.auditLog.create({
+        data: {
+          siteId: post.siteId,
+          userId: post.authorId || "system",
+          action: "POST_PUBLISHED_ALERT",
+          meta: { postId: post.id },
+        },
+      });
     }
   }
 }

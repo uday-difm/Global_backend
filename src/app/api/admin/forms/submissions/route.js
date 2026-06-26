@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { checkSitePermission } from "@/lib/apiAuth";
+import { apiSuccess } from "@/core/errors";
 
 export async function GET(req) {
   const auth = await checkSitePermission(req, "EDITOR");
@@ -22,7 +23,7 @@ export async function GET(req) {
       orderBy: { createdAt: "desc" }
     });
 
-    return NextResponse.json({ success: true, submissions });
+    return NextResponse.json(apiSuccess({ submissions }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }
