@@ -16,12 +16,18 @@ const CtaSchema = z
   })
   .partial({ url: false });
 
-const UrlOrRelative = z.string().refine(
-  (val) => val === "" || val.startsWith("/") || val.startsWith(".") || /^(https?:)?\/\//.test(val),
-  {
-    message: "Must be a valid absolute URL, relative path, or empty",
-  }
-);
+const UrlOrRelative = z
+  .string()
+  .refine(
+    (val) =>
+      val === "" ||
+      val.startsWith("/") ||
+      val.startsWith(".") ||
+      /^(https?:)?\/\//.test(val),
+    {
+      message: "Must be a valid absolute URL, relative path, or empty",
+    },
+  );
 
 // HERO content schema
 const HeroContentSchema = z
@@ -34,8 +40,13 @@ const HeroContentSchema = z
     primaryButton: CtaSchema.optional(),
     secondaryButton: CtaSchema.optional(),
     alignment: z.enum(["left", "center", "right"]).optional(),
+    heading: z.string().optional(),
+    subheading: z.string().optional(),
+    textColor: z.string().optional(),
+    overlay: z.any().optional(),
+    backgroundImage: z.any().optional(),
   })
-  .strict();
+  .passthrough();
 
 // TEXT_BLOCK content schema
 const TextBlockContentSchema = z
@@ -46,15 +57,26 @@ const TextBlockContentSchema = z
     imageUrl: UrlOrRelative.optional(),
     imagePosition: z.enum(["left", "right", "top"]).optional(),
     cta: CtaSchema.optional(),
+    heading: z.string().optional(),
+    bgColor: z.string().optional(),
+    textColor: z.string().optional(),
+    showImage: z.boolean().optional(),
+    layout: z.string().optional(),
   })
-  .strict();
+  .passthrough();
 
 // LEGAL_CONTENT content schema
 const LegalContentSchema = z
   .object({
-    documentType: z.enum(["privacy", "terms", "cookies", "disclaimer", "refund"]),
+    documentType: z.enum([
+      "privacy",
+      "terms",
+      "cookies",
+      "disclaimer",
+      "refund",
+    ]),
   })
-  .strict();
+  .passthrough();
 
 const TypeSchemaMap = {
   HERO: HeroContentSchema,

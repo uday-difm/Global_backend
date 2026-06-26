@@ -191,6 +191,9 @@ export function Header({
   navigationLinks = [],
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [expandedMobileItems, setExpandedMobileItems] = React.useState(
+    new Set(),
+  );
 
   // Merge defaults
   const config = {
@@ -335,15 +338,87 @@ export function Header({
         return (
           <>
             <nav style={navLinksStyle} className="sdk-desktop-only">
-              {navigationLinks.map((link, idx) => (
-                <a
-                  key={idx}
-                  href={link.url}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
-                  {link.label}
-                </a>
-              ))}
+              {navigationLinks.map((link, idx) => {
+                const hasChildren = link.children && link.children.length > 0;
+                return hasChildren ? (
+                  <div
+                    key={idx}
+                    className="sdk-dropdown-wrapper"
+                    style={{ position: "relative", display: "inline-block" }}
+                  >
+                    <a
+                      href={link.url}
+                      style={{
+                        textDecoration: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      {link.label}
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </a>
+                    <div
+                      className="sdk-dropdown-menu"
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: "0",
+                        marginTop: "12px",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        minWidth: "200px",
+                        padding: "8px",
+                        opacity: 0,
+                        pointerEvents: "none",
+                        transform: "translateY(4px)",
+                        transition: "all 0.2s ease",
+                        zIndex: 100,
+                      }}
+                    >
+                      {link.children.map((child, cIdx) => (
+                        <a
+                          key={cIdx}
+                          href={child.url}
+                          style={{
+                            textDecoration: "none",
+                            color: "#4a5568",
+                            display: "block",
+                            padding: "8px 12px",
+                            borderRadius: "6px",
+                            fontSize: "0.85rem",
+                            fontWeight: 500,
+                          }}
+                          className="sdk-dropdown-item"
+                        >
+                          {child.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <a
+                    key={idx}
+                    href={link.url}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    {link.label}
+                  </a>
+                );
+              })}
             </nav>
             <div
               style={{
@@ -382,27 +457,171 @@ export function Header({
             }}
           >
             <nav style={navLinksStyle} className="sdk-desktop-only">
-              {leftLinks.map((link, idx) => (
-                <a
-                  key={idx}
-                  href={link.url}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
-                  {link.label}
-                </a>
-              ))}
+              {leftLinks.map((link, idx) => {
+                const hasChildren = link.children && link.children.length > 0;
+                return hasChildren ? (
+                  <div
+                    key={idx}
+                    className="sdk-dropdown-wrapper"
+                    style={{ position: "relative", display: "inline-block" }}
+                  >
+                    <a
+                      href={link.url}
+                      style={{
+                        textDecoration: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      {link.label}
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </a>
+                    <div
+                      className="sdk-dropdown-menu"
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: "0",
+                        marginTop: "12px",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        minWidth: "200px",
+                        padding: "8px",
+                        opacity: 0,
+                        pointerEvents: "none",
+                        transform: "translateY(4px)",
+                        transition: "all 0.2s ease",
+                        zIndex: 100,
+                      }}
+                    >
+                      {link.children.map((child, cIdx) => (
+                        <a
+                          key={cIdx}
+                          href={child.url}
+                          style={{
+                            textDecoration: "none",
+                            color: "#4a5568",
+                            display: "block",
+                            padding: "8px 12px",
+                            borderRadius: "6px",
+                            fontSize: "0.85rem",
+                            fontWeight: 500,
+                          }}
+                          className="sdk-dropdown-item"
+                        >
+                          {child.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <a
+                    key={idx}
+                    href={link.url}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    {link.label}
+                  </a>
+                );
+              })}
             </nav>
             <div>{renderLogo()}</div>
             <nav style={navLinksStyle} className="sdk-desktop-only">
-              {rightLinks.map((link, idx) => (
-                <a
-                  key={idx}
-                  href={link.url}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
-                  {link.label}
-                </a>
-              ))}
+              {rightLinks.map((link, idx) => {
+                const hasChildren = link.children && link.children.length > 0;
+                return hasChildren ? (
+                  <div
+                    key={idx}
+                    className="sdk-dropdown-wrapper"
+                    style={{ position: "relative", display: "inline-block" }}
+                  >
+                    <a
+                      href={link.url}
+                      style={{
+                        textDecoration: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      {link.label}
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </a>
+                    <div
+                      className="sdk-dropdown-menu"
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: "0",
+                        marginTop: "12px",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        minWidth: "200px",
+                        padding: "8px",
+                        opacity: 0,
+                        pointerEvents: "none",
+                        transform: "translateY(4px)",
+                        transition: "all 0.2s ease",
+                        zIndex: 100,
+                      }}
+                    >
+                      {link.children.map((child, cIdx) => (
+                        <a
+                          key={cIdx}
+                          href={child.url}
+                          style={{
+                            textDecoration: "none",
+                            color: "#4a5568",
+                            display: "block",
+                            padding: "8px 12px",
+                            borderRadius: "6px",
+                            fontSize: "0.85rem",
+                            fontWeight: 500,
+                          }}
+                          className="sdk-dropdown-item"
+                        >
+                          {child.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <a
+                    key={idx}
+                    href={link.url}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    {link.label}
+                  </a>
+                );
+              })}
             </nav>
             <button
               onClick={() => setIsMobileMenuOpen(true)}
@@ -425,15 +644,87 @@ export function Header({
               )}
             </div>
             <nav style={navLinksStyle} className="sdk-desktop-only">
-              {navigationLinks.map((link, idx) => (
-                <a
-                  key={idx}
-                  href={link.url}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
-                  {link.label}
-                </a>
-              ))}
+              {navigationLinks.map((link, idx) => {
+                const hasChildren = link.children && link.children.length > 0;
+                return hasChildren ? (
+                  <div
+                    key={idx}
+                    className="sdk-dropdown-wrapper"
+                    style={{ position: "relative", display: "inline-block" }}
+                  >
+                    <a
+                      href={link.url}
+                      style={{
+                        textDecoration: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      {link.label}
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </a>
+                    <div
+                      className="sdk-dropdown-menu"
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: "0",
+                        marginTop: "12px",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        minWidth: "200px",
+                        padding: "8px",
+                        opacity: 0,
+                        pointerEvents: "none",
+                        transform: "translateY(4px)",
+                        transition: "all 0.2s ease",
+                        zIndex: 100,
+                      }}
+                    >
+                      {link.children.map((child, cIdx) => (
+                        <a
+                          key={cIdx}
+                          href={child.url}
+                          style={{
+                            textDecoration: "none",
+                            color: "#4a5568",
+                            display: "block",
+                            padding: "8px 12px",
+                            borderRadius: "6px",
+                            fontSize: "0.85rem",
+                            fontWeight: 500,
+                          }}
+                          className="sdk-dropdown-item"
+                        >
+                          {child.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <a
+                    key={idx}
+                    href={link.url}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    {link.label}
+                  </a>
+                );
+              })}
             </nav>
             <div>{renderLogo()}</div>
             <button
@@ -486,15 +777,87 @@ export function Header({
               }}
             >
               <nav style={navLinksStyle}>
-                {navigationLinks.map((link, idx) => (
-                  <a
-                    key={idx}
-                    href={link.url}
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    {link.label}
-                  </a>
-                ))}
+                {navigationLinks.map((link, idx) => {
+                  const hasChildren = link.children && link.children.length > 0;
+                  return hasChildren ? (
+                    <div
+                      key={idx}
+                      className="sdk-dropdown-wrapper"
+                      style={{ position: "relative", display: "inline-block" }}
+                    >
+                      <a
+                        href={link.url}
+                        style={{
+                          textDecoration: "none",
+                          color: "inherit",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px",
+                        }}
+                      >
+                        {link.label}
+                        <svg
+                          width="10"
+                          height="10"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </a>
+                      <div
+                        className="sdk-dropdown-menu"
+                        style={{
+                          position: "absolute",
+                          top: "100%",
+                          left: "0",
+                          marginTop: "12px",
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "8px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          minWidth: "200px",
+                          padding: "8px",
+                          opacity: 0,
+                          pointerEvents: "none",
+                          transform: "translateY(4px)",
+                          transition: "all 0.2s ease",
+                          zIndex: 100,
+                        }}
+                      >
+                        {link.children.map((child, cIdx) => (
+                          <a
+                            key={cIdx}
+                            href={child.url}
+                            style={{
+                              textDecoration: "none",
+                              color: "#4a5568",
+                              display: "block",
+                              padding: "8px 12px",
+                              borderRadius: "6px",
+                              fontSize: "0.85rem",
+                              fontWeight: 500,
+                            }}
+                            className="sdk-dropdown-item"
+                          >
+                            {child.label}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <a
+                      key={idx}
+                      href={link.url}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      {link.label}
+                    </a>
+                  );
+                })}
               </nav>
               <div>
                 {config.ctaText && config.ctaLink && (
@@ -517,15 +880,87 @@ export function Header({
               {renderLogo()}
             </div>
             <nav style={navLinksStyle} className="sdk-desktop-only">
-              {navigationLinks.map((link, idx) => (
-                <a
-                  key={idx}
-                  href={link.url}
-                  style={{ textDecoration: "none", color: "inherit" }}
-                >
-                  {link.label}
-                </a>
-              ))}
+              {navigationLinks.map((link, idx) => {
+                const hasChildren = link.children && link.children.length > 0;
+                return hasChildren ? (
+                  <div
+                    key={idx}
+                    className="sdk-dropdown-wrapper"
+                    style={{ position: "relative", display: "inline-block" }}
+                  >
+                    <a
+                      href={link.url}
+                      style={{
+                        textDecoration: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}
+                    >
+                      {link.label}
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </a>
+                    <div
+                      className="sdk-dropdown-menu"
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: "0",
+                        marginTop: "12px",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        minWidth: "200px",
+                        padding: "8px",
+                        opacity: 0,
+                        pointerEvents: "none",
+                        transform: "translateY(4px)",
+                        transition: "all 0.2s ease",
+                        zIndex: 100,
+                      }}
+                    >
+                      {link.children.map((child, cIdx) => (
+                        <a
+                          key={cIdx}
+                          href={child.url}
+                          style={{
+                            textDecoration: "none",
+                            color: "#4a5568",
+                            display: "block",
+                            padding: "8px 12px",
+                            borderRadius: "6px",
+                            fontSize: "0.85rem",
+                            fontWeight: 500,
+                          }}
+                          className="sdk-dropdown-item"
+                        >
+                          {child.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <a
+                    key={idx}
+                    href={link.url}
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    {link.label}
+                  </a>
+                );
+              })}
               {config.ctaText && config.ctaLink && (
                 <a
                   href={config.ctaLink}
@@ -677,6 +1112,27 @@ export function Header({
         .sdk-drawer-link:hover {
           opacity: 0.8;
         }
+
+        .sdk-dropdown-wrapper {
+          position: relative !important;
+          display: inline-block !important;
+        }
+        .sdk-dropdown-wrapper::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          height: 12px;
+        }
+        .sdk-dropdown-wrapper:hover .sdk-dropdown-menu {
+          opacity: 1 !important;
+          pointer-events: auto !important;
+          transform: translateY(0) !important;
+        }
+        .sdk-dropdown-item:hover {
+          background-color: #f7fafc !important;
+        }
       `,
         }}
       />
@@ -725,16 +1181,87 @@ export function Header({
           {renderLogo()}
         </div>
         <nav className="sdk-drawer-nav">
-          {navigationLinks.map((link, idx) => (
-            <a
-              key={idx}
-              href={link.url}
-              className="sdk-drawer-link"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              {link.label}
-            </a>
-          ))}
+          {navigationLinks.map((link, idx) => {
+            const hasChildren = link.children && link.children.length > 0;
+            const isExpanded = expandedMobileItems.has(idx);
+            return (
+              <div key={idx}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <a
+                    href={link.url}
+                    className="sdk-drawer-link"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    style={{ flex: 1 }}
+                  >
+                    {link.label}
+                  </a>
+                  {hasChildren && (
+                    <button
+                      onClick={() => {
+                        const next = new Set(expandedMobileItems);
+                        if (isExpanded) next.delete(idx);
+                        else next.add(idx);
+                        setExpandedMobileItems(next);
+                      }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "8px",
+                        color: "inherit",
+                      }}
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        style={{
+                          transform: isExpanded ? "rotate(180deg)" : "none",
+                          transition: "transform 0.2s",
+                        }}
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {hasChildren && isExpanded && (
+                  <div
+                    style={{
+                      marginLeft: "16px",
+                      borderLeft: "2px solid #e2e8f0",
+                      paddingLeft: "12px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                      marginTop: "8px",
+                    }}
+                  >
+                    {link.children.map((child, cIdx) => (
+                      <a
+                        key={cIdx}
+                        href={child.url}
+                        className="sdk-drawer-link"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        style={{ fontSize: "0.95rem" }}
+                      >
+                        {child.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {config.ctaText && config.ctaLink && (
             <a
               href={config.ctaLink}

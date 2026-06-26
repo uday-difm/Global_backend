@@ -241,8 +241,9 @@ export default function SecurityConsole({ siteId, user }) {
       if (!res.ok)
         throw new Error(json.error || "Failed to generate 2FA secret");
 
-      setTwoFaSecret(json.secret);
-      setTwoFaQrCode(json.qrCode || "");
+      const payload = json.data || json;
+      setTwoFaSecret(payload.secret);
+      setTwoFaQrCode(payload.qrCode || "");
       setTwoFaStep(2);
     } catch (err) {
       setTwoFaError(err.message);
@@ -288,7 +289,7 @@ export default function SecurityConsole({ siteId, user }) {
       });
       const json = await res.json();
       if (res.ok) {
-        setLoginHistory(json.loginHistory || []);
+        setLoginHistory(json.data?.loginHistory || json.loginHistory || []);
       }
     } catch (err) {
       console.error(err);

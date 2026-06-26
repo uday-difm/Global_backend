@@ -51,8 +51,8 @@ export default function PerformanceConsole({ siteId, user }) {
         headers: { "x-site-id": siteId },
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        setHealthData(data);
+      if (res.ok && !data.error) {
+        setHealthData(data.data || data);
       } else {
         throw new Error(data.error || "Failed to fetch health check details");
       }
@@ -71,8 +71,9 @@ export default function PerformanceConsole({ siteId, user }) {
         headers: { "x-site-id": siteId },
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        const cfg = data.performanceConfig;
+      if (res.ok && !data.error) {
+        const payload = data.data || data;
+        const cfg = payload.performanceConfig;
         setLazyLoading(cfg.lazyLoading ?? true);
         setLazyLoadImages(cfg.lazyLoadImages ?? true);
         setLazyLoadVideos(cfg.lazyLoadVideos ?? true);

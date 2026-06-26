@@ -488,10 +488,9 @@ export default function PageEditorClient({
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to save section");
 
-      setSections((prev) =>
-        prev.map((s) => (s.id === json.section.id ? json.section : s)),
-      );
-      setSelectedSection(json.section);
+      const sec = (json.data || json).section;
+      setSections((prev) => prev.map((s) => (s.id === sec.id ? sec : s)));
+      setSelectedSection(sec);
       setPreviewKey((k) => k + 1);
       flashMessage("Section content saved successfully!");
     } catch (err) {
@@ -547,16 +546,13 @@ export default function PageEditorClient({
       const json = await res.json();
       if (!res.ok) throw new Error("Failed to change visibility");
 
-      setSections((prev) =>
-        prev.map((s) => (s.id === json.section.id ? json.section : s)),
-      );
+      const s = (json.data || json).section;
+      setSections((prev) => prev.map((item) => (item.id === s.id ? s : item)));
       if (selectedSection?.id === sec.id) {
-        setSelectedSection(json.section);
+        setSelectedSection(s);
       }
       flashMessage(
-        json.section.isVisible
-          ? "Section is now visible"
-          : "Section is now hidden",
+        s.isVisible ? "Section is now visible" : "Section is now hidden",
       );
     } catch (err) {
       alert(err.message);
@@ -627,7 +623,8 @@ export default function PageEditorClient({
       );
       if (sectionsRes.ok) {
         const json = await sectionsRes.json();
-        setSections(json.sections || []);
+        const payload = json.data || json;
+        setSections(payload.sections || []);
       }
       flashMessage("Moved to top");
     } catch (err) {

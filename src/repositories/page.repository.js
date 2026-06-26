@@ -14,6 +14,7 @@ export class PageRepository extends BaseRepository {
         slug: { in: [slugWithSlash, slugWithoutSlash] }
       },
       include: { sections: { where: { isDeleted: false }, orderBy: { order: "asc" } } },
+      orderBy: [{ status: "desc" }, { createdAt: "asc" }],
     });
   }
 }

@@ -10,8 +10,15 @@ export async function GET(req) {
   }
 
   try {
-    const history = await prisma.loginHistory.findMany({
+    // Get all user IDs that belong to this site
+    const siteUsers = await prisma.siteUser.findMany({
       where: { siteId: auth.siteId },
+      select: { userId: true },
+    });
+    const userIds = siteUsers.map((su) => su.userId);
+
+    const history = await prisma.loginHistory.findMany({
+      where: { userId: { in: userIds } },
       orderBy: { createdAt: "desc" },
       take: 100,
       include: {

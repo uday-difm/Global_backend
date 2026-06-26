@@ -830,7 +830,7 @@ async function seed() {
       data: {
         siteId: SITE_ID,
         title: "Home",
-        slug: ""
+        slug: "",
         status: "PUBLISHED",
         isManagedBySync: false,
         isHardcoded: true,
