@@ -164,9 +164,18 @@ export class AnalyticsService {
     });
 
     const byDay = {};
+    // Pre-populate last 'days' days to ensure time series has continuous dates
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      const day = d.toISOString().split("T")[0];
+      byDay[day] = { date: day, pageViews: 0, visitors: new Set() };
+    }
+
     for (const log of logs) {
       const day = log.createdAt.toISOString().split("T")[0];
-      if (!byDay[day]) byDay[day] = { date: day, pageViews: 0, visitors: new Set() };
+      if (!byDay[day]) {
+        byDay[day] = { date: day, pageViews: 0, visitors: new Set() };
+      }
       byDay[day].pageViews++;
       byDay[day].visitors.add(log.visitorId);
     }
