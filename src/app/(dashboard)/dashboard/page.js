@@ -82,9 +82,9 @@ export default async function DashboardPage() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Recent Leads */}
-        <div className="rounded-xl border bg-white p-4 sm:p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6 shadow-sm flex flex-col justify-between">
           <div>
-            <h2 className="mb-4 text-base font-bold text-gray-900 border-b pb-2">
+            <h2 className="mb-4 text-base font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-700 pb-2">
               Recent CRM Leads
             </h2>
             <div className="space-y-3">
@@ -96,20 +96,20 @@ export default async function DashboardPage() {
                 recentLeads.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between border-b pb-2 text-xs"
+                    className="flex items-center justify-between border-b border-gray-100 dark:border-slate-700 pb-2 text-xs"
                   >
                     <div>
-                      <span className="font-semibold text-gray-900">
+                      <span className="font-semibold text-gray-900 dark:text-slate-200">
                         {item.name}
                       </span>
-                      <p className="text-[10px] text-gray-400 mt-0.5">
+                      <p className="text-[10px] text-gray-400 dark:text-slate-400 mt-0.5">
                         {item.serviceInterest || "General inquiry"}
                       </p>
                     </div>
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${item.status === "new"
-                          ? "bg-blue-50 text-blue-700 border-blue-200"
-                          : "bg-yellow-50 text-yellow-700 border-yellow-250"
+                          ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-900/40"
+                          : "bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300 border-yellow-250 dark:border-yellow-900/40"
                         }`}
                     >
                       {item.status}
@@ -119,10 +119,10 @@ export default async function DashboardPage() {
               )}
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t">
+          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-slate-700">
             <Link
               href="/leads"
-              className="text-xs text-blue-600 font-semibold hover:underline flex items-center gap-1"
+              className="text-xs text-blue-600 dark:text-indigo-400 font-semibold hover:underline flex items-center gap-1"
             >
               View Leads CRM <Play size={10} fill="currentColor" />
             </Link>
@@ -130,9 +130,9 @@ export default async function DashboardPage() {
         </div>
 
         {/* Recent Submissions */}
-        <div className="rounded-xl border bg-white p-4 sm:p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6 shadow-sm flex flex-col justify-between">
           <div>
-            <h2 className="mb-4 text-base font-bold text-gray-900 border-b pb-2">
+            <h2 className="mb-4 text-base font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-700 pb-2">
               Recent Inquiries
             </h2>
             <div className="space-y-3">
@@ -144,17 +144,17 @@ export default async function DashboardPage() {
                 recentSubmissions.map((item) => (
                   <div
                     key={item.id}
-                    className="flex flex-col gap-1 border-b pb-2 text-xs"
+                    className="flex flex-col gap-1 border-b border-gray-100 dark:border-slate-700 pb-2 text-xs"
                   >
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-900">
+                      <span className="font-semibold text-gray-900 dark:text-slate-200">
                         {item.name}
                       </span>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-[10px] text-gray-400 dark:text-slate-400">
                         {new Date(item.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-500 italic truncate">
+                    <p className="text-[11px] text-gray-500 dark:text-slate-400 italic truncate">
                       "{item.message}"
                     </p>
                   </div>
@@ -162,10 +162,10 @@ export default async function DashboardPage() {
               )}
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t">
+          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-slate-700">
             <Link
               href="/leads"
-              className="text-xs text-blue-600 font-semibold hover:underline flex items-center gap-1"
+              className="text-xs text-blue-600 dark:text-indigo-400 font-semibold hover:underline flex items-center gap-1"
             >
               View Inbox Submissions <Play size={10} fill="currentColor" />
             </Link>
@@ -173,12 +173,12 @@ export default async function DashboardPage() {
         </div>
 
         {/* System & Operations */}
-        <div className="rounded-xl border bg-white p-4 sm:p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6 shadow-sm flex flex-col justify-between">
           <div>
-            <h2 className="mb-4 text-base font-bold text-gray-900 border-b pb-2">
+            <h2 className="mb-4 text-base font-bold text-gray-900 dark:text-white border-b border-gray-100 dark:border-slate-700 pb-2">
               System Integrations
             </h2>
-            <div className="space-y-3 text-xs text-gray-600">
+            <div className="space-y-3 text-xs text-gray-600 dark:text-slate-300">
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
                 <span>PostgreSQL DB Connected</span>
@@ -191,7 +191,7 @@ export default async function DashboardPage() {
                 <span className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse" />
                 <span>
                   Local Server:{" "}
-                  <span className="font-mono bg-gray-100 px-1 rounded">
+                  <span className="font-mono bg-gray-100 dark:bg-slate-700 px-1 rounded text-slate-800 dark:text-slate-250">
                     Dev Bypass
                   </span>
                 </span>
@@ -199,32 +199,32 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t space-y-2">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+          <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700 space-y-2">
+            <h3 className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2">
               Operations Quick Actions
             </h3>
             <div className="grid grid-cols-2 gap-2 text-xs text-center font-semibold">
               <Link
                 href="/backup"
-                className="border rounded-lg py-2.5 px-1 hover:bg-gray-50 transition truncate"
+                className="border border-gray-200 dark:border-slate-700 rounded-lg py-2.5 px-1 hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition truncate"
               >
                 Backup
               </Link>
               <Link
                 href="/redirects"
-                className="border rounded-lg py-2.5 px-1 hover:bg-gray-50 transition truncate"
+                className="border border-gray-200 dark:border-slate-700 rounded-lg py-2.5 px-1 hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition truncate"
               >
                 Link Auditor
               </Link>
               <Link
                 href="/faq"
-                className="border rounded-lg py-2.5 px-1 hover:bg-gray-50 transition truncate"
+                className="border border-gray-200 dark:border-slate-700 rounded-lg py-2.5 px-1 hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition truncate"
               >
                 FAQ Editor
               </Link>
               <Link
                 href="/testimonials"
-                className="border rounded-lg py-2.5 px-1 hover:bg-gray-50 transition truncate"
+                className="border border-gray-200 dark:border-slate-700 rounded-lg py-2.5 px-1 hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition truncate"
               >
                 Reviews
               </Link>
