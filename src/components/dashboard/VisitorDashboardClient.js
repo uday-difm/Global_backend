@@ -325,14 +325,14 @@ function LiveFeed({ liveVisitors }) {
       {liveVisitors.map((v) => (
         <div
           key={v.id}
-          className="flex items-center gap-3 rounded-xl border border-green-100 bg-green-50/60 px-3 py-2.5"
+          className="flex items-center gap-3 rounded-xl border border-green-100 dark:border-green-900/30 bg-green-50/60 dark:bg-green-950/20 px-3 py-2.5"
         >
           <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-xs text-gray-800 truncate">
+            <p className="font-semibold text-xs text-gray-800 dark:text-green-200 truncate">
               {v.pageViewed}
             </p>
-            <p className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
+            <p className="text-[10px] text-gray-500 dark:text-green-400/70 flex items-center gap-1 mt-0.5">
               <MapPin size={9} />
               {v.location || "Unknown"}
               &nbsp;·&nbsp;
@@ -342,7 +342,7 @@ function LiveFeed({ liveVisitors }) {
               {v.trafficSource || "Direct"}
             </p>
           </div>
-          <span className="text-[10px] text-gray-400 shrink-0">
+          <span className="text-[10px] text-gray-400 dark:text-green-500/80 shrink-0">
             {formatDuration(v.duration)}
           </span>
         </div>
@@ -479,8 +479,8 @@ export default function VisitorDashboardClient({
           {/* Connection status */}
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${connected
-                ? "border-green-200 bg-green-50 text-green-700"
-                : "border-red-200 bg-red-50 text-red-700"
+                ? "border-green-200 dark:border-green-900/30 bg-green-50 text-green-700"
+                : "border-red-200 dark:border-red-900/30 bg-red-50 text-red-700"
               }`}
           >
             {connected ? <Wifi size={11} /> : <WifiOff size={11} />}
