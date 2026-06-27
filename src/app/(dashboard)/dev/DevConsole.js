@@ -88,8 +88,9 @@ export default function DevConsole({
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to generate API key");
 
-      setApiKeys((prev) => [json.apiKey, ...prev]);
-      setJustGeneratedKey(json.apiKey.key); // Cache raw key to show user once
+      const key = json.data?.apiKey ?? json.apiKey;
+      setApiKeys((prev) => [key, ...prev]);
+      setJustGeneratedKey(key.key); // Cache raw key to show user once
       setNewKeyName("");
       setSuccessMessage("Developer API Key created successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -151,7 +152,7 @@ export default function DevConsole({
       if (!res.ok)
         throw new Error(json.error || "Failed to rotate integration key");
 
-      setIntegrationKey(json.integrationKey);
+      setIntegrationKey(json.data?.integrationKey ?? json.integrationKey);
       setSuccessMessage("Content Sync Integration Key rotated successfully!");
       setTimeout(() => setSuccessMessage(""), 4000);
     } catch (err) {
@@ -180,7 +181,9 @@ export default function DevConsole({
       });
       const json = await res.json();
       if (res.ok) {
-        setErrorLogs(json.logs || []);
+        setErrorLogs(json.data?.errorLogs || json.logs || []);
+      } else {
+        setErrorMessage(json.error || "Failed to fetch error logs");
       }
     } catch (e) {
       console.error(e);
@@ -462,7 +465,7 @@ export default function DevConsole({
                           : "—"}
                       </td>
                       <td className="px-6 py-3 text-gray-500">
-                        {new Date(key.createdAt).toLocaleDateString()}
+                        {new Date(key.createdAt).toLocaleDateString("en-US")}
                       </td>
                       <td className="px-6 py-3">
                         <button
@@ -592,7 +595,7 @@ export default function DevConsole({
                 </h3>
                 <p className="text-[10px] text-gray-400 font-medium">
                   Build timestamp:{" "}
-                  {new Date(initialVersionInfo.buildTime).toLocaleString()}
+                  {new Date(initialVersionInfo.buildTime).toLocaleString("en-US")}
                 </p>
               </div>
               <div className="px-3 py-1 bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-xs rounded-full">
@@ -694,7 +697,7 @@ export default function DevConsole({
                         {note.author}
                       </span>
                       <span>v{note.version}</span>
-                      <span>{new Date(note.createdAt).toLocaleString()}</span>
+                      <span>{new Date(note.createdAt).toLocaleString("en-US")}</span>
                     </div>
                     <p className="text-xs text-gray-700 leading-relaxed">
                       {note.text}
@@ -770,7 +773,7 @@ export default function DevConsole({
                 <div className="flex justify-between items-start gap-4">
                   <div className="space-y-0.5">
                     <span className="text-[9px] text-slate-500 font-bold bg-slate-950 px-1.5 py-0.5 rounded select-none">
-                      {new Date(log.createdAt).toLocaleString()}
+                      {new Date(log.createdAt).toLocaleString("en-US")}
                     </span>
                     <p className="text-red-400 font-semibold text-xs leading-normal mt-1">
                       {log.message}

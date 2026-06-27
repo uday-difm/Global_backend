@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import Script from "next/script";
 import DOMPurify from "isomorphic-dompurify";
 /**
@@ -1400,9 +1401,39 @@ export function Footer({
           </div>
         );
 
-      case "newsletter":
+      case "newsletter": {
+        const [nlEmail, setNlEmail] = React.useState("");
+        const [nlStatus, setNlStatus] = React.useState("idle");
+        const handleNlSubmit = async (e) => {
+          e.preventDefault();
+          if (!nlEmail.trim()) return;
+          setNlStatus("submitting");
+          try {
+            const baseUrl =
+              process.env.NEXT_PUBLIC_CMS_BASE_URL || "http://localhost:3000";
+            const siteId =
+              process.env.NEXT_PUBLIC_SITE_ID || "layman_litigation";
+            await fetch(baseUrl + "/api/forms/submit", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                siteId,
+                name: "Newsletter Subscriber",
+                email: nlEmail,
+                message: "Subscribed to newsletter from footer",
+                _hp: "",
+              }),
+            });
+            setNlStatus("success");
+            setNlEmail("");
+            setTimeout(() => setNlStatus("idle"), 3000);
+          } catch {
+            setNlStatus("error");
+            setTimeout(() => setNlStatus("idle"), 3000);
+          }
+        };
         return (
-          <div key={idx}>
+          <form key={idx} onSubmit={handleNlSubmit}>
             <h5
               style={{
                 color: headingColor,
@@ -1423,8 +1454,63 @@ export function Footer({
             >
               {col.description || "Stay updated with our latest news."}
             </p>
-          </div>
+            <div style={{ display: "flex", gap: "0.375rem" }}>
+              <input
+                type="email"
+                required
+                value={nlEmail}
+                onChange={(e) => setNlEmail(e.target.value)}
+                placeholder={col.newsletterPlaceholder || "your@email.com"}
+                style={{
+                  flex: 1,
+                  padding: "0.5rem 0.75rem",
+                  fontSize: "0.75rem",
+                  borderRadius: "6px",
+                  border: "1px solid #4a5568",
+                  backgroundColor: "transparent",
+                  color: "inherit",
+                  outline: "none",
+                  minWidth: 0,
+                }}
+              />
+              <button
+                type="submit"
+                disabled={nlStatus === "submitting"}
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  borderRadius: "6px",
+                  border: "none",
+                  backgroundColor:
+                    nlStatus === "success" ? "#22c55e" : "#d9b04f",
+                  color: "#1a202c",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  opacity: nlStatus === "submitting" ? 0.7 : 1,
+                }}
+              >
+                {nlStatus === "success"
+                  ? "Subscribed!"
+                  : nlStatus === "submitting"
+                    ? "..."
+                    : col.newsletterButtonText || "Subscribe"}
+              </button>
+            </div>
+            {nlStatus === "error" && (
+              <p
+                style={{
+                  fontSize: "0.65rem",
+                  color: "#ef4444",
+                  marginTop: "0.375rem",
+                }}
+              >
+                Subscription failed. Try again.
+              </p>
+            )}
+          </form>
         );
+      }
 
       default:
         return (

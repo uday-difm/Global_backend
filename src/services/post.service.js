@@ -172,7 +172,9 @@ export class PostService extends BaseService {
     let candidate = baseSlug;
     let i = 0;
     while (
-      await this.repository.findFirst(siteId, { where: { slug: candidate } })
+      await prisma.post.findFirst({
+        where: { siteId, slug: candidate },
+      })
     ) {
       i += 1;
       candidate = `${baseSlug}-${i}`;

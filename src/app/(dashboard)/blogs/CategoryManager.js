@@ -39,8 +39,9 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create category");
+      const cat = data.data?.category ?? data.category;
       setCategories((prev) =>
-        [...prev, { ...data.category, _count: { posts: 0 } }].sort((a, b) =>
+        [...prev, { ...cat, _count: { posts: 0 } }].sort((a, b) =>
           a.name.localeCompare(b.name),
         ),
       );
@@ -72,9 +73,10 @@ export default function CategoryManager({ initialCategories = [], siteId }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to rename category");
+      const cat = data.data?.category ?? data.category;
       setCategories((prev) =>
         prev
-          .map((c) => (c.id === id ? { ...c, name: data.category.name } : c))
+          .map((c) => (c.id === id ? { ...c, name: cat.name } : c))
           .sort((a, b) => a.name.localeCompare(b.name)),
       );
       setEditingId(null);

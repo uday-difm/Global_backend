@@ -63,7 +63,7 @@ export default function FaqManager({ siteId, initialFaqs, pages = [] }) {
       pageId: pageId || null,
       sortOrder: Number(sortOrder),
       showHide,
-      schemaMarkup
+      schemaMarkup,
     };
 
     const isEdit = !!selectedItem;
@@ -77,9 +77,9 @@ export default function FaqManager({ siteId, initialFaqs, pages = [] }) {
         method,
         headers: {
           "Content-Type": "application/json",
-          "x-site-id": siteId
+          "x-site-id": siteId,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -88,13 +88,14 @@ export default function FaqManager({ siteId, initialFaqs, pages = [] }) {
       }
 
       const result = await res.json();
+      const faq = result.data?.faq ?? result.faq;
 
       if (isEdit) {
         setFaqs((prev) =>
-          prev.map((f) => (f.id === selectedItem.id ? result.faq : f))
+          prev.map((f) => (f.id === selectedItem.id ? faq : f)),
         );
       } else {
-        setFaqs((prev) => [...prev, result.faq]);
+        setFaqs((prev) => [...prev, faq]);
       }
 
       handleModalClose();
@@ -112,8 +113,8 @@ export default function FaqManager({ siteId, initialFaqs, pages = [] }) {
       const res = await fetch(`/api/admin/faq/${id}`, {
         method: "DELETE",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
 
       if (!res.ok) {
@@ -151,11 +152,21 @@ export default function FaqManager({ siteId, initialFaqs, pages = [] }) {
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Question</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Assigned Page</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Order</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700">Settings</th>
-                  <th className="px-6 py-4 font-semibold text-gray-700 text-right">Actions</th>
+                  <th className="px-6 py-4 font-semibold text-gray-700">
+                    Question
+                  </th>
+                  <th className="px-6 py-4 font-semibold text-gray-700">
+                    Assigned Page
+                  </th>
+                  <th className="px-6 py-4 font-semibold text-gray-700">
+                    Order
+                  </th>
+                  <th className="px-6 py-4 font-semibold text-gray-700">
+                    Settings
+                  </th>
+                  <th className="px-6 py-4 font-semibold text-gray-700 text-right">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -196,10 +207,14 @@ export default function FaqManager({ siteId, initialFaqs, pages = [] }) {
                           {item.page.slug}
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400 italic">Global / All Pages</span>
+                        <span className="text-xs text-gray-400 italic">
+                          Global / All Pages
+                        </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-gray-700 whitespace-nowrap">{item.sortOrder}</td>
+                    <td className="px-6 py-4 text-gray-700 whitespace-nowrap">
+                      {item.sortOrder}
+                    </td>
                     <td className="px-6 py-4 space-y-1 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 text-xs">
                         <span
@@ -331,7 +346,10 @@ export default function FaqManager({ siteId, initialFaqs, pages = [] }) {
                     onChange={(e) => setShowHide(e.target.checked)}
                     className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4"
                   />
-                  <label htmlFor="showHide" className="text-sm font-semibold text-gray-700">
+                  <label
+                    htmlFor="showHide"
+                    className="text-sm font-semibold text-gray-700"
+                  >
                     Visible to public clients
                   </label>
                 </div>
@@ -344,7 +362,10 @@ export default function FaqManager({ siteId, initialFaqs, pages = [] }) {
                     onChange={(e) => setSchemaMarkup(e.target.checked)}
                     className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4"
                   />
-                  <label htmlFor="schemaMarkup" className="text-sm font-semibold text-gray-700">
+                  <label
+                    htmlFor="schemaMarkup"
+                    className="text-sm font-semibold text-gray-700"
+                  >
                     Enable SEO Schema
                   </label>
                 </div>

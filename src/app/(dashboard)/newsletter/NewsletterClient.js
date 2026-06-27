@@ -46,7 +46,7 @@ export default function NewsletterClient({ siteId }) {
       const res = await fetch("/api/admin/newsletter", { headers });
       if (!res.ok) throw new Error("Failed to load subscribers");
       const data = await res.json();
-      setSubscribers(data?.subscribers || []);
+      setSubscribers((data?.data?.subscribers ?? data?.subscribers) || []);
     } catch (err) {
       setError(err.message);
     } finally {

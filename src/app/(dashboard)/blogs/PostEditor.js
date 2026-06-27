@@ -105,10 +105,7 @@ export default function PostEditor({
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
   const isScheduled =
-    status === "PUBLISHED" &&
-    customPublishDate &&
-    publishDate &&
-    new Date(publishDate) > new Date();
+    customPublishDate && publishDate && new Date(publishDate) > new Date();
 
   /* ─────────────── Load existing post data ─────────────── */
   useEffect(() => {
@@ -283,12 +280,13 @@ export default function PostEditor({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create category");
+      const cat = data.data?.category ?? data.category;
       setLocalCategories((prev) =>
-        [...prev, { ...data.category, _count: { posts: 0 } }].sort((a, b) =>
+        [...prev, { ...cat, _count: { posts: 0 } }].sort((a, b) =>
           a.name.localeCompare(b.name),
         ),
       );
-      setSelectedCategoryIds((prev) => [...prev, data.category.id]);
+      setSelectedCategoryIds((prev) => [...prev, cat.id]);
       setNewCatName("");
     } catch (err) {
       alert(err.message);
@@ -509,7 +507,7 @@ export default function PostEditor({
                   Content Body
                 </label>
                 <div className="flex items-center gap-3 text-[10px] text-slate-400">
-                  <span>{wordCount.toLocaleString()} words</span>
+                  <span>{wordCount.toLocaleString("en-US")} words</span>
                   <span className="text-slate-200">|</span>
                   <span>~{readTime} min read</span>
                 </div>
@@ -743,7 +741,8 @@ export default function PostEditor({
                       Scheduled Post
                     </p>
                     <p className="text-[10px] text-slate-400 mt-0.5">
-                      Will publish on {new Date(publishDate).toLocaleString()}
+                      Will publish on{" "}
+                      {new Date(publishDate).toLocaleString("en-US")}
                     </p>
                   </div>
                 </>
@@ -774,8 +773,8 @@ export default function PostEditor({
               )}
             </div>
 
-            {/* Schedule toggle — shown only when status is DRAFT */}
-            {status === "DRAFT" && (
+            {/* Schedule toggle */}
+            <>
               <>
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <div
@@ -815,7 +814,7 @@ export default function PostEditor({
                   </div>
                 )}
               </>
-            )}
+            </>
 
             {/* Author */}
             <div>

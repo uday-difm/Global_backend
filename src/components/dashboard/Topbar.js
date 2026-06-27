@@ -18,7 +18,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export default function Topbar({ siteId, sites = [] }) {
+export default function Topbar({ siteId, sites = [], onMenuClick }) {
   const [showSearch, setShowSearch] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -46,8 +46,8 @@ export default function Topbar({ siteId, sites = [] }) {
       });
       if (res.ok) {
         const json = await res.json();
-        setAlerts(json.alerts || []);
-        setUnreadCount(json.unreadCount || 0);
+        setAlerts(json.data?.alerts ?? (json.alerts || []));
+        setUnreadCount(json.data?.unreadCount ?? (json.unreadCount || 0));
       }
     } catch (e) {
       console.error("Failed to load alerts in Topbar:", e);
@@ -184,7 +184,10 @@ export default function Topbar({ siteId, sites = [] }) {
           {/* Left */}
           <div className="flex items-center gap-3">
             {/* Mobile Menu Button */}
-            <button className="rounded-lg p-2 hover:bg-gray-100 md:hidden">
+            <button
+              onClick={onMenuClick}
+              className="rounded-lg p-2 hover:bg-gray-100 md:hidden"
+            >
               <Menu size={20} />
             </button>
 

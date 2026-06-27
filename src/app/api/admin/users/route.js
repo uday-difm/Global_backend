@@ -16,6 +16,7 @@ const UserSchema = z.object({
     .enum(["SUPERADMIN", "ADMIN", "EDITOR", "AUTHOR", "VIEWER"])
     .optional()
     .default("VIEWER"),
+  siteIds: z.array(z.string()).optional().default([]),
 });
 
 export async function GET() {
@@ -106,6 +107,19 @@ export async function POST(req) {
         globalRole: validated.globalRole,
       },
     });
+
+    // Assign site access if siteIds were provided
+    if (validated.siteIds.length > 0) {
+      const siteUserData = validated.siteIds.map((siteId) => ({
+        siteId,
+        userId: newUser.id,
+        role: "EDITOR",
+      }));
+      await prisma.siteUser.createMany({
+        data: siteUserData,
+        skipDuplicates: true,
+      });
+    }
 
     // Audit: log that caller created this new user
     try {

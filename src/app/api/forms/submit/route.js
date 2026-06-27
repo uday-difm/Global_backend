@@ -22,15 +22,20 @@ export async function POST(req) {
     const body = await req.json();
     const parsed = FormSubmitSchema.safeParse(body);
     if (!parsed.success) {
-      const siteId = (body && typeof body.siteId === "string") ? body.siteId : "unknown";
+      const siteId =
+        body && typeof body.siteId === "string" ? body.siteId : "unknown";
       if (siteId !== "unknown") {
         try {
           EventBus.emit("form.failed", {
             siteId,
             data: {
-              message: "Validation failed: " + (parsed.error.issues || parsed.error.errors).map(e => `${e.path.join(".")}: ${e.message}`).join(", "),
-              payload: body
-            }
+              message:
+                "Validation failed: " +
+                (parsed.error.issues || parsed.error.errors)
+                  .map((e) => `${e.path.join(".")}: ${e.message}`)
+                  .join(", "),
+              payload: body,
+            },
           });
         } catch (e) {
           console.error("Failed to emit form.failed event:", e);
@@ -46,13 +51,16 @@ export async function POST(req) {
       );
     }
 
-    const { siteId, name, email, phone, message, recaptchaToken, _hp } = parsed.data;
+    const { siteId, name, email, phone, message, recaptchaToken, _hp } =
+      parsed.data;
 
     // ── Honeypot check ─────────────────────────────────────────────────────────
     // Bots fill in all fields; real users leave honeypot blank
     if (_hp && _hp.trim().length > 0) {
       // Silently accept but do not persist (anti-bot)
-      return NextResponse.json(apiSuccess({ message: "Form submitted successfully" }));
+      return NextResponse.json(
+        apiSuccess({ message: "Form submitted successfully" }),
+      );
     }
 
     // Check if site exists
@@ -75,11 +83,14 @@ export async function POST(req) {
             siteId,
             data: {
               message: `Blocked IP (${ip}) attempted form submission`,
-              payload: { name, email, ip }
-            }
+              payload: { name, email, ip },
+            },
           });
-        } catch (e) { }
-        return NextResponse.json({ success: false, error: "Access Denied: Your IP is blocked" }, { status: 403 });
+        } catch (e) {}
+        return NextResponse.json(
+          { success: false, error: "Access Denied: Your IP is blocked" },
+          { status: 403 },
+        );
       }
 
       const controls = await securityService.getSecurityControls(siteId);
@@ -92,11 +103,14 @@ export async function POST(req) {
             siteId,
             data: {
               message: `IP rate limit exceeded (${ip})`,
-              payload: { name, email, ip }
-            }
+              payload: { name, email, ip },
+            },
           });
-        } catch (e) { }
-        return NextResponse.json({ success: false, error: "Too Many Requests: Rate limit exceeded" }, { status: 429 });
+        } catch (e) {}
+        return NextResponse.json(
+          { success: false, error: "Too Many Requests: Rate limit exceeded" },
+          { status: 429 },
+        );
       }
     } catch (e) {
       console.error("IP check / Rate limit failed in form submission:", e);
@@ -118,13 +132,13 @@ export async function POST(req) {
             siteId,
             data: {
               message: "reCAPTCHA verification token missing",
-              payload: { name, email }
-            }
+              payload: { name, email },
+            },
           });
-        } catch (e) { }
+        } catch (e) {}
         return NextResponse.json(
           { success: false, error: "reCAPTCHA verification is required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -135,9 +149,12 @@ export async function POST(req) {
           response: recaptchaToken,
         });
 
-        const verifyRes = await fetch(`${verifyUrl}?${queryParams.toString()}`, {
-          method: "POST",
-        });
+        const verifyRes = await fetch(
+          `${verifyUrl}?${queryParams.toString()}`,
+          {
+            method: "POST",
+          },
+        );
 
         const verifyJson = await verifyRes.json();
         if (!verifyJson.success) {
@@ -146,29 +163,35 @@ export async function POST(req) {
               siteId,
               data: {
                 message: "reCAPTCHA verification failed",
-                payload: { name, email }
-              }
+                payload: { name, email },
+              },
             });
-          } catch (e) { }
+          } catch (e) {}
           return NextResponse.json(
             { success: false, error: "reCAPTCHA verification failed" },
-            { status: 400 }
+            { status: 400 },
           );
         }
       } catch (captchaErr) {
-        console.error("Google reCAPTCHA validation failed:", captchaErr.message);
+        console.error(
+          "Google reCAPTCHA validation failed:",
+          captchaErr.message,
+        );
         try {
           EventBus.emit("form.failed", {
             siteId,
             data: {
               message: `reCAPTCHA validation service error: ${captchaErr.message}`,
-              payload: { name, email }
-            }
+              payload: { name, email },
+            },
           });
-        } catch (e) { }
+        } catch (e) {}
         return NextResponse.json(
-          { success: false, error: "Security check validation service temporarily unavailable" },
-          { status: 400 }
+          {
+            success: false,
+            error: "Security check validation service temporarily unavailable",
+          },
+          { status: 400 },
         );
       }
     }
@@ -191,10 +214,10 @@ export async function POST(req) {
             siteId,
             data: {
               message: "Submission blocked by spam keyword filter",
-              payload: { name, email, message }
-            }
+              payload: { name, email, message },
+            },
           });
-        } catch (e) { }
+        } catch (e) {}
         return NextResponse.json(
           { success: false, error: "Submission blocked as spam" },
           { status: 400 },
@@ -213,10 +236,10 @@ export async function POST(req) {
           siteId,
           data: {
             message: "Submission frequency limit reached (max 5 per hour)",
-            payload: { name, email }
-          }
+            payload: { name, email },
+          },
         });
-      } catch (e) { }
+      } catch (e) {}
       return NextResponse.json(
         {
           success: false,
@@ -244,6 +267,30 @@ export async function POST(req) {
       }),
     ]);
 
+    // Sync newsletter subscribers when submission is a newsletter signup
+    const isNewsletter =
+      message?.toLowerCase().includes("newsletter") ||
+      name === "Newsletter Subscriber";
+    if (isNewsletter) {
+      try {
+        const existing = await prisma.newsletter.findFirst({
+          where: { siteId, email: email.toLowerCase() },
+        });
+        if (!existing) {
+          await prisma.newsletter.create({
+            data: { siteId, email: email.toLowerCase(), status: "active" },
+          });
+        } else if (existing.status !== "active") {
+          await prisma.newsletter.update({
+            where: { id: existing.id },
+            data: { status: "active" },
+          });
+        }
+      } catch (e) {
+        console.error("Failed to sync newsletter subscriber:", e);
+      }
+    }
+
     // ── Emit events for asynchronous processing (emails & dashboard notifications) ──
     try {
       EventBus.emit("contact_form.submitted", { submission, lead, site });
@@ -252,9 +299,13 @@ export async function POST(req) {
       console.error("Failed to emit submission events:", err);
     }
 
-    return NextResponse.json(apiSuccess({ message: "Form submitted successfully",
-      submissionId: submission.id,
-      leadId: lead.id }));
+    return NextResponse.json(
+      apiSuccess({
+        message: "Form submitted successfully",
+        submissionId: submission.id,
+        leadId: lead.id,
+      }),
+    );
   } catch (err) {
     console.error("POST /api/forms/submit error:", err);
     return NextResponse.json(

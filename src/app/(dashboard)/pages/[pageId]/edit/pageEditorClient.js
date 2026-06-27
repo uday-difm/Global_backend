@@ -2142,7 +2142,7 @@ export default function PageEditorClient({
                           v{v.version}
                         </span>
                         <span className="text-xs text-gray-500 ml-3">
-                          {new Date(v.createdAt).toLocaleString()}
+                          {new Date(v.createdAt).toLocaleString("en-US")}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -2168,7 +2168,7 @@ export default function PageEditorClient({
                           onClick={async () => {
                             if (
                               !confirm(
-                                `Restore version v${v.version} from ${new Date(v.createdAt).toLocaleString()}? Current page data will be replaced.`,
+                                `Restore version v${v.version} from ${new Date(v.createdAt).toLocaleString("en-US")}? Current page data will be replaced.`,
                               )
                             )
                               return;

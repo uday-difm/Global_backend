@@ -35,7 +35,8 @@ export default function MediaLibraryClient({ siteId }) {
         },
       );
       const mediaData = await mediaRes.json();
-      setMedia(Array.isArray(mediaData) ? mediaData : []);
+      const items = mediaData.data ?? mediaData;
+      setMedia(Array.isArray(items) ? items : []);
 
       // 2. Fetch subfolders in current directory
       const foldersRes = await fetch(
@@ -45,7 +46,7 @@ export default function MediaLibraryClient({ siteId }) {
         },
       );
       const foldersData = await foldersRes.json();
-      setFolders(foldersData.folders || []);
+      setFolders((foldersData.data?.folders ?? foldersData.folders) || []);
     } catch (error) {
       console.error("Load media contents error:", error);
     } finally {

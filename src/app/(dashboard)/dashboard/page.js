@@ -70,7 +70,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Active Pages" value={totalPages} />
         <StatCard title="Blog Posts" value={totalPosts} />
         <StatCard title="Open CRM Leads" value={totalLeads} />
@@ -78,9 +78,9 @@ export default async function DashboardPage() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Recent Leads */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-xl border bg-white p-4 sm:p-6 shadow-sm flex flex-col justify-between">
           <div>
             <h2 className="mb-4 text-base font-bold text-gray-900 border-b pb-2">
               Recent CRM Leads
@@ -129,7 +129,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Recent Submissions */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-xl border bg-white p-4 sm:p-6 shadow-sm flex flex-col justify-between">
           <div>
             <h2 className="mb-4 text-base font-bold text-gray-900 border-b pb-2">
               Recent Inquiries
@@ -172,7 +172,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* System & Operations */}
-        <div className="rounded-xl border bg-white p-6 shadow-sm flex flex-col justify-between">
+        <div className="rounded-xl border bg-white p-4 sm:p-6 shadow-sm flex flex-col justify-between">
           <div>
             <h2 className="mb-4 text-base font-bold text-gray-900 border-b pb-2">
               System Integrations
@@ -205,27 +205,27 @@ export default async function DashboardPage() {
             <div className="grid grid-cols-2 gap-2 text-xs text-center font-semibold">
               <Link
                 href="/backup"
-                className="border rounded-lg py-2 hover:bg-gray-50 transition"
+                className="border rounded-lg py-2.5 px-1 hover:bg-gray-50 transition truncate"
               >
-                Backup Data
+                Backup
               </Link>
               <Link
                 href="/redirects"
-                className="border rounded-lg py-2 hover:bg-gray-50 transition"
+                className="border rounded-lg py-2.5 px-1 hover:bg-gray-50 transition truncate"
               >
                 Link Auditor
               </Link>
               <Link
                 href="/faq"
-                className="border rounded-lg py-2 hover:bg-gray-50 transition"
+                className="border rounded-lg py-2.5 px-1 hover:bg-gray-50 transition truncate"
               >
                 FAQ Editor
               </Link>
               <Link
                 href="/testimonials"
-                className="border rounded-lg py-2 hover:bg-gray-50 transition"
+                className="border rounded-lg py-2.5 px-1 hover:bg-gray-50 transition truncate"
               >
-                Reviews Manager
+                Reviews
               </Link>
             </div>
           </div>

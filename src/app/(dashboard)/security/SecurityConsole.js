@@ -681,7 +681,7 @@ export default function SecurityConsole({ siteId, user }) {
                           )}
                         </td>
                         <td className="px-4 py-3 text-gray-400">
-                          {new Date(log.createdAt).toLocaleString()}
+                          {new Date(log.createdAt).toLocaleString("en-US")}
                         </td>
                       </tr>
                     ))}
@@ -765,7 +765,7 @@ export default function SecurityConsole({ siteId, user }) {
                           {log.meta ? JSON.stringify(log.meta) : "—"}
                         </td>
                         <td className="px-4 py-3 text-gray-400">
-                          {new Date(log.createdAt).toLocaleString()}
+                          {new Date(log.createdAt).toLocaleString("en-US")}
                         </td>
                       </tr>
                     ))}

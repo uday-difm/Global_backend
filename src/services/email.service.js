@@ -128,6 +128,7 @@ export class EmailService extends BaseService {
       try {
         await transporter.sendMail({
           from: fromEmail,
+          replyTo: fromEmail,
           to: submission.email,
           subject: replySubject,
           text: replyBody,
@@ -143,6 +144,7 @@ export class EmailService extends BaseService {
       try {
         await transporter.sendMail({
           from: fromEmail,
+          replyTo: fromEmail,
           to: adminEmail,
           subject: `[${site.name}] New Lead / Contact Submission: ${submission.name}`,
           text: `New contact form submission:\n\nName: ${submission.name}\nEmail: ${submission.email}\nPhone: ${submission.phone || "N/A"}\nMessage:\n${submission.message}\n\nView in CMS dashboard under Leads.`,

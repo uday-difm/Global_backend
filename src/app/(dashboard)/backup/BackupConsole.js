@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Upload, Database, RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  Download,
+  Upload,
+  Database,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 
 export default function BackupConsole({ siteId, initialHistory }) {
   const [history, setHistory] = useState(initialHistory);
@@ -22,8 +29,8 @@ export default function BackupConsole({ siteId, initialHistory }) {
       const res = await fetch("/api/admin/backup/database", {
         method: "POST",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
 
       if (!res.ok) {
@@ -32,25 +39,32 @@ export default function BackupConsole({ siteId, initialHistory }) {
       }
 
       const result = await res.json();
+      const backup = result.data?.backup ?? result.backup;
 
       // Trigger browser download of the backup payload
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(result.backup, null, 2));
+      const dataStr =
+        "data:text/json;charset=utf-8," +
+        encodeURIComponent(JSON.stringify(backup, null, 2));
       const downloadAnchor = document.createElement("a");
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `site_backup_${siteId}_${Date.now()}.json`);
+      downloadAnchor.setAttribute(
+        "download",
+        `site_backup_${siteId}_${Date.now()}.json`,
+      );
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
 
       // Refetch backup logs
       const historyRes = await fetch(`/api/admin/backup/history`, {
-        headers: { "x-site-id": siteId }
+        headers: { "x-site-id": siteId },
       });
       const historyResult = await historyRes.json();
-      if (historyResult.success) {
-        setHistory(historyResult.backupHistory);
+      const history =
+        historyResult.data?.backupHistory ?? historyResult.backupHistory;
+      if (history) {
+        setHistory(history);
       }
-
       setSuccess("Database backup successfully compiled and downloaded!");
     } catch (err) {
       setError(err.message);
@@ -68,8 +82,8 @@ export default function BackupConsole({ siteId, initialHistory }) {
       const res = await fetch("/api/admin/backup/media", {
         method: "POST",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
 
       if (!res.ok) {
@@ -78,25 +92,32 @@ export default function BackupConsole({ siteId, initialHistory }) {
       }
 
       const result = await res.json();
+      const backup = result.data?.backup ?? result.backup;
 
       // Trigger browser download of the media backup payload
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(result.backup, null, 2));
+      const dataStr =
+        "data:text/json;charset=utf-8," +
+        encodeURIComponent(JSON.stringify(backup, null, 2));
       const downloadAnchor = document.createElement("a");
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `media_backup_${siteId}_${Date.now()}.json`);
+      downloadAnchor.setAttribute(
+        "download",
+        `media_backup_${siteId}_${Date.now()}.json`,
+      );
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
 
       // Refetch backup logs
       const historyRes = await fetch(`/api/admin/backup/history`, {
-        headers: { "x-site-id": siteId }
+        headers: { "x-site-id": siteId },
       });
       const historyResult = await historyRes.json();
-      if (historyResult.success) {
-        setHistory(historyResult.backupHistory);
+      const history =
+        historyResult.data?.backupHistory ?? historyResult.backupHistory;
+      if (history) {
+        setHistory(history);
       }
-
       setSuccess("Media backup successfully compiled and downloaded!");
     } catch (err) {
       setError(err.message);
@@ -132,7 +153,8 @@ export default function BackupConsole({ siteId, initialHistory }) {
       return;
     }
 
-    const isMedia = parsedBackup && (parsedBackup.media || parsedBackup.folders);
+    const isMedia =
+      parsedBackup && (parsedBackup.media || parsedBackup.folders);
     const confirmMessage = isMedia
       ? "CRITICAL WARNING: Restoring the media snapshot will delete and overwrite your current site media folders and file references. Are you sure you want to proceed?"
       : "CRITICAL WARNING: Restoring the database will overwrite your current site data. All current pages, testimonials, FAQs, team members, and leads will be rollbacked. Are you sure you want to proceed?";
@@ -150,9 +172,9 @@ export default function BackupConsole({ siteId, initialHistory }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-site-id": siteId
+          "x-site-id": siteId,
         },
-        body: JSON.stringify({ backup: parsedBackup })
+        body: JSON.stringify({ backup: parsedBackup }),
       });
 
       if (!res.ok) {
@@ -161,17 +183,23 @@ export default function BackupConsole({ siteId, initialHistory }) {
       }
 
       const resJson = await res.json();
-      setSuccess(resJson.message || "Database successfully rollbacked and restored! Reloading state...");
+      const msg = resJson.data?.message ?? resJson.message;
+      setSuccess(
+        msg ||
+          "Database successfully rollbacked and restored! Reloading state...",
+      );
       setRestoreFile(null);
       setRestoreText("");
 
       // Refresh list
       const historyRes = await fetch(`/api/admin/backup/history`, {
-        headers: { "x-site-id": siteId }
+        headers: { "x-site-id": siteId },
       });
       const historyResult = await historyRes.json();
-      if (historyResult.success) {
-        setHistory(historyResult.backupHistory);
+      const history =
+        historyResult.data?.backupHistory ?? historyResult.backupHistory;
+      if (history) {
+        setHistory(history);
       }
     } catch (err) {
       setError(err.message);
@@ -220,16 +248,23 @@ export default function BackupConsole({ siteId, initialHistory }) {
               <Database size={24} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Compile Site Database Backup</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                Compile Site Database Backup
+              </h3>
               <p className="text-sm text-gray-500 mt-0.5">
-                Generate an atomic snapshot of your website configuration including pages, blogs, services, testimonials, FAQs, redirects, and leads.
+                Generate an atomic snapshot of your website configuration
+                including pages, blogs, services, testimonials, FAQs, redirects,
+                and leads.
               </p>
             </div>
           </div>
 
           <div className="bg-gray-50 border rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-xs text-gray-500">
-              ⚡ Scope: All tables filtered under Site ID <span className="font-mono text-gray-800 bg-gray-200 px-1 py-0.5 rounded">{siteId}</span>
+              ⚡ Scope: All tables filtered under Site ID{" "}
+              <span className="font-mono text-gray-800 bg-gray-200 px-1 py-0.5 rounded">
+                {siteId}
+              </span>
             </div>
             <button
               onClick={triggerBackup}
@@ -258,16 +293,22 @@ export default function BackupConsole({ siteId, initialHistory }) {
               <Upload size={24} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Compile Site Media Snapshot</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                Compile Site Media Snapshot
+              </h3>
               <p className="text-sm text-gray-500 mt-0.5">
-                Generate an atomic snapshot of your website media asset folders and file links stored inside Cloudinary.
+                Generate an atomic snapshot of your website media asset folders
+                and file links stored inside Cloudinary.
               </p>
             </div>
           </div>
 
           <div className="bg-gray-50 border rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-xs text-gray-500">
-              ⚡ Scope: Media assets and folder hierarchies under Site ID <span className="font-mono text-gray-800 bg-gray-200 px-1 py-0.5 rounded">{siteId}</span>
+              ⚡ Scope: Media assets and folder hierarchies under Site ID{" "}
+              <span className="font-mono text-gray-800 bg-gray-200 px-1 py-0.5 rounded">
+                {siteId}
+              </span>
             </div>
             <button
               onClick={triggerMediaBackup}
@@ -296,9 +337,14 @@ export default function BackupConsole({ siteId, initialHistory }) {
               <Upload size={24} />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Atomic Rollback Restore</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                Atomic Rollback Restore
+              </h3>
               <p className="text-sm text-gray-500 mt-0.5">
-                Upload a previously compiled site JSON file (Database or Media) to restore the configuration state. Database operations are transactional: any error triggers a full rollback to keep data safe.
+                Upload a previously compiled site JSON file (Database or Media)
+                to restore the configuration state. Database operations are
+                transactional: any error triggers a full rollback to keep data
+                safe.
               </p>
             </div>
           </div>
@@ -316,19 +362,28 @@ export default function BackupConsole({ siteId, initialHistory }) {
                 <Upload className="mx-auto text-gray-400" size={32} />
                 <p>
                   {restoreFile ? (
-                    <span className="font-semibold text-gray-900">{restoreFile.name}</span>
+                    <span className="font-semibold text-gray-900">
+                      {restoreFile.name}
+                    </span>
                   ) : (
-                    <span>Drag and drop your backup JSON file here, or click to browse</span>
+                    <span>
+                      Drag and drop your backup JSON file here, or click to
+                      browse
+                    </span>
                   )}
                 </p>
-                <p className="text-xs text-gray-400">JSON files up to 10MB (either Database or Media snapshots)</p>
+                <p className="text-xs text-gray-400">
+                  JSON files up to 10MB (either Database or Media snapshots)
+                </p>
               </div>
             </div>
 
             <div className="flex justify-end pt-2">
               <button
                 type="submit"
-                disabled={isBackingUp || isBackingUpMedia || isRestoring || !restoreFile}
+                disabled={
+                  isBackingUp || isBackingUpMedia || isRestoring || !restoreFile
+                }
                 className="flex items-center gap-2 rounded-lg bg-yellow-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-yellow-700 disabled:bg-gray-300 disabled:text-gray-500 transition"
               >
                 {isRestoring ? (
@@ -350,22 +405,34 @@ export default function BackupConsole({ siteId, initialHistory }) {
 
       {/* History Log Panel */}
       <div className="rounded-xl border bg-white p-6 shadow-sm space-y-4">
-        <h3 className="text-lg font-bold text-gray-900 border-b pb-2">Backup History</h3>
+        <h3 className="text-lg font-bold text-gray-900 border-b pb-2">
+          Backup History
+        </h3>
 
         {history.length === 0 ? (
-          <p className="text-xs text-gray-400 italic text-center py-6">No previous backups recorded.</p>
+          <p className="text-xs text-gray-400 italic text-center py-6">
+            No previous backups recorded.
+          </p>
         ) : (
           <div className="space-y-3 max-h-[580px] overflow-y-auto pr-1">
             {history.map((log) => (
-              <div key={log.id} className="border rounded-lg p-3 text-xs space-y-1 hover:bg-gray-50/50">
+              <div
+                key={log.id}
+                className="border rounded-lg p-3 text-xs space-y-1 hover:bg-gray-50/50"
+              >
                 <div className="flex justify-between font-semibold text-gray-800">
-                  <span>{log.type === "media" ? "Media Snapshot" : "Database Snap"}</span>
+                  <span>
+                    {log.type === "media" ? "Media Snapshot" : "Database Snap"}
+                  </span>
                   <span className="text-gray-500">{formatBytes(log.size)}</span>
                 </div>
                 <div className="text-[10px] text-gray-400">
-                  {new Date(log.timestamp).toLocaleString()}
+                  {new Date(log.timestamp).toLocaleString("en-US")}
                 </div>
-                <div className="text-[10px] text-gray-500 font-mono truncate" title={log.id}>
+                <div
+                  className="text-[10px] text-gray-500 font-mono truncate"
+                  title={log.id}
+                >
                   ID: {log.id}
                 </div>
               </div>

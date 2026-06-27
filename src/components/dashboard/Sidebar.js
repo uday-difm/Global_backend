@@ -240,7 +240,7 @@ function SidebarLink({ href, label, icon: Icon, pathname }) {
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, setIsOpen }) {
   const pathname = usePathname();
   const { data: session } = useSession();
 
@@ -249,106 +249,127 @@ export default function Sidebar() {
   const userRole = session?.user?.globalRole || "VIEWER";
 
   return (
-    <aside className="hidden md:flex md:w-56 md:flex-col border-r bg-white">
-      {/* Header */}
-      <div className="border-b px-4 py-3">
-        <h1 className="text-base font-bold tracking-tight text-gray-900">
-          Global CMS
-        </h1>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-3">
-        {sections.map((section) => {
-          const visibleLinks = section.links.filter((link) =>
-            canSee(userRole, link.minRole),
-          );
-
-          if (!visibleLinks.length) return null;
-
-          return (
-            <div key={section.title}>
-              <h5 className="px-2.5 mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-gray-400">
-                {section.title}
-              </h5>
-
-              <div className="space-y-0.5">
-                {visibleLinks.map((link) => (
-                  <SidebarLink key={link.href} {...link} pathname={pathname} />
-                ))}
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Advanced */}
-        {canSee(userRole, "ADMIN") && (
-          <div>
-            <button
-              onClick={() => setAdvancedOpen(!advancedOpen)}
-              className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
-            >
-              <span>Advanced</span>
-
-              {advancedOpen ? (
-                <ChevronDown size={14} />
-              ) : (
-                <ChevronRight size={14} />
-              )}
-            </button>
-
-            {advancedOpen && (
-              <div className="mt-1 space-y-0.5">
-                <SidebarLink
-                  href="/backup"
-                  label="Backup & Restore"
-                  icon={Database}
-                  pathname={pathname}
-                />
-
-                <SidebarLink
-                  href="/compliance"
-                  label="Compliance"
-                  icon={Fingerprint}
-                  pathname={pathname}
-                />
-
-                <SidebarLink
-                  href="/performance"
-                  label="Performance"
-                  icon={Activity}
-                  pathname={pathname}
-                />
-
-                <SidebarLink
-                  href="/dev"
-                  label="Developer Tools"
-                  icon={Terminal}
-                  pathname={pathname}
-                />
-
-                <SidebarLink
-                  href="/settings"
-                  label="Settings"
-                  icon={Settings}
-                  pathname={pathname}
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </nav>
-
-      {/* Footer */}
-      <div className="border-t px-4 py-2.5 bg-gray-50">
-        <div className="flex items-center justify-between">
-          <span className="text-[9px] text-gray-400 font-medium">CMS v1.0</span>
-
-          <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-indigo-700">
-            {userRole}
-          </span>
+    <>
+      {/* Mobile overlay backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+      <aside
+        className={`
+        fixed inset-y-0 left-0 z-50 w-56 border-r bg-white flex flex-col transform transition-transform duration-200
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        md:relative md:translate-x-0
+      `}
+      >
+        {/* Header */}
+        <div className="border-b px-4 py-3">
+          <h1 className="text-base font-bold tracking-tight text-gray-900">
+            Global CMS
+          </h1>
         </div>
-      </div>
-    </aside>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-3">
+          {sections.map((section) => {
+            const visibleLinks = section.links.filter((link) =>
+              canSee(userRole, link.minRole),
+            );
+
+            if (!visibleLinks.length) return null;
+
+            return (
+              <div key={section.title}>
+                <h5 className="px-2.5 mb-1 text-[9px] font-bold uppercase tracking-[0.18em] text-gray-400">
+                  {section.title}
+                </h5>
+
+                <div className="space-y-0.5">
+                  {visibleLinks.map((link) => (
+                    <SidebarLink
+                      key={link.href}
+                      {...link}
+                      pathname={pathname}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Advanced */}
+          {canSee(userRole, "ADMIN") && (
+            <div>
+              <button
+                onClick={() => setAdvancedOpen(!advancedOpen)}
+                className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-gray-600 hover:bg-gray-50"
+              >
+                <span>Advanced</span>
+
+                {advancedOpen ? (
+                  <ChevronDown size={14} />
+                ) : (
+                  <ChevronRight size={14} />
+                )}
+              </button>
+
+              {advancedOpen && (
+                <div className="mt-1 space-y-0.5">
+                  <SidebarLink
+                    href="/backup"
+                    label="Backup & Restore"
+                    icon={Database}
+                    pathname={pathname}
+                  />
+
+                  <SidebarLink
+                    href="/compliance"
+                    label="Compliance"
+                    icon={Fingerprint}
+                    pathname={pathname}
+                  />
+
+                  <SidebarLink
+                    href="/performance"
+                    label="Performance"
+                    icon={Activity}
+                    pathname={pathname}
+                  />
+
+                  <SidebarLink
+                    href="/dev"
+                    label="Developer Tools"
+                    icon={Terminal}
+                    pathname={pathname}
+                  />
+
+                  <SidebarLink
+                    href="/settings"
+                    label="Settings"
+                    icon={Settings}
+                    pathname={pathname}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </nav>
+
+        {/* Footer */}
+        <div className="border-t px-4 py-2.5 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] text-gray-400 font-medium">
+              CMS v1.0
+            </span>
+
+            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-indigo-700">
+              {userRole}
+            </span>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

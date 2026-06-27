@@ -2,7 +2,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, X, UserPlus, Mail, KeyRound, Shield, AlertTriangle } from "lucide-react";
+import {
+  Plus,
+  X,
+  UserPlus,
+  Mail,
+  KeyRound,
+  Shield,
+  AlertTriangle,
+} from "lucide-react";
 
 const ROLE_LEVEL = {
   SUPERADMIN: 5,
@@ -12,12 +20,13 @@ const ROLE_LEVEL = {
   VIEWER: 1,
 };
 
-export default function CreateUserForm() {
+export default function CreateUserForm({ sites = [] }) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [role, setRole] = useState("EDITOR");
+  const [selectedSites, setSelectedSites] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [creatorRole, setCreatorRole] = useState(null);
@@ -28,6 +37,7 @@ export default function CreateUserForm() {
     setPassword("");
     setConfirm("");
     setRole("EDITOR");
+    setSelectedSites([]);
     setError(null);
   };
 
@@ -38,15 +48,22 @@ export default function CreateUserForm() {
 
     if (!email.trim()) return setError("Email address is required.");
     if (!password) return setError("Password is required.");
-    if (password.length < 6) return setError("Password must be at least 6 characters.");
-    if (password !== confirm) return setError("Confirmation passwords do not match.");
+    if (password.length < 6)
+      return setError("Password must be at least 6 characters.");
+    if (password !== confirm)
+      return setError("Confirmation passwords do not match.");
 
     setLoading(true);
     try {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, globalRole: role }),
+        body: JSON.stringify({
+          email,
+          password,
+          globalRole: role,
+          siteIds: selectedSites,
+        }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -87,7 +104,9 @@ export default function CreateUserForm() {
 
   const allRoles = ["SUPERADMIN", "ADMIN", "EDITOR", "AUTHOR", "VIEWER"];
   const allowedRoles = creatorRole
-    ? allRoles.filter((r) => (ROLE_LEVEL[r] || 0) <= (ROLE_LEVEL[creatorRole] || 0))
+    ? allRoles.filter(
+        (r) => (ROLE_LEVEL[r] || 0) <= (ROLE_LEVEL[creatorRole] || 0),
+      )
     : ["EDITOR", "AUTHOR", "VIEWER"]; // Safe fallback
 
   return (
@@ -118,7 +137,9 @@ export default function CreateUserForm() {
             <div className="px-6 py-4 bg-gray-50 border-b flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <UserPlus className="text-green-600" size={18} />
-                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Add System Member</h3>
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
+                  Add System Member
+                </h3>
               </div>
               <button
                 className="p-1 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-700 transition"
@@ -133,7 +154,10 @@ export default function CreateUserForm() {
               <div className="p-6 space-y-4">
                 {error && (
                   <div className="flex gap-2.5 p-3.5 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs font-semibold">
-                    <AlertTriangle className="shrink-0 text-red-600" size={16} />
+                    <AlertTriangle
+                      className="shrink-0 text-red-600"
+                      size={16}
+                    />
                     <p>{error}</p>
                   </div>
                 )}
@@ -144,7 +168,10 @@ export default function CreateUserForm() {
                     Email Address
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 text-gray-400" size={14} />
+                    <Mail
+                      className="absolute left-3 top-3 text-gray-400"
+                      size={14}
+                    />
                     <input
                       type="email"
                       required
@@ -162,7 +189,10 @@ export default function CreateUserForm() {
                     Sign-In Password
                   </label>
                   <div className="relative">
-                    <KeyRound className="absolute left-3 top-3 text-gray-400" size={14} />
+                    <KeyRound
+                      className="absolute left-3 top-3 text-gray-400"
+                      size={14}
+                    />
                     <input
                       type="password"
                       required
@@ -180,7 +210,10 @@ export default function CreateUserForm() {
                     Confirm Sign-In Password
                   </label>
                   <div className="relative">
-                    <KeyRound className="absolute left-3 top-3 text-gray-400" size={14} />
+                    <KeyRound
+                      className="absolute left-3 top-3 text-gray-400"
+                      size={14}
+                    />
                     <input
                       type="password"
                       required
@@ -198,7 +231,10 @@ export default function CreateUserForm() {
                     System Global Access Role
                   </label>
                   <div className="relative">
-                    <Shield className="absolute left-3 top-3 text-gray-400" size={14} />
+                    <Shield
+                      className="absolute left-3 top-3 text-gray-400"
+                      size={14}
+                    />
                     <select
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
@@ -212,6 +248,63 @@ export default function CreateUserForm() {
                     </select>
                   </div>
                 </div>
+
+                {/* Site Access Selection — only for admin/superadmin users */}
+                {creatorRole &&
+                  (creatorRole === "SUPERADMIN" || creatorRole === "ADMIN") &&
+                  sites.length > 0 && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                        Site Access
+                      </label>
+                      <div className="rounded-lg border border-gray-200 bg-white p-3 space-y-2 max-h-48 overflow-y-auto">
+                        {sites.length === 0 ? (
+                          <p className="text-xs text-gray-400 italic">
+                            No sites available
+                          </p>
+                        ) : (
+                          sites.map((site) => (
+                            <label
+                              key={site.id}
+                              className="flex items-center gap-2.5 cursor-pointer group"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedSites.includes(site.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedSites((prev) => [
+                                      ...prev,
+                                      site.id,
+                                    ]);
+                                  } else {
+                                    setSelectedSites((prev) =>
+                                      prev.filter((id) => id !== site.id),
+                                    );
+                                  }
+                                }}
+                                className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4"
+                              />
+                              <div className="flex flex-col">
+                                <span className="text-xs font-semibold text-gray-800 group-hover:text-blue-700 transition">
+                                  {site.name}
+                                </span>
+                                {site.domain && (
+                                  <span className="text-[10px] text-gray-400 font-mono">
+                                    {site.domain}
+                                  </span>
+                                )}
+                              </div>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-1 italic">
+                        Assign which sites this user can access. Site role
+                        defaults to Editor.
+                      </p>
+                    </div>
+                  )}
               </div>
 
               {/* Actions Footer */}

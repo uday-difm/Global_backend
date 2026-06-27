@@ -40,13 +40,13 @@ export async function GET(req, { params }) {
     const user = await prisma.user.findUnique({
       where: { id },
       include: {
-        loginHistory: { 
-          orderBy: { createdAt: "desc" }, 
-          take: 20 
+        loginHistory: {
+          orderBy: { createdAt: "desc" },
+          take: 20,
         },
-        auditLogs: { 
-          orderBy: { createdAt: "desc" }, 
-          take: 20 
+        auditLogs: {
+          orderBy: { createdAt: "desc" },
+          take: 20,
         },
       },
     });
@@ -141,7 +141,8 @@ export async function PATCH(req, { params }) {
     try {
       await logAction(null, caller.id, "USER_ROLE_UPDATED", {
         targetUserId: id,
-        newRole: body.globalRole !== undefined ? body.globalRole : target.globalRole,
+        newRole:
+          body.globalRole !== undefined ? body.globalRole : target.globalRole,
         isActive: body.isActive !== undefined ? body.isActive : target.isActive,
       });
     } catch (logErr) {
@@ -208,7 +209,10 @@ export async function DELETE(req, context) {
       });
       if (superadminCount <= 1) {
         return NextResponse.json(
-          { error: "Forbidden: Cannot delete the last active Superadmin account" },
+          {
+            error:
+              "Forbidden: Cannot delete the last active Superadmin account",
+          },
           { status: 403 },
         );
       }
@@ -218,18 +222,30 @@ export async function DELETE(req, context) {
     if (!isSelfDelete) {
       if (!canDeleteRole(caller.globalRole, target.globalRole)) {
         return NextResponse.json(
-          { error: "Forbidden: insufficient permission to deactivate this user" },
+          {
+            error: "Forbidden: insufficient permission to deactivate this user",
+          },
           { status: 403 },
         );
       }
     }
+
+    // Delete related records to avoid RESTRICT foreign key violations
+    // AuditLog and LoginHistory have required User references without Cascade
+    await prisma.loginHistory.deleteMany({ where: { userId: id } });
+    await prisma.auditLog.deleteMany({ where: { userId: id } });
 
     // Delete user
     await prisma.user.delete({ where: { id } });
 
     // Audit log
     try {
-      await logAction(null, caller.id, isSelfDelete ? "USER_SELF_DELETED" : "USER_DELETED", { targetUserId: id });
+      await logAction(
+        null,
+        caller.id,
+        isSelfDelete ? "USER_SELF_DELETED" : "USER_DELETED",
+        { targetUserId: id },
+      );
     } catch (logErr) {
       console.error("Failed to write audit log:", logErr);
     }

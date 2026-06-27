@@ -14,7 +14,11 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-export default function RedirectsManager({ siteId, initialRedirects, initialCustom404 }) {
+export default function RedirectsManager({
+  siteId,
+  initialRedirects,
+  initialCustom404,
+}) {
   const [activeTab, setActiveTab] = useState("redirects"); // "redirects" | "custom404" | "scanner"
 
   // Redirect rules states
@@ -33,16 +37,31 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
   const [scanError, setScanError] = useState(null);
 
   // Custom 404 states
-  const [c404Enabled, setC404Enabled] = useState(initialCustom404?.enabled ?? true);
-  const [c404Title, setC404Title] = useState(initialCustom404?.title || "Page Not Found");
-  const [c404Description, setC404Description] = useState(
-    initialCustom404?.description || "Oops! The page you are looking for does not exist."
+  const [c404Enabled, setC404Enabled] = useState(
+    initialCustom404?.enabled ?? true,
   );
-  const [c404ButtonText, setC404ButtonText] = useState(initialCustom404?.buttonText || "Go Home");
-  const [c404ButtonLink, setC404ButtonLink] = useState(initialCustom404?.buttonLink || "/");
-  const [c404RedirectOn404, setC404RedirectOn404] = useState(initialCustom404?.redirectOn404 ?? false);
-  const [c404RedirectUrl, setC404RedirectUrl] = useState(initialCustom404?.redirectUrl || "/");
-  const [c404RedirectDelay, setC404RedirectDelay] = useState(initialCustom404?.redirectDelay ?? 5);
+  const [c404Title, setC404Title] = useState(
+    initialCustom404?.title || "Page Not Found",
+  );
+  const [c404Description, setC404Description] = useState(
+    initialCustom404?.description ||
+      "Oops! The page you are looking for does not exist.",
+  );
+  const [c404ButtonText, setC404ButtonText] = useState(
+    initialCustom404?.buttonText || "Go Home",
+  );
+  const [c404ButtonLink, setC404ButtonLink] = useState(
+    initialCustom404?.buttonLink || "/",
+  );
+  const [c404RedirectOn404, setC404RedirectOn404] = useState(
+    initialCustom404?.redirectOn404 ?? false,
+  );
+  const [c404RedirectUrl, setC404RedirectUrl] = useState(
+    initialCustom404?.redirectUrl || "/",
+  );
+  const [c404RedirectDelay, setC404RedirectDelay] = useState(
+    initialCustom404?.redirectDelay ?? 5,
+  );
 
   const [c404Submitting, setC404Submitting] = useState(false);
   const [c404Success, setC404Success] = useState(null);
@@ -55,7 +74,9 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
     setSuccess(null);
 
     const payload = {
-      source: source.trim().startsWith("/") ? source.trim() : `/${source.trim()}`,
+      source: source.trim().startsWith("/")
+        ? source.trim()
+        : `/${source.trim()}`,
       target: target.trim(),
       type: Number(type),
     };
@@ -76,7 +97,8 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
       }
 
       const result = await res.json();
-      setRedirects((prev) => [result.redirect, ...prev]);
+      const newRedirect = result.data?.redirect ?? result.redirect;
+      setRedirects((prev) => [newRedirect, ...prev]);
       setSource("");
       setTarget("");
       setType("301");
@@ -168,7 +190,9 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
 
       const json = await res.json();
       if (!res.ok) {
-        throw new Error(json.error || "Failed to save Custom 404 configurations");
+        throw new Error(
+          json.error || "Failed to save Custom 404 configurations",
+        );
       }
 
       setC404Success("Custom 404 configurations saved successfully!");
@@ -243,9 +267,14 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                 <Plus size={16} className="text-blue-500" />
                 Add New Route Mapping
               </h3>
-              <form onSubmit={handleAddRedirect} className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+              <form
+                onSubmit={handleAddRedirect}
+                className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end"
+              >
                 <div className="sm:col-span-1.5">
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Source Path (URL)</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">
+                    Source Path (URL)
+                  </label>
                   <input
                     type="text"
                     required
@@ -257,7 +286,9 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                 </div>
 
                 <div className="sm:col-span-1.5">
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Destination Path/URL</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">
+                    Destination Path/URL
+                  </label>
                   <input
                     type="text"
                     id="target-input"
@@ -270,7 +301,9 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">Redirect Type</label>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">
+                    Redirect Type
+                  </label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value)}
@@ -294,11 +327,15 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
 
             <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
               <div className="border-b px-6 py-4 bg-gray-50/50">
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Active Redirect Rules</h3>
+                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">
+                  Active Redirect Rules
+                </h3>
               </div>
 
               {redirects.length === 0 ? (
-                <div className="p-8 text-center text-gray-400 text-xs italic">No custom redirects mapping configured.</div>
+                <div className="p-8 text-center text-gray-400 text-xs italic">
+                  No custom redirects mapping configured.
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
@@ -312,15 +349,24 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                     </thead>
                     <tbody className="divide-y text-gray-700 font-medium">
                       {redirects.map((item) => (
-                        <tr key={item.id} className="hover:bg-gray-50/30 transition">
-                          <td className="px-6 py-4 font-mono text-gray-900 text-xs">{item.source}</td>
-                          <td className="px-6 py-4 font-mono text-gray-500 text-xs truncate max-w-xs">{item.target}</td>
+                        <tr
+                          key={item.id}
+                          className="hover:bg-gray-50/30 transition"
+                        >
+                          <td className="px-6 py-4 font-mono text-gray-900 text-xs">
+                            {item.source}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-gray-500 text-xs truncate max-w-xs">
+                            {item.target}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-0.5 text-[10px] font-mono rounded border ${
-                              item.type === 301
-                                ? "bg-green-50 text-green-700 border-green-150"
-                                : "bg-blue-50 text-blue-700 border-blue-150"
-                            }`}>
+                            <span
+                              className={`px-2 py-0.5 text-[10px] font-mono rounded border ${
+                                item.type === 301
+                                  ? "bg-green-50 text-green-700 border-green-150"
+                                  : "bg-blue-50 text-blue-700 border-blue-150"
+                              }`}
+                            >
                               {item.type}
                             </span>
                           </td>
@@ -348,15 +394,22 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
               Routing & URL Mappings
             </h4>
             <p className="text-xs text-gray-500 leading-relaxed">
-              Use redirects to ensure old indexed page URLs mapped to updated routes don't return broken links to site visitors.
+              Use redirects to ensure old indexed page URLs mapped to updated
+              routes don't return broken links to site visitors.
             </p>
             <div className="text-[10px] text-gray-500 border bg-white p-3 rounded-lg space-y-2">
-              <span className="font-semibold block text-gray-700 uppercase">Redirect Types:</span>
+              <span className="font-semibold block text-gray-700 uppercase">
+                Redirect Types:
+              </span>
               <div>
-                <strong className="text-green-700">301 (Permanent)</strong>: Tells browsers and search engines to update their index mapping to the destination URL.
+                <strong className="text-green-700">301 (Permanent)</strong>:
+                Tells browsers and search engines to update their index mapping
+                to the destination URL.
               </div>
               <div>
-                <strong className="text-blue-700">302 (Temporary)</strong>: Tells clients to temporarily route users to the destination path.
+                <strong className="text-blue-700">302 (Temporary)</strong>:
+                Tells clients to temporarily route users to the destination
+                path.
               </div>
             </div>
           </div>
@@ -388,7 +441,9 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                     <Settings size={16} className="text-blue-500" />
                     Custom 404 Page Config
                   </h3>
-                  <p className="text-[11px] text-gray-400 mt-1">Configure layout contents served for missing site routes.</p>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    Configure layout contents served for missing site routes.
+                  </p>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
@@ -397,7 +452,9 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                     onChange={(e) => setC404Enabled(e.target.checked)}
                     className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 border-gray-300"
                   />
-                  <span className="text-xs font-bold text-gray-700 uppercase">Enable Content</span>
+                  <span className="text-xs font-bold text-gray-700 uppercase">
+                    Enable Content
+                  </span>
                 </label>
               </div>
 
@@ -478,7 +535,9 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                     onChange={(e) => setC404RedirectOn404(e.target.checked)}
                     className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 border-gray-300"
                   />
-                  <span className="text-xs font-bold text-gray-700 uppercase">Enable Redirection</span>
+                  <span className="text-xs font-bold text-gray-700 uppercase">
+                    Enable Redirection
+                  </span>
                 </label>
               </div>
 
@@ -500,7 +559,10 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Delay (Seconds): <span className="font-mono text-blue-600">{c404RedirectDelay}s</span>
+                        Delay (Seconds):{" "}
+                        <span className="font-mono text-blue-600">
+                          {c404RedirectDelay}s
+                        </span>
                       </label>
                       <input
                         type="range"
@@ -508,18 +570,23 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                         max="30"
                         step="1"
                         value={c404RedirectDelay}
-                        onChange={(e) => setC404RedirectDelay(Number(e.target.value))}
+                        onChange={(e) =>
+                          setC404RedirectDelay(Number(e.target.value))
+                        }
                         className="w-full accent-blue-600 h-2 bg-gray-200 rounded-lg cursor-pointer"
                       />
                     </div>
                   </div>
                   <p className="text-[10px] text-gray-400">
-                    If enabled, visitors landing on a 404 page will be dynamically redirected to the target URL after the selected delay. Set delay to 0 for immediate redirection.
+                    If enabled, visitors landing on a 404 page will be
+                    dynamically redirected to the target URL after the selected
+                    delay. Set delay to 0 for immediate redirection.
                   </p>
                 </div>
               ) : (
                 <p className="text-xs text-gray-400 italic">
-                  Automatic redirection is disabled. Visitors will remain on the custom 404 page layout.
+                  Automatic redirection is disabled. Visitors will remain on the
+                  custom 404 page layout.
                 </p>
               )}
             </div>
@@ -539,17 +606,21 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
             <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider border-b pb-1.5">
               404 Page Live Preview
             </h4>
-            
+
             {c404Enabled ? (
               <div className="border rounded-xl bg-white p-6 shadow-sm text-center space-y-4 max-w-sm mx-auto">
                 <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto text-xl font-bold font-mono">
                   404
                 </div>
                 <div className="space-y-1">
-                  <h5 className="font-bold text-gray-900 text-sm leading-tight">{c404Title}</h5>
-                  <p className="text-[10px] text-gray-500 leading-normal">{c404Description}</p>
+                  <h5 className="font-bold text-gray-900 text-sm leading-tight">
+                    {c404Title}
+                  </h5>
+                  <p className="text-[10px] text-gray-500 leading-normal">
+                    {c404Description}
+                  </p>
                 </div>
-                
+
                 <a
                   href="#"
                   onClick={(e) => e.preventDefault()}
@@ -560,13 +631,16 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
 
                 {c404RedirectOn404 && (
                   <div className="text-[9px] text-gray-400 animate-pulse border-t pt-2 mt-1">
-                    Redirecting to <span className="font-mono">{c404RedirectUrl}</span> in {c404RedirectDelay}s...
+                    Redirecting to{" "}
+                    <span className="font-mono">{c404RedirectUrl}</span> in{" "}
+                    {c404RedirectDelay}s...
                   </div>
                 )}
               </div>
             ) : (
               <div className="border rounded-xl bg-white p-8 text-center text-gray-400 text-xs italic shadow-sm">
-                Custom 404 page content is disabled. The browser or target hosting default error layouts will show instead.
+                Custom 404 page content is disabled. The browser or target
+                hosting default error layouts will show instead.
               </div>
             )}
           </div>
@@ -582,7 +656,8 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                 Broken Links Scanner
               </h3>
               <p className="text-xs text-gray-500 leading-relaxed">
-                Audit layout sections and action buttons across pages for broken internal relative URLs. Ensure users don't encounter dead ends.
+                Audit layout sections and action buttons across pages for broken
+                internal relative URLs. Ensure users don't encounter dead ends.
               </p>
 
               <button
@@ -620,9 +695,14 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
 
                 {scanResult.brokenLinks.length === 0 ? (
                   <div className="flex gap-3 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl">
-                    <CheckCircle className="shrink-0 text-green-600" size={18} />
+                    <CheckCircle
+                      className="shrink-0 text-green-600"
+                      size={18}
+                    />
                     <div>
-                      <strong className="font-semibold text-sm">Audit Clean!</strong>
+                      <strong className="font-semibold text-sm">
+                        Audit Clean!
+                      </strong>
                       <p className="mt-0.5 text-xs text-green-700 leading-normal">
                         No broken links detected on any page buttons or CTAs.
                       </p>
@@ -657,10 +737,14 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
                                 setTarget("");
                                 setActiveTab("redirects");
                                 setTimeout(() => {
-                                  const targetInput = document.getElementById("target-input");
+                                  const targetInput =
+                                    document.getElementById("target-input");
                                   if (targetInput) {
                                     targetInput.focus();
-                                    targetInput.scrollIntoView({ behavior: "smooth", block: "center" });
+                                    targetInput.scrollIntoView({
+                                      behavior: "smooth",
+                                      block: "center",
+                                    });
                                   }
                                 }, 100);
                               }}
@@ -684,7 +768,9 @@ export default function RedirectsManager({ siteId, initialRedirects, initialCust
               Scan Scope
             </h4>
             <p className="text-xs text-gray-500 leading-relaxed">
-              The scanner checks the URLs configured across all dynamic layout sections. It flags links pointing to missing/unregistered page or blog slugs.
+              The scanner checks the URLs configured across all dynamic layout
+              sections. It flags links pointing to missing/unregistered page or
+              blog slugs.
             </p>
           </div>
         </div>

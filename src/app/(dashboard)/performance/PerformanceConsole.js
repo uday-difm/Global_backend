@@ -112,7 +112,7 @@ export default function PerformanceConsole({ siteId, user }) {
         }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (res.ok) {
         setConfigSuccess("Performance settings saved successfully!");
         setTimeout(() => setConfigSuccess(null), 3000);
       } else {
@@ -133,8 +133,8 @@ export default function PerformanceConsole({ siteId, user }) {
         headers: { "x-site-id": siteId },
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        setErrorLogs(data.errorLogs || []);
+      if (res.ok) {
+        setErrorLogs(data.data?.errorLogs || data.errorLogs || []);
       } else {
         throw new Error(data.error || "Failed to retrieve system logs");
       }
@@ -709,7 +709,7 @@ export default function PerformanceConsole({ siteId, user }) {
                                 {log.message}
                               </span>
                               <span className="text-[10px] text-gray-400">
-                                {new Date(log.createdAt).toLocaleString()}
+                                {new Date(log.createdAt).toLocaleString("en-US")}
                               </span>
                             </div>
                             {log.context && (

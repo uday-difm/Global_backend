@@ -140,7 +140,7 @@ export default function ComplianceConsole({
       if (!res.ok)
         throw new Error(json.error || "Failed to load matching records");
 
-      setRecordCounts(json.counts);
+      setRecordCounts(json.data?.counts ?? json.counts);
     } catch (err) {
       setErrorMessage(err.message);
     } finally {
@@ -204,7 +204,7 @@ export default function ComplianceConsole({
       });
       const json = await res.json();
       if (res.ok) {
-        setDeletionLogs(json.logs || []);
+        setDeletionLogs((json.data?.logs ?? json.logs) || []);
       }
     } catch (e) {
       console.error("Failed to load deletion logs:", e);
@@ -222,7 +222,8 @@ export default function ComplianceConsole({
       });
       const json = await res.json();
       if (res.ok) {
-        setConsentLogs(json.config?.consentLogs || []);
+        const cfg = json.data?.config ?? json.config;
+        setConsentLogs(cfg?.consentLogs || []);
       }
     } catch (e) {
       console.error(e);
@@ -706,7 +707,7 @@ export default function ComplianceConsole({
                       )}
                     </td>
                     <td className="px-6 py-3 text-gray-500">
-                      {new Date(log.timestamp).toLocaleString()}
+                      {new Date(log.timestamp).toLocaleString("en-US")}
                     </td>
                   </tr>
                 ))}
@@ -887,7 +888,7 @@ export default function ComplianceConsole({
                         {log.user?.email || "System"}
                       </td>
                       <td className="px-6 py-3 text-gray-500">
-                        {new Date(log.createdAt).toLocaleString()}
+                        {new Date(log.createdAt).toLocaleString("en-US")}
                       </td>
                     </tr>
                   ))}

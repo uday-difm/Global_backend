@@ -19,7 +19,6 @@ const RESERVED_SLUGS = [
   "backup",
   "blogs",
   "compliance",
-  "contact",
   "cta",
   "dashboard",
   "dev",

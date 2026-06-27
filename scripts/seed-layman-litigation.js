@@ -325,9 +325,9 @@ async function seed() {
           {
             type: "links",
             title: "Quick Links",
-            items: [
+            links: [
               { url: "/about", label: "About Us" },
-              { url: "/practice-areas", label: "Practice Areas" },
+              { url: "/blogs", label: "Blog" },
               { url: "/blogs", label: "Legal Blog" },
               { url: "/faq", label: "FAQs" },
               { url: "/contact", label: "Contact" },
@@ -341,25 +341,25 @@ async function seed() {
             address: "123 Legal Avenue, Suite 400\nNew York, NY 10001",
           },
           {
-            type: "social",
+            type: "links",
             title: "Follow Us",
-            items: [
+            links: [
               {
-                platform: "facebook",
                 url: "https://facebook.com/laymanlitigation",
+                label: "Facebook",
               },
               {
-                platform: "instagram",
                 url: "https://instagram.com/laymanlitigation",
+                label: "Instagram",
               },
               {
-                platform: "linkedin",
                 url: "https://linkedin.com/company/laymanlitigation",
+                label: "LinkedIn",
               },
-              { platform: "twitter", url: "https://twitter.com/laymanlegal" },
+              { url: "https://twitter.com/laymanlegal", label: "Twitter" },
               {
-                platform: "youtube",
                 url: "https://youtube.com/@laymanlitigation",
+                label: "YouTube",
               },
             ],
           },
@@ -664,11 +664,11 @@ async function seed() {
           "Expert legal guidance explained in plain language. Whether you're facing a legal challenge or planning for the future, we're here to help.",
         primaryButton: {
           text: "Free Consultation",
-          url: "/contact"
+          url: "/contact",
         },
         secondaryButton: {
           text: "Learn More",
-          url: "/about"
+          url: "/about",
         },
         backgroundUrl:
           "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1600",
@@ -961,8 +961,8 @@ async function seed() {
         sections: {
           create: [
             {
-                      type: "hero",
-                      name: "Contact Hero",
+              type: "hero",
+              name: "Contact Hero",
               order: 0,
               content: {
                 heading: "Contact Us",
@@ -1000,8 +1000,8 @@ async function seed() {
         sections: {
           create: [
             {
-                      type: "hero",
-                      name: "FAQ Hero",
+              type: "hero",
+              name: "FAQ Hero",
               order: 0,
               content: {
                 heading: "Frequently Asked Questions",
@@ -1012,8 +1012,8 @@ async function seed() {
               },
             },
             {
-                      type: "faq",
-                      name: "FAQ List",
+              type: "faq",
+              name: "FAQ List",
               order: 1,
               content: {
                 heading: "Common Legal Questions",

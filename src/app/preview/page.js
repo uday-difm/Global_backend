@@ -578,6 +578,12 @@ export default async function PreviewPage({ searchParams }) {
 
   const isSticky = headerSettings.sticky ?? true;
   const isTransparent = headerSettings.transparent ?? false;
+  const positionClass = isSticky
+    ? "sticky top-[28px] md:top-[32px]"
+    : isTransparent
+      ? "absolute w-full bg-transparent"
+      : "relative";
+  const bgClass = isTransparent ? "" : "bg-white";
 
   const paddingYClass =
     headerSettings.paddingY === "small"
@@ -814,7 +820,7 @@ export default async function PreviewPage({ searchParams }) {
 
       {/* Dynamic Header */}
       <header
-        className={`${isTransparent ? "absolute w-full bg-transparent" : "bg-white"} ${borderClass} ${shadowClass} z-40 ${isSticky ? "sticky top-[28px] md:top-[32px]" : "relative"}`}
+        className={`${positionClass} ${bgClass} ${borderClass} ${shadowClass} z-40`}
       >
         {renderHeaderContent()}
       </header>

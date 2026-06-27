@@ -159,7 +159,7 @@ function SubmissionsTab({ siteId, submissions, setSubmissions }) {
                     </td>
                     <td className="px-5 py-3.5"><StatusBadge status={sub.status} /></td>
                     <td className="px-5 py-3.5 text-xs text-slate-500 whitespace-nowrap">
-                      {new Date(sub.createdAt).toLocaleDateString()}
+                      {new Date(sub.createdAt).toLocaleDateString("en-US")}
                     </td>
                     <td className="px-5 py-3.5 text-right space-x-1 whitespace-nowrap">
                       <button
@@ -205,7 +205,7 @@ function SubmissionsTab({ siteId, submissions, setSubmissions }) {
                 <div className="flex gap-2"><span className="font-semibold text-slate-600 w-16 shrink-0">Name:</span><span className="text-slate-900">{selected.name}</span></div>
                 <div className="flex gap-2"><span className="font-semibold text-slate-600 w-16 shrink-0">Email:</span><span className="text-slate-900">{selected.email}</span></div>
                 {selected.phone && <div className="flex gap-2"><span className="font-semibold text-slate-600 w-16 shrink-0">Phone:</span><span className="text-slate-900">{selected.phone}</span></div>}
-                <div className="flex gap-2 mt-1"><span className="font-semibold text-slate-600 w-16 shrink-0">Date:</span><span className="text-slate-500">{new Date(selected.createdAt).toLocaleString()}</span></div>
+                <div className="flex gap-2 mt-1"><span className="font-semibold text-slate-600 w-16 shrink-0">Date:</span><span className="text-slate-500">{new Date(selected.createdAt).toLocaleString("en-US")}</span></div>
                 <div className="pt-2 border-t border-slate-200">
                   <span className="font-semibold text-slate-600 block mb-1">Message:</span>
                   <p className="text-slate-800 whitespace-pre-wrap bg-white border rounded p-2.5 max-h-32 overflow-y-auto leading-relaxed">{selected.message}</p>
@@ -387,7 +387,7 @@ function LeadsTab({ siteId, leads, setLeads }) {
                     </td>
                     <td className="px-5 py-3.5"><StatusBadge status={lead.status} /></td>
                     <td className="px-5 py-3.5 text-xs text-slate-500 whitespace-nowrap">
-                      {new Date(lead.createdAt).toLocaleDateString()}
+                      {new Date(lead.createdAt).toLocaleDateString("en-US")}
                     </td>
                     <td className="px-5 py-3.5 text-right space-x-1 whitespace-nowrap">
                       <button onClick={() => openEdit(lead)} className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg inline-flex transition-colors" title="Edit">

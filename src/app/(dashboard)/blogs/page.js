@@ -17,7 +17,8 @@ import {
 
 export const metadata = {
   title: "Blog & Resources | CMS Admin",
-  description: "Manage blog posts, categories, author assignments, featured images, and scheduled publications.",
+  description:
+    "Manage blog posts, categories, author assignments, featured images, and scheduled publications.",
 };
 
 export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
@@ -29,7 +30,9 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
     return (
       <div className="p-8">
         <h1 className="text-2xl font-bold text-slate-900">Blog & Resources</h1>
-        <p className="mt-4 text-sm text-rose-600">No active site configured for your profile.</p>
+        <p className="mt-4 text-sm text-rose-600">
+          No active site configured for your profile.
+        </p>
       </div>
     );
   }
@@ -45,7 +48,6 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
   } else if (statusFilter === "DRAFT") {
     where.status = "DRAFT";
   } else if (statusFilter === "SCHEDULED") {
-    where.status = "PUBLISHED";
     where.publishedAt = { gt: new Date() };
   }
 
@@ -67,11 +69,18 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
   const now = new Date();
   const totalCount = allPosts.length;
   const publishedCount = allPosts.filter(
-    (p) => p.status === "PUBLISHED" && p.publishedAt && new Date(p.publishedAt) <= now
+    (p) =>
+      p.status === "PUBLISHED" &&
+      p.publishedAt &&
+      new Date(p.publishedAt) <= now,
   ).length;
-  const draftCount = allPosts.filter((p) => p.status === "DRAFT").length;
+  const draftCount = allPosts.filter(
+    (p) =>
+      p.status === "DRAFT" &&
+      (!p.publishedAt || new Date(p.publishedAt) <= now),
+  ).length;
   const scheduledCount = allPosts.filter(
-    (p) => p.status === "PUBLISHED" && p.publishedAt && new Date(p.publishedAt) > now
+    (p) => p.publishedAt && new Date(p.publishedAt) > now,
   ).length;
 
   // Categories scoped to this site (fetch all, but count posts for this site)
@@ -81,11 +90,11 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
       _count: {
         select: {
           posts: {
-            where: { siteId: site.id, deletedAt: null }
-          }
-        }
-      }
-    }
+            where: { siteId: site.id, deletedAt: null },
+          },
+        },
+      },
+    },
   });
 
   const filters = [
@@ -100,9 +109,12 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">Blog & Resources</h1>
+          <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
+            Blog & Resources
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Site: <span className="font-semibold text-slate-700">{site.name}</span>{" "}
+            Site:{" "}
+            <span className="font-semibold text-slate-700">{site.name}</span>{" "}
             <span className="text-slate-400">({site.domain || site.id})</span>
           </p>
         </div>
@@ -118,31 +130,55 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600"><FileText size={18} /></div>
+          <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600">
+            <FileText size={18} />
+          </div>
           <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</div>
-            <div className="text-2xl font-bold text-slate-900">{totalCount}</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Total
+            </div>
+            <div className="text-2xl font-bold text-slate-900">
+              {totalCount}
+            </div>
           </div>
         </div>
         <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-green-50 text-green-600"><CheckCircle size={18} /></div>
+          <div className="p-2.5 rounded-xl bg-green-50 text-green-600">
+            <CheckCircle size={18} />
+          </div>
           <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Published</div>
-            <div className="text-2xl font-bold text-slate-900">{publishedCount}</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Published
+            </div>
+            <div className="text-2xl font-bold text-slate-900">
+              {publishedCount}
+            </div>
           </div>
         </div>
         <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-slate-100 text-slate-500"><Clock size={18} /></div>
+          <div className="p-2.5 rounded-xl bg-slate-100 text-slate-500">
+            <Clock size={18} />
+          </div>
           <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Drafts</div>
-            <div className="text-2xl font-bold text-slate-900">{draftCount}</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Drafts
+            </div>
+            <div className="text-2xl font-bold text-slate-900">
+              {draftCount}
+            </div>
           </div>
         </div>
         <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-xs flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600"><CalendarClock size={18} /></div>
+          <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600">
+            <CalendarClock size={18} />
+          </div>
           <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Scheduled</div>
-            <div className="text-2xl font-bold text-slate-900">{scheduledCount}</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Scheduled
+            </div>
+            <div className="text-2xl font-bold text-slate-900">
+              {scheduledCount}
+            </div>
           </div>
         </div>
       </div>
@@ -159,15 +195,19 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
                 <Link
                   key={f.value}
                   href={`/blogs${f.value === "ALL" ? "" : `?status=${f.value}`}`}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 ${isActive
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 ${
+                    isActive
                       ? "bg-indigo-600 text-white shadow-sm"
                       : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
-                    }`}
+                  }`}
                 >
                   {f.label}
                   <span
-                    className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
-                      }`}
+                    className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-slate-100 text-slate-600"
+                    }`}
                   >
                     {f.count}
                   </span>
@@ -206,24 +246,31 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
                   {posts.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-5 py-16 text-center">
-                        <FileText className="mx-auto text-slate-200 mb-2" size={36} />
-                        <p className="text-sm font-semibold text-slate-500">No posts found.</p>
+                        <FileText
+                          className="mx-auto text-slate-200 mb-2"
+                          size={36}
+                        />
+                        <p className="text-sm font-semibold text-slate-500">
+                          No posts found.
+                        </p>
                         <p className="text-xs text-slate-400 mt-1">
-                          {statusFilter !== "ALL" ? "Try changing the filter above." : "Create your first blog post!"}
+                          {statusFilter !== "ALL"
+                            ? "Try changing the filter above."
+                            : "Create your first blog post!"}
                         </p>
                       </td>
                     </tr>
                   ) : (
                     posts.map((post) => {
                       const isScheduled =
-                        post.status === "PUBLISHED" &&
-                        post.publishedAt &&
-                        new Date(post.publishedAt) > now;
+                        post.publishedAt && new Date(post.publishedAt) > now;
                       const isPublished =
                         post.status === "PUBLISHED" &&
-                        (!post.publishedAt || new Date(post.publishedAt) <= now);
+                        (!post.publishedAt ||
+                          new Date(post.publishedAt) <= now);
                       const coverUrl =
-                        post.featuredImage?.secureUrl || post.featuredImage?.url;
+                        post.featuredImage?.secureUrl ||
+                        post.featuredImage?.url;
 
                       // Author initials
                       const authorEmail = post.author?.email || "System";
@@ -250,7 +297,10 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
                                 </div>
                               ) : (
                                 <div className="w-12 h-9 rounded-lg bg-slate-100 shrink-0 flex items-center justify-center border border-slate-100">
-                                  <FileText size={14} className="text-slate-300" />
+                                  <FileText
+                                    size={14}
+                                    className="text-slate-300"
+                                  />
                                 </div>
                               )}
                               <div className="min-w-0">
@@ -268,7 +318,9 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
                           <td className="px-5 py-4">
                             <div className="flex flex-wrap gap-1 max-w-[180px]">
                               {post.categories.length === 0 ? (
-                                <span className="text-slate-300 italic text-[10px]">None</span>
+                                <span className="text-slate-300 italic text-[10px]">
+                                  None
+                                </span>
                               ) : (
                                 post.categories.map((cat) => (
                                   <span
@@ -320,21 +372,27 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
                             {post.publishedAt ? (
                               <div>
                                 <div className="text-slate-600 text-[11px] font-medium">
-                                  {new Date(post.publishedAt).toLocaleDateString(undefined, {
+                                  {new Date(
+                                    post.publishedAt,
+                                  ).toLocaleDateString(undefined, {
                                     month: "short",
                                     day: "numeric",
                                     year: "numeric",
                                   })}
                                 </div>
                                 <div className="text-[10px] text-slate-400 mt-0.5">
-                                  {new Date(post.publishedAt).toLocaleTimeString([], {
+                                  {new Date(
+                                    post.publishedAt,
+                                  ).toLocaleTimeString([], {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                   })}
                                 </div>
                               </div>
                             ) : (
-                              <span className="text-slate-300 italic text-[10px]">Not set</span>
+                              <span className="text-slate-300 italic text-[10px]">
+                                Not set
+                              </span>
                             )}
                           </td>
 
@@ -347,7 +405,10 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
                               >
                                 Edit Post
                               </Link>
-                              <DeletePostButton postId={post.id} siteId={site.id} />
+                              <DeletePostButton
+                                postId={post.id}
+                                siteId={site.id}
+                              />
                             </div>
                           </td>
                         </tr>

@@ -180,7 +180,7 @@ export default function NotificationsConsole({
       });
       if (res.ok) {
         const json = await res.json();
-        setAlerts(json.alerts || []);
+        setAlerts((json.data?.alerts ?? json.alerts) || []);
       }
     } catch (e) {
       console.error(e);
@@ -484,7 +484,7 @@ export default function NotificationsConsole({
                       {alert.message}
                     </p>
                     <span className="text-[10px] text-gray-400 block pt-1">
-                      {new Date(alert.createdAt).toLocaleString()}
+                      {new Date(alert.createdAt).toLocaleString("en-US")}
                     </span>
                   </div>
 

@@ -94,7 +94,8 @@ export async function middleware(request) {
 
     if (settingsRes.ok) {
       const settingsData = await settingsRes.json();
-      const ws = settingsData?.websiteSettings;
+      const ws =
+        settingsData?.data?.websiteSettings ?? settingsData?.websiteSettings;
       const isMaintenanceMode = ws?.maintenanceMode === true;
 
       if (isMaintenanceMode) {
@@ -132,7 +133,7 @@ export async function middleware(request) {
 
       if (redirectRes.ok) {
         const redirectData = await redirectRes.json();
-        const redirect = redirectData?.redirect;
+        const redirect = redirectData?.data?.redirect ?? redirectData?.redirect;
 
         if (redirect && redirect.target && redirect.target !== pathname) {
           const redirectUrl = new URL(redirect.target, url);

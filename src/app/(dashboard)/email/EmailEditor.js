@@ -183,7 +183,7 @@ export default function EmailEditor({ siteId, initialEmailSettings }) {
       });
       if (logRes.ok) {
         const logData = await logRes.json();
-        setFailedLogs(logData.failedLogs || []);
+        setFailedLogs((logData.data?.failedLogs ?? logData.failedLogs) || []);
       }
 
       setMessage({ type: "success", text: `Success: ${data.message}` });
@@ -200,7 +200,7 @@ export default function EmailEditor({ siteId, initialEmailSettings }) {
       });
       if (logRes.ok) {
         const logData = await logRes.json();
-        setFailedLogs(logData.failedLogs || []);
+        setFailedLogs((logData.data?.failedLogs ?? logData.failedLogs) || []);
       }
     } finally {
       setIsTesting(false);

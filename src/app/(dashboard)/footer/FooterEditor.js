@@ -23,7 +23,7 @@ export default function FooterEditor({
       {
         type: "links",
         title: "Quick Links",
-        items: [
+        links: [
           { label: "Home", url: "/" },
           { label: "Services", url: "/services" },
           { label: "Blog Feed", url: "/blogs" },
@@ -66,7 +66,7 @@ export default function FooterEditor({
         cfg.columns.push({
           type: "links",
           title: "Quick Links",
-          items: [],
+          links: [],
         });
       }
       return cfg;
@@ -133,9 +133,9 @@ export default function FooterEditor({
   const handleAddLinkItem = (colIdx) => {
     setConfig((prev) => {
       const updatedCols = [...prev.columns];
-      const items = [...(updatedCols[colIdx].items || [])];
-      items.push({ label: "New Link", url: "#" });
-      updatedCols[colIdx] = { ...updatedCols[colIdx], items };
+      const links = [...(updatedCols[colIdx].links || [])];
+      links.push({ label: "New Link", url: "#" });
+      updatedCols[colIdx] = { ...updatedCols[colIdx], links };
       return { ...prev, columns: updatedCols };
     });
   };
@@ -143,10 +143,10 @@ export default function FooterEditor({
   const handleRemoveLinkItem = (colIdx, itemIdx) => {
     setConfig((prev) => {
       const updatedCols = [...prev.columns];
-      const items = (updatedCols[colIdx].items || []).filter(
+      const links = (updatedCols[colIdx].links || []).filter(
         (_, idx) => idx !== itemIdx,
       );
-      updatedCols[colIdx] = { ...updatedCols[colIdx], items };
+      updatedCols[colIdx] = { ...updatedCols[colIdx], links };
       return { ...prev, columns: updatedCols };
     });
   };
@@ -154,9 +154,9 @@ export default function FooterEditor({
   const handleUpdateLinkItem = (colIdx, itemIdx, key, val) => {
     setConfig((prev) => {
       const updatedCols = [...prev.columns];
-      const items = [...(updatedCols[colIdx].items || [])];
-      items[itemIdx] = { ...items[itemIdx], [key]: val };
-      updatedCols[colIdx] = { ...updatedCols[colIdx], items };
+      const links = [...(updatedCols[colIdx].links || [])];
+      links[itemIdx] = { ...links[itemIdx], [key]: val };
+      updatedCols[colIdx] = { ...updatedCols[colIdx], links };
       return { ...prev, columns: updatedCols };
     });
   };
@@ -284,7 +284,7 @@ export default function FooterEditor({
                 </div>
 
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {(col.items || []).map((item, itemIdx) => (
+                  {(col.links || []).map((item, itemIdx) => (
                     <div
                       key={itemIdx}
                       className="flex gap-2 items-center bg-gray-50 p-2 rounded-lg border"
@@ -326,7 +326,7 @@ export default function FooterEditor({
                       </button>
                     </div>
                   ))}
-                  {(col.items || []).length === 0 && (
+                  {(col.links || []).length === 0 && (
                     <p className="text-xs text-gray-400 italic">
                       No links added. Click 'Add Item'.
                     </p>
@@ -459,7 +459,7 @@ export default function FooterEditor({
                     </li>
                   ),
                 )
-              : (col.items || []).map((item, linkIdx) => (
+              : (col.links || []).map((item, linkIdx) => (
                   <li key={linkIdx}>
                     <a
                       href={item.url}
@@ -472,7 +472,7 @@ export default function FooterEditor({
                 ))}
             {(col.sourceType === "navigation"
               ? navigation[col.menuType || "footer"] || []
-              : col.items || []
+              : col.links || []
             ).length === 0 && (
               <span className="italic text-slate-500 text-[10px]">
                 No links configured

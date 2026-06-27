@@ -10,7 +10,8 @@ import { Users, Shield, ShieldCheck, UserCheck, Activity } from "lucide-react";
 
 export const metadata = {
   title: "User Management | CMS Admin",
-  description: "Configure system roles, access policies, account statuses, and administrative overrides.",
+  description:
+    "Configure system roles, access policies, account statuses, and administrative overrides.",
 };
 
 export default async function UsersPage() {
@@ -21,9 +22,19 @@ export default async function UsersPage() {
   }
 
   // Restrict access to SUPERADMIN and ADMIN
-  if (sessionUser.globalRole !== "SUPERADMIN" && sessionUser.globalRole !== "ADMIN") {
+  if (
+    sessionUser.globalRole !== "SUPERADMIN" &&
+    sessionUser.globalRole !== "ADMIN"
+  ) {
     redirect("/dashboard");
   }
+
+  // Fetch all active sites for site-access assignment
+  const sites = await prisma.site.findMany({
+    where: { isActive: true, deletedAt: null },
+    select: { id: true, name: true, domain: true },
+    orderBy: { name: "asc" },
+  });
 
   // Fetch users server-side, including 2FA status
   const users = await prisma.user.findMany({
@@ -42,7 +53,9 @@ export default async function UsersPage() {
   // Calculate metrics
   const totalUsers = users.length;
   const activeUsers = users.filter((u) => u.isActive).length;
-  const adminUsers = users.filter((u) => u.globalRole === "SUPERADMIN" || u.globalRole === "ADMIN").length;
+  const adminUsers = users.filter(
+    (u) => u.globalRole === "SUPERADMIN" || u.globalRole === "ADMIN",
+  ).length;
   const usersWith2Fa = users.filter((u) => u.twoFAEnabled).length;
 
   // Helper to resolve role styles
@@ -67,13 +80,16 @@ export default async function UsersPage() {
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Admin Access & Roles</h1>
+          <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">
+            Admin Access & Roles
+          </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Add users, deactivate accounts, assign administrative roles, and override credential security policies.
+            Add users, deactivate accounts, assign administrative roles, and
+            override credential security policies.
           </p>
         </div>
         <div className="shrink-0">
-          <CreateUserForm />
+          <CreateUserForm sites={JSON.parse(JSON.stringify(sites))} />
         </div>
       </div>
 
@@ -84,8 +100,12 @@ export default async function UsersPage() {
             <Users size={20} />
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Members</div>
-            <div className="text-2xl font-bold text-gray-900 mt-0.5">{totalUsers}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              Total Members
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mt-0.5">
+              {totalUsers}
+            </div>
           </div>
         </div>
 
@@ -94,8 +114,12 @@ export default async function UsersPage() {
             <UserCheck size={20} />
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Active Members</div>
-            <div className="text-2xl font-bold text-gray-900 mt-0.5">{activeUsers}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              Active Members
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mt-0.5">
+              {activeUsers}
+            </div>
           </div>
         </div>
 
@@ -104,8 +128,12 @@ export default async function UsersPage() {
             <Shield size={20} />
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Admins / Managers</div>
-            <div className="text-2xl font-bold text-gray-900 mt-0.5">{adminUsers}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              Admins / Managers
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mt-0.5">
+              {adminUsers}
+            </div>
           </div>
         </div>
 
@@ -114,8 +142,12 @@ export default async function UsersPage() {
             <ShieldCheck size={20} />
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">MFA Protected</div>
-            <div className="text-2xl font-bold text-gray-900 mt-0.5">{usersWith2Fa}</div>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              MFA Protected
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mt-0.5">
+              {usersWith2Fa}
+            </div>
           </div>
         </div>
       </div>
@@ -145,13 +177,19 @@ export default async function UsersPage() {
                         {u.email.substring(0, 2)}
                       </div>
                       <div>
-                        <span className="font-semibold text-gray-900 block">{u.email}</span>
-                        <span className="text-[10px] text-gray-400 font-mono block">ID: {u.id}</span>
+                        <span className="font-semibold text-gray-900 block">
+                          {u.email}
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-mono block">
+                          ID: {u.id}
+                        </span>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-[10px] font-bold border uppercase tracking-wider ${getRoleBadgeClass(u.globalRole)}`}>
+                    <span
+                      className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-[10px] font-bold border uppercase tracking-wider ${getRoleBadgeClass(u.globalRole)}`}
+                    >
                       {u.globalRole}
                     </span>
                   </td>
@@ -171,7 +209,10 @@ export default async function UsersPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {u.twoFAEnabled ? (
                       <span className="inline-flex items-center gap-1 text-blue-600 font-bold">
-                        <ShieldCheck size={14} className="shrink-0 text-blue-500" />
+                        <ShieldCheck
+                          size={14}
+                          className="shrink-0 text-blue-500"
+                        />
                         Enabled
                       </span>
                     ) : (
@@ -199,7 +240,9 @@ export default async function UsersPage() {
         {users.length === 0 && (
           <div className="p-12 text-center text-gray-400 space-y-2">
             <Users className="mx-auto text-gray-300" size={32} />
-            <p className="text-sm font-semibold">No administrator users found.</p>
+            <p className="text-sm font-semibold">
+              No administrator users found.
+            </p>
           </div>
         )}
       </div>

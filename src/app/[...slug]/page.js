@@ -881,6 +881,12 @@ function PublicHeader({ site, settings }) {
 
   const isSticky = headerSettings.sticky ?? true;
   const isTransparent = headerSettings.transparent ?? false;
+  const positionClass = isSticky
+    ? "sticky top-0"
+    : isTransparent
+      ? "absolute w-full bg-transparent"
+      : "relative";
+  const bgClass = isTransparent ? "" : "bg-white";
 
   const paddingYClass =
     headerSettings.paddingY === "small"
@@ -1108,7 +1114,7 @@ function PublicHeader({ site, settings }) {
         )}
 
       <header
-        className={`${isTransparent ? "absolute w-full bg-transparent" : "bg-white"} ${borderClass} ${shadowClass} z-40 ${isSticky ? "sticky top-0" : "relative"}`}
+        className={`${positionClass} ${bgClass} ${borderClass} ${shadowClass} z-40`}
       >
         {renderHeaderContent()}
       </header>

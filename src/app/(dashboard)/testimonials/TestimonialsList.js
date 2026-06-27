@@ -60,7 +60,7 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
       rating: Number(rating),
       content,
       showHide,
-      sortOrder: Number(sortOrder)
+      sortOrder: Number(sortOrder),
     };
 
     const isEdit = !!selectedItem;
@@ -74,9 +74,9 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
         method,
         headers: {
           "Content-Type": "application/json",
-          "x-site-id": siteId
+          "x-site-id": siteId,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -88,7 +88,7 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
 
       if (isEdit) {
         setTestimonials((prev) =>
-          prev.map((t) => (t.id === selectedItem.id ? result.testimonial : t))
+          prev.map((t) => (t.id === selectedItem.id ? result.testimonial : t)),
         );
       } else {
         setTestimonials((prev) => [...prev, result.testimonial]);
@@ -109,8 +109,8 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
       const res = await fetch(`/api/admin/testimonials/${id}`, {
         method: "DELETE",
         headers: {
-          "x-site-id": siteId
-        }
+          "x-site-id": siteId,
+        },
       });
 
       if (!res.ok) {
@@ -142,7 +142,9 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
     <div className="space-y-6">
       {/* Top Bar actions */}
       <div className="flex justify-between items-center pb-2 border-b">
-        <h2 className="text-lg font-semibold text-gray-700">Manage Testimonials</h2>
+        <h2 className="text-lg font-semibold text-gray-700">
+          Manage Testimonials
+        </h2>
         <button
           onClick={handleCreateClick}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition"
@@ -155,7 +157,8 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
       {/* Grid List */}
       {testimonials.length === 0 ? (
         <div className="rounded-xl border bg-white p-8 text-center text-gray-500 shadow-sm">
-          No testimonials created yet. Click "Add Testimonial" to create your first client review.
+          No testimonials created yet. Click "Add Testimonial" to create your
+          first client review.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -176,7 +179,8 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
                       className="h-10 w-10 rounded-full object-cover border"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80"; // fallback
+                        e.target.src =
+                          "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80"; // fallback
                       }}
                     />
                   ) : (
@@ -185,19 +189,24 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
                     </div>
                   )}
                   <div>
-                    <h4 className="font-bold text-gray-900">{item.clientName}</h4>
+                    <h4 className="font-bold text-gray-900">
+                      {item.clientName}
+                    </h4>
                     {renderStars(item.rating)}
                   </div>
                 </div>
 
                 {/* Content */}
-                <p className="text-sm text-gray-600 italic line-clamp-4">"{item.content}"</p>
+                <p className="text-sm text-gray-600 italic line-clamp-4">
+                  "{item.content}"
+                </p>
               </div>
 
               {/* Footer */}
               <div className="mt-6 flex items-center justify-between border-t pt-4 text-xs text-gray-500">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-700">Sort:</span> {item.sortOrder}
+                  <span className="font-semibold text-gray-700">Sort:</span>{" "}
+                  {item.sortOrder}
                   <span className="mx-1.5">•</span>
                   <span
                     className={`font-semibold ${
@@ -275,7 +284,7 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
                       type="url"
                       value={clientImage}
                       onChange={(e) => setClientImage(e.target.value)}
-                      className="flex-1 rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm"
+                      className="min-w-0 flex-1 rounded-lg border border-gray-200 p-2.5 outline-none focus:border-blue-600 text-sm"
                       placeholder="https://..."
                     />
                     <button
@@ -343,7 +352,10 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
                   onChange={(e) => setShowHide(e.target.checked)}
                   className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4"
                 />
-                <label htmlFor="showHide" className="text-sm font-semibold text-gray-700">
+                <label
+                  htmlFor="showHide"
+                  className="text-sm font-semibold text-gray-700"
+                >
                   Visible to public clients
                 </label>
               </div>

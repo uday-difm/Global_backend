@@ -366,6 +366,7 @@ model GlobalSettings {
   ctaConfig         Json?
   performanceConfig Json?
   devTools          Json?
+  deploymentNotes   Json?
   navigation        Json?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt

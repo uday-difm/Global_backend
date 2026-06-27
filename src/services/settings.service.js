@@ -78,6 +78,11 @@ export class SettingsService extends BaseService {
       data: updated,
     });
 
+    // Ping frontend to revalidate cached settings (header / footer)
+    if (fieldName === "header" || fieldName === "footer") {
+      triggerFrontendRevalidation(siteId);
+    }
+
     return updated[fieldName];
   }
 
@@ -94,8 +99,14 @@ export class SettingsService extends BaseService {
     const existing = await settingsRepository.findBySiteId(siteId);
 
     const updatePayload = {
-      header: data.header !== undefined ? { ...(existing?.header || {}), ...data.header } : undefined,
-      footer: data.footer !== undefined ? { ...(existing?.footer || {}), ...data.footer } : undefined,
+      header:
+        data.header !== undefined
+          ? { ...(existing?.header || {}), ...data.header }
+          : undefined,
+      footer:
+        data.footer !== undefined
+          ? { ...(existing?.footer || {}), ...data.footer }
+          : undefined,
       analytics: data.analytics !== undefined ? data.analytics : undefined,
       scripts: data.scripts !== undefined ? data.scripts : undefined,
       ctaConfig: data.ctaConfig !== undefined ? data.ctaConfig : undefined,
@@ -124,6 +135,9 @@ export class SettingsService extends BaseService {
     }
 
     EventBus.emit("settings.global.updated", { siteId, userId, data: result });
+
+    // Ping frontend to revalidate cached settings
+    triggerFrontendRevalidation(siteId);
 
     return result;
   }

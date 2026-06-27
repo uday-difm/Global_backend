@@ -17,12 +17,22 @@ export async function GET(req) {
 
     const emailSettings = settings?.emailSettings || {};
     // Sanitize: never expose password
-    const sanitizedEmail = { ...emailSettings, password: emailSettings.password ? "********" : "" };
+    const sanitizedEmail = {
+      ...emailSettings,
+      password: emailSettings.password ? "********" : "",
+    };
 
-    return NextResponse.json(apiSuccess({ spamConfig: settings?.securityControls || {},
-      emailSettings: sanitizedEmail }));
+    return NextResponse.json(
+      apiSuccess({
+        spamConfig: settings?.securityControls || {},
+        emailSettings: sanitizedEmail,
+      }),
+    );
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error", message: err.message },
+      { status: 500 },
+    );
   }
 }
 
@@ -66,12 +76,23 @@ export async function PUT(req) {
 
     await prisma.globalSettings.upsert({
       where: { siteId: auth.siteId },
-      update: { securityControls: updatedSecurity, emailSettings: updatedEmail },
-      create: { siteId: auth.siteId, securityControls: updatedSecurity, emailSettings: updatedEmail },
+      update: {
+        securityControls: updatedSecurity,
+        emailSettings: updatedEmail,
+      },
+      create: {
+        siteId: auth.siteId,
+        securityControls: updatedSecurity,
+        emailSettings: updatedEmail,
+      },
     });
 
-    return NextResponse.json(apiSuccess({ success: true }));
+    return NextResponse.json({ success: true });
   } catch (err) {
-    return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+    console.error("Failed to update form config:", err);
+    return NextResponse.json(
+      { error: "Internal Server Error", message: err.message },
+      { status: 500 },
+    );
   }
 }
