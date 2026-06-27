@@ -34,7 +34,9 @@ export default async function DashboardPage() {
     where: { siteId: site.id, deletedAt: null },
   });
 
-  const totalPosts = await prisma.post.count({ where: { siteId: site.id } });
+  const totalPosts = await prisma.post.count({
+    where: { siteId: site.id, deletedAt: null },
+  });
   const totalLeads = await prisma.lead.count({
     where: { siteId: site.id, status: { in: ["new", "contacted"] } },
   });

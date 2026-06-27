@@ -1536,125 +1536,143 @@ export function Footer({
   };
 
   return (
-    <footer style={footerStyle}>
-      <div
-        style={{
-          maxWidth: "80rem",
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: `repeat(${Math.min(columns.length || 4, 4)}, minmax(200px, 1fr))`,
-          gap: "2rem",
-        }}
-      >
-        {columns.length > 0 ? (
-          columns.map((col, idx) => renderColumnContent(col, idx))
-        ) : (
-          <>
-            <div>
-              <h4
-                style={{
-                  color: headingColor,
-                  fontWeight: 700,
-                  margin: "0 0 1rem 0",
-                }}
-              >
-                {siteName}
-              </h4>
-              <p style={{ fontSize: "0.75rem", lineHeight: "1.6" }}>
-                High-performance modular pages served dynamically via backend
-                integrations.
-              </p>
-            </div>
-            <div>
-              <h5
-                style={{
-                  color: headingColor,
-                  fontWeight: 700,
-                  fontSize: "0.875rem",
-                  margin: "0 0 0.75rem 0",
-                }}
-              >
-                Navigation
-              </h5>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.5rem",
-                  fontSize: "0.75rem",
-                }}
-              >
-                {navigationLinks.slice(0, 4).map((link, idx) => (
-                  <a
-                    key={idx}
-                    href={link.url}
-                    style={{ color: "inherit", textDecoration: "none" }}
-                  >
-                    {link.label}
-                  </a>
-                ))}
+    <>
+      <style>{`
+        .sdk-footer-grid {
+          grid-template-columns: 1fr !important;
+        }
+        @media (min-width: 640px) {
+          .sdk-footer-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (min-width: 1024px) {
+          .sdk-footer-grid {
+            grid-template-columns: repeat(${Math.min(columns.length || 4, 4)}, minmax(200px, 1fr)) !important;
+          }
+        }
+      `}</style>
+      <footer style={footerStyle}>
+        <div
+          className="sdk-footer-grid"
+          style={{
+            maxWidth: "80rem",
+            margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: `repeat(${Math.min(columns.length || 4, 4)}, minmax(200px, 1fr))`,
+            gap: "2rem",
+          }}
+        >
+          {columns.length > 0 ? (
+            columns.map((col, idx) => renderColumnContent(col, idx))
+          ) : (
+            <>
+              <div>
+                <h4
+                  style={{
+                    color: headingColor,
+                    fontWeight: 700,
+                    margin: "0 0 1rem 0",
+                  }}
+                >
+                  {siteName}
+                </h4>
+                <p style={{ fontSize: "0.75rem", lineHeight: "1.6" }}>
+                  High-performance modular pages served dynamically via backend
+                  integrations.
+                </p>
               </div>
-            </div>
-            <div>
-              <h5
-                style={{
-                  color: headingColor,
-                  fontWeight: 700,
-                  fontSize: "0.875rem",
-                  margin: "0 0 0.75rem 0",
-                }}
-              >
-                Connection
-              </h5>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.375rem",
-                  borderRadius: "9999px",
-                  backgroundColor: "#064e3b",
-                  padding: "0.25rem 0.625rem",
-                  fontSize: "0.7rem",
-                  fontWeight: 700,
-                  color: "#34d399",
-                  border: "1px solid #065f46",
-                }}
-              >
-                CONNECTED
-              </span>
-            </div>
-            <div>
-              <h5
-                style={{
-                  color: headingColor,
-                  fontWeight: 700,
-                  fontSize: "0.875rem",
-                  margin: "0 0 0.75rem 0",
-                }}
-              >
-                Copyright
-              </h5>
-              <p style={{ fontSize: "0.7rem", lineHeight: "1.6" }}>
-                {config.copyright}
-              </p>
-            </div>
-          </>
-        )}
-      </div>
-      <div
-        style={{
-          maxWidth: "80rem",
-          margin: "2rem auto 0",
-          paddingTop: "1.5rem",
-          borderTop: "1px solid rgba(255,255,255,0.1)",
-          textAlign: "center",
-          fontSize: "0.7rem",
-          color: linkColor,
-        }}
-      >
-        {config.copyright}
-      </div>
-    </footer>
+              <div>
+                <h5
+                  style={{
+                    color: headingColor,
+                    fontWeight: 700,
+                    fontSize: "0.875rem",
+                    margin: "0 0 0.75rem 0",
+                  }}
+                >
+                  Navigation
+                </h5>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  {navigationLinks.slice(0, 4).map((link, idx) => (
+                    <a
+                      key={idx}
+                      href={link.url}
+                      style={{ color: "inherit", textDecoration: "none" }}
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h5
+                  style={{
+                    color: headingColor,
+                    fontWeight: 700,
+                    fontSize: "0.875rem",
+                    margin: "0 0 0.75rem 0",
+                  }}
+                >
+                  Connection
+                </h5>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.375rem",
+                    borderRadius: "9999px",
+                    backgroundColor: "#064e3b",
+                    padding: "0.25rem 0.625rem",
+                    fontSize: "0.7rem",
+                    fontWeight: 700,
+                    color: "#34d399",
+                    border: "1px solid #065f46",
+                  }}
+                >
+                  CONNECTED
+                </span>
+              </div>
+              <div>
+                <h5
+                  style={{
+                    color: headingColor,
+                    fontWeight: 700,
+                    fontSize: "0.875rem",
+                    margin: "0 0 0.75rem 0",
+                  }}
+                >
+                  Copyright
+                </h5>
+                <p style={{ fontSize: "0.7rem", lineHeight: "1.6" }}>
+                  {config.copyright}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+        <div
+          style={{
+            maxWidth: "80rem",
+            margin: "2rem auto 0",
+            paddingTop: "1.5rem",
+            borderTop: "1px solid rgba(255,255,255,0.1)",
+            textAlign: "center",
+            fontSize: "0.7rem",
+            color: linkColor,
+          }}
+        >
+          {config.copyright}
+        </div>
+      </footer>
+    </>
   );
 }
 
