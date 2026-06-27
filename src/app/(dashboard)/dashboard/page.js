@@ -61,7 +61,7 @@ export default async function DashboardPage() {
     <div className="space-y-8 w-full">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold md:text-3xl text-gray-950">
+        <h1 className="text-2xl font-bold md:text-3xl ">
           Dashboard
         </h1>
         <p className="text-gray-500 text-sm mt-0.5">
@@ -107,11 +107,10 @@ export default async function DashboardPage() {
                       </p>
                     </div>
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                        item.status === "new"
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${item.status === "new"
                           ? "bg-blue-50 text-blue-700 border-blue-200"
                           : "bg-yellow-50 text-yellow-700 border-yellow-250"
-                      }`}
+                        }`}
                     >
                       {item.status}
                     </span>

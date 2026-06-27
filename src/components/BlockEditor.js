@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
+import { useTheme } from "next-themes";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
@@ -12,6 +13,8 @@ export default function BlockEditor({
   onChangeHtml,
   onChangeJson,
 }) {
+  const { resolvedTheme } = useTheme();
+
   // Initialize the editor with existing JSON blocks if available
   const editor = useCreateBlockNote({
     initialContent: initialContent ? JSON.parse(initialContent) : undefined,
@@ -37,10 +40,10 @@ export default function BlockEditor({
   }, [initialContent, fallbackHtml, editor]);
 
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white z-10">
+    <div className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900 z-10">
       <BlockNoteView
         editor={editor}
-        theme="light"
+        theme={resolvedTheme === "dark" ? "dark" : "light"}
         onChange={async () => {
           // 1. Save the raw JSON blocks (best for saving to DB for future editing)
           const jsonBlocks = JSON.stringify(editor.document);

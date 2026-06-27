@@ -53,8 +53,10 @@ function getDeviceIcon(deviceInfo) {
 function getSourceColor(source) {
   const s = (source || "").toLowerCase();
   if (s.includes("google")) return "bg-blue-100 text-blue-700";
-  if (s.includes("facebook") || s.includes("meta")) return "bg-indigo-100 text-indigo-700";
-  if (s.includes("twitter") || s.includes("x.com")) return "bg-sky-100 text-sky-700";
+  if (s.includes("facebook") || s.includes("meta"))
+    return "bg-indigo-100 text-indigo-700";
+  if (s.includes("twitter") || s.includes("x.com"))
+    return "bg-sky-100 text-sky-700";
   if (s.includes("linkedin")) return "bg-blue-200 text-blue-800";
   if (s.includes("direct")) return "bg-gray-100 text-gray-700";
   if (s.includes("email")) return "bg-yellow-100 text-yellow-700";
@@ -100,7 +102,14 @@ function MiniBarChart({ data, valueKey, labelKey, color = "#6366f1" }) {
 
 function Sparkline({ data, width = 200, height = 50 }) {
   if (!data || data.length < 2)
-    return <div style={{ width, height }} className="flex items-center justify-center text-xs text-gray-300">No data</div>;
+    return (
+      <div
+        style={{ width, height }}
+        className="flex items-center justify-center text-xs text-gray-300"
+      >
+        No data
+      </div>
+    );
 
   const values = data.map((d) => d.pageViews);
   const max = Math.max(...values, 1);
@@ -151,7 +160,9 @@ function StatCard({ label, value, sub, icon: Icon, color, pulse }) {
         <Icon size={20} className="text-white" />
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          {label}
+        </p>
         <p className="text-2xl font-extrabold text-gray-900 mt-0.5 flex items-center gap-2">
           {value}
           {pulse && (
@@ -178,7 +189,7 @@ function LogsTable({ logs }) {
       l.visitorId?.toLowerCase().includes(search.toLowerCase()) ||
       (l.location || "").toLowerCase().includes(search.toLowerCase()) ||
       (l.deviceInfo || "").toLowerCase().includes(search.toLowerCase()) ||
-      (l.trafficSource || "").toLowerCase().includes(search.toLowerCase())
+      (l.trafficSource || "").toLowerCase().includes(search.toLowerCase()),
   );
 
   const total = Math.ceil(filtered.length / PAGE_SIZE);
@@ -216,7 +227,10 @@ function LogsTable({ logs }) {
           <tbody>
             {slice.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-400 italic">
+                <td
+                  colSpan={7}
+                  className="px-4 py-6 text-center text-gray-400 italic"
+                >
                   No visitor logs found.
                 </td>
               </tr>
@@ -248,7 +262,7 @@ function LogsTable({ logs }) {
                   <td className="px-4 py-2.5">
                     <span
                       className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${getSourceColor(
-                        log.trafficSource
+                        log.trafficSource,
                       )}`}
                     >
                       {log.trafficSource || "Direct"}
@@ -315,7 +329,9 @@ function LiveFeed({ liveVisitors }) {
         >
           <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse shrink-0" />
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-xs text-gray-800 truncate">{v.pageViewed}</p>
+            <p className="font-semibold text-xs text-gray-800 truncate">
+              {v.pageViewed}
+            </p>
             <p className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
               <MapPin size={9} />
               {v.location || "Unknown"}
@@ -326,7 +342,9 @@ function LiveFeed({ liveVisitors }) {
               {v.trafficSource || "Direct"}
             </p>
           </div>
-          <span className="text-[10px] text-gray-400 shrink-0">{formatDuration(v.duration)}</span>
+          <span className="text-[10px] text-gray-400 shrink-0">
+            {formatDuration(v.duration)}
+          </span>
         </div>
       ))}
     </div>
@@ -367,9 +385,9 @@ export default function VisitorDashboardClient({
           headers: siteIdHeader,
         });
         const data = await res.json();
-        if (data.success) {
-          setStats(data.stats);
-          setTimeSeries(data.timeSeries);
+        if (res.ok) {
+          setStats(data.data?.stats ?? data.stats);
+          setTimeSeries(data.data?.timeSeries ?? data.timeSeries);
           setLastRefresh(new Date());
           setConnected(true);
         }
@@ -379,18 +397,20 @@ export default function VisitorDashboardClient({
         setLoading(false);
       }
     },
-    [dateRange, siteId]
+    [dateRange, siteId],
   );
 
   // ── Fetch live visitors ────────────────────────────────────────────────────
   const refreshLive = useCallback(async () => {
     setLiveLoading(true);
     try {
-      const res = await fetch("/api/admin/visitors/live", { headers: siteIdHeader });
+      const res = await fetch("/api/admin/visitors/live", {
+        headers: siteIdHeader,
+      });
       const data = await res.json();
-      if (data.success) {
-        setLiveCount(data.liveCount);
-        setLiveVisitors(data.liveVisitors || []);
+      if (res.ok) {
+        setLiveCount(data.data?.liveCount ?? data.liveCount);
+        setLiveVisitors(data.data?.liveVisitors ?? (data.liveVisitors || []));
         setConnected(true);
       }
     } catch {
@@ -407,7 +427,7 @@ export default function VisitorDashboardClient({
         headers: siteIdHeader,
       });
       const data = await res.json();
-      if (data.success) setLogs(data.logs || []);
+      if (res.ok) setLogs(data.data?.logs ?? (data.logs || []));
     } catch {
       // silent
     }
@@ -447,7 +467,7 @@ export default function VisitorDashboardClient({
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-gray-950">
+          <h1 className="text-2xl font-extrabold ">
             Live Visitor Dashboard
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -458,11 +478,10 @@ export default function VisitorDashboardClient({
         <div className="flex items-center gap-2 flex-wrap">
           {/* Connection status */}
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${
-              connected
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${connected
                 ? "border-green-200 bg-green-50 text-green-700"
                 : "border-red-200 bg-red-50 text-red-700"
-            }`}
+              }`}
           >
             {connected ? <Wifi size={11} /> : <WifiOff size={11} />}
             {connected ? "Connected" : "Disconnected"}
@@ -483,7 +502,11 @@ export default function VisitorDashboardClient({
 
           <button
             id="refresh-btn"
-            onClick={() => { refreshStats(); refreshLive(); refreshLogs(); }}
+            onClick={() => {
+              refreshStats();
+              refreshLive();
+              refreshLogs();
+            }}
             disabled={loading}
             className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white shadow-sm hover:bg-gray-50 disabled:opacity-60 transition"
           >
@@ -544,7 +567,10 @@ export default function VisitorDashboardClient({
               className="text-gray-400 hover:text-indigo-600 transition"
               title="Refresh live feed"
             >
-              <RefreshCw size={13} className={liveLoading ? "animate-spin" : ""} />
+              <RefreshCw
+                size={13}
+                className={liveLoading ? "animate-spin" : ""}
+              />
             </button>
           </div>
           <LiveFeed liveVisitors={liveVisitors} />
@@ -582,11 +608,10 @@ export default function VisitorDashboardClient({
               key={tab.id}
               id={`tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
-              className={`shrink-0 px-5 py-3 text-xs font-semibold transition border-b-2 ${
-                activeTab === tab.id
+              className={`shrink-0 px-5 py-3 text-xs font-semibold transition border-b-2 ${activeTab === tab.id
                   ? "border-indigo-600 text-indigo-700 bg-indigo-50/50"
                   : "border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-              }`}
+                }`}
             >
               {tab.label}
             </button>

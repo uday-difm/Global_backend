@@ -17,6 +17,7 @@ import {
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Topbar({ siteId, sites = [], onMenuClick }) {
   const [showSearch, setShowSearch] = useState(false);
@@ -179,14 +180,14 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
   return (
     <>
       {/* Top Bar */}
-      <header className="sticky top-0 z-40 border-b bg-white">
+      <header className="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div className="flex h-16 items-center justify-between px-4 md:px-6">
           {/* Left */}
           <div className="flex items-center gap-3">
             {/* Mobile Menu Button */}
             <button
               onClick={onMenuClick}
-              className="rounded-lg p-2 hover:bg-gray-100 md:hidden"
+              className="rounded-lg p-2 hover:bg-slate-150 dark:hover:bg-slate-700 md:hidden"
             >
               <Menu size={20} />
             </button>
@@ -285,7 +286,7 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
             {/* Mobile Search Toggle */}
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className="rounded-lg p-2 transition hover:bg-gray-100 md:hidden"
+              className="rounded-lg p-2 transition hover:bg-gray-100 dark:hover:bg-slate-700 md:hidden"
             >
               <Search size={18} />
             </button>
@@ -299,7 +300,7 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
                     fetchAlerts();
                   }
                 }}
-                className="relative rounded-lg p-2 transition hover:bg-gray-100"
+                className="relative rounded-lg p-2 transition hover:bg-gray-100 dark:hover:bg-slate-700"
               >
                 <Bell size={18} />
                 {unreadCount > 0 && (
@@ -311,10 +312,10 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
 
               {/* Notification Popover Dropdown */}
               {notificationsOpen && (
-                <div className="absolute right-0 mt-2 w-80 rounded-xl border bg-white shadow-xl overflow-hidden z-50 text-xs text-left">
+                <div className="absolute right-0 mt-2 w-80 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl overflow-hidden z-50 text-xs text-left">
                   {/* Popover Header */}
-                  <div className="flex items-center justify-between border-b bg-gray-50 px-4 py-3">
-                    <span className="font-bold text-gray-800 uppercase tracking-wider text-[10px]">
+                  <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 px-4 py-3">
+                    <span className="font-bold text-gray-800 dark:text-slate-300 uppercase tracking-wider text-[10px]">
                       Notifications ({unreadCount} new)
                     </span>
                     {alerts.length > 0 && (
@@ -337,14 +338,14 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
                   </div>
 
                   {/* Popover list */}
-                  <div className="max-h-64 overflow-y-auto divide-y divide-gray-100">
+                  <div className="max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-700">
                     {alerts.map((alert) => (
                       <div
                         key={alert.id}
                         className={`p-3 transition-colors ${
                           alert.isRead
-                            ? "bg-white"
-                            : "bg-blue-50/30 hover:bg-blue-50/50"
+                            ? "bg-white dark:bg-slate-800"
+                            : "bg-blue-50/30 hover:bg-blue-50/50 dark:bg-blue-900/10 dark:hover:bg-blue-900/20"
                         }`}
                       >
                         <div className="flex gap-2.5 items-start">
@@ -353,17 +354,17 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
                           </div>
                           <div className="flex-1 space-y-0.5">
                             <div className="flex justify-between items-start gap-1">
-                              <span className="font-bold text-gray-900 leading-tight">
+                              <span className="font-bold text-gray-900 dark:text-slate-100 leading-tight">
                                 {alert.title}
                               </span>
                               {!alert.isRead && (
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0 mt-1" />
                               )}
                             </div>
-                            <p className="text-gray-500 leading-normal text-[11px]">
+                            <p className="text-gray-500 dark:text-slate-400 leading-normal text-[11px]">
                               {alert.message}
                             </p>
-                            <span className="text-[9px] text-gray-400 block mt-1">
+                            <span className="text-[9px] text-gray-400 dark:text-slate-500 block mt-1">
                               {new Date(alert.createdAt).toLocaleString()}
                             </span>
                           </div>
@@ -372,7 +373,7 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
                     ))}
 
                     {alerts.length === 0 && (
-                      <div className="p-8 text-center text-gray-400 italic">
+                      <div className="p-8 text-center text-gray-400 dark:text-slate-500 italic">
                         No recent system alerts.
                       </div>
                     )}
@@ -382,7 +383,7 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
                   <Link
                     href="/notifications"
                     onClick={() => setNotificationsOpen(false)}
-                    className="block text-center border-t py-2.5 bg-gray-50/50 hover:bg-gray-50 font-semibold text-[10px] text-gray-600 transition"
+                    className="block text-center border-t border-gray-100 dark:border-slate-700 py-2.5 bg-gray-50/50 dark:bg-slate-900/50 hover:bg-gray-50 dark:hover:bg-slate-700 font-semibold text-[10px] text-gray-600 dark:text-slate-300 transition"
                   >
                     Manage Settings & Alerts History
                   </Link>
@@ -390,17 +391,20 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
               )}
             </div>
 
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* User menu */}
             <div className="relative" ref={menuRef}>
               <button
                 id="user-menu-btn"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-lg border px-2 py-2 transition hover:bg-gray-50 sm:px-3"
+                className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-slate-700 px-2 py-2 transition hover:bg-gray-50 dark:hover:bg-slate-700 sm:px-3"
               >
-                <UserCircle size={22} className="text-gray-600 shrink-0" />
+                <UserCircle size={22} className="text-gray-600 dark:text-slate-400 shrink-0" />
 
                 <div className="hidden lg:block text-left">
-                  <p className="text-sm font-medium text-gray-900 leading-tight max-w-[140px] truncate">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white leading-tight max-w-[140px] truncate">
                     {userEmail}
                   </p>
                   <p className="text-xs text-gray-500">{userRole}</p>
@@ -416,26 +420,26 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
 
               {/* Dropdown */}
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-52 rounded-xl border bg-white shadow-lg overflow-hidden z-50">
-                  {/* User info header */}
-                  <div className="px-4 py-3 border-b bg-gray-50">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Signed in as
-                    </p>
-                    <p className="text-sm font-medium text-gray-900 truncate mt-0.5">
-                      {userEmail}
-                    </p>
-                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">
-                      {userRole}
-                    </span>
-                  </div>
-
-                  {/* Logout */}
-                  <button
-                    id="logout-btn"
-                    onClick={handleLogout}
-                    className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-                  >
+                 <div className="absolute right-0 mt-2 w-52 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg overflow-hidden z-50">
+                   {/* User info header */}
+                   <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
+                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                       Signed in as
+                     </p>
+                     <p className="text-sm font-medium text-gray-900 dark:text-slate-100 truncate mt-0.5">
+                       {userEmail}
+                     </p>
+                     <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                       {userRole}
+                     </span>
+                   </div>
+ 
+                   {/* Logout */}
+                   <button
+                     id="logout-btn"
+                     onClick={handleLogout}
+                     className="flex w-full items-center gap-2.5 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
+                   >
                     <LogOut size={15} />
                     Sign out
                   </button>
