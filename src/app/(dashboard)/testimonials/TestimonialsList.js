@@ -85,13 +85,14 @@ export default function TestimonialsList({ siteId, initialTestimonials }) {
       }
 
       const result = await res.json();
+      const testimonial = result.data?.testimonial ?? result.testimonial;
 
       if (isEdit) {
         setTestimonials((prev) =>
-          prev.map((t) => (t.id === selectedItem.id ? result.testimonial : t)),
+          prev.map((t) => (t.id === selectedItem.id ? testimonial : t)),
         );
       } else {
-        setTestimonials((prev) => [...prev, result.testimonial]);
+        setTestimonials((prev) => [...prev, testimonial]);
       }
 
       handleModalClose();
