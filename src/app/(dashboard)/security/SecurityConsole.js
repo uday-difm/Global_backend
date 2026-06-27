@@ -308,7 +308,7 @@ export default function SecurityConsole({ siteId, user }) {
       });
       const json = await res.json();
       if (res.ok) {
-        setAuditLogs(json.auditLogs || []);
+        setAuditLogs(json.data?.auditLogs ?? (json.auditLogs || []));
       }
     } catch (err) {
       console.error(err);

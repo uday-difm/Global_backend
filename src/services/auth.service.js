@@ -5,7 +5,11 @@ import { userRepository } from "@/repositories/user.repository";
 import { twoFactorRepository } from "@/repositories/twoFactor.repository";
 import { passwordResetRepository } from "@/repositories/passwordReset.repository";
 import { BaseService } from "@/core/service";
-import { UnauthorizedError, ValidationError, NotFoundError } from "@/core/errors";
+import {
+  UnauthorizedError,
+  ValidationError,
+  NotFoundError,
+} from "@/core/errors";
 import { recordLogin } from "@/lib/audit";
 import { EventBus } from "@/core/events";
 import prisma from "@/lib/prisma";
@@ -25,7 +29,8 @@ export class AuthService extends BaseService {
       throw new UnauthorizedError("Invalid credentials");
     }
 
-    const ip = reqHeaders["x-forwarded-for"] || "unknown";
+    const ip =
+      reqHeaders["x-forwarded-for"] || reqHeaders["x-real-ip"] || "unknown";
     const agent = reqHeaders["user-agent"] || "unknown";
 
     const validPassword = await bcrypt.compare(password, user.passwordHash);
@@ -143,7 +148,9 @@ export class AuthService extends BaseService {
 
   async executePasswordReset(token, newPassword) {
     if (!token || !newPassword || newPassword.length < 6) {
-      throw new ValidationError("Valid token and password (min 6 characters) required");
+      throw new ValidationError(
+        "Valid token and password (min 6 characters) required",
+      );
     }
 
     const pr = await passwordResetRepository.findActiveToken(token);
@@ -179,7 +186,10 @@ export class AuthService extends BaseService {
       throw new NotFoundError("User");
     }
 
-    const validCurrent = await bcrypt.compare(currentPassword, user.passwordHash);
+    const validCurrent = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash,
+    );
     if (!validCurrent) {
       throw new UnauthorizedError("Incorrect current password");
     }
