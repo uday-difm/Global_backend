@@ -813,6 +813,24 @@ export default function PageEditorClient({
     setShowMediaPicker(false);
   };
 
+  const normalizePreviewBaseUrl = (value) => {
+    const fallback = "http://localhost:3001";
+    const raw = (value || fallback).trim();
+    const withProtocol = /^https?:\/\//i.test(raw) ? raw : `http://${raw}`;
+    return withProtocol.replace(/\/+$/, "");
+  };
+
+  const previewBaseUrl = normalizePreviewBaseUrl(frontendUrl);
+  const previewPath = slug ? `/${slug.replace(/^\/+/, "")}` : "/";
+  const livePreviewUrl = `${previewBaseUrl}${previewPath}?preview=true`;
+  const previewDisplayHost = (() => {
+    try {
+      return new URL(previewBaseUrl).host;
+    } catch {
+      return previewBaseUrl.replace(/^https?:\/\//i, "");
+    }
+  })();
+
   return (
     <div className="space-y-6">
       {/* Save indicator / Flash alerts */}
@@ -1964,8 +1982,8 @@ export default function PageEditorClient({
                 <span className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
               </div>
               <div className="flex-1 bg-slate-700/60 rounded-md px-2.5 py-1 text-[9px] text-slate-400 font-mono truncate min-w-0">
-                <span className="text-slate-500">localhost:3000</span>
-                {slug ? `/${slug.replace(/^\//, "")}` : "/preview"}
+                <span className="text-slate-500">{previewDisplayHost}</span>
+                {previewPath}
                 <span className="text-slate-600 ml-1">· preview</span>
               </div>
               <button
@@ -1982,7 +2000,7 @@ export default function PageEditorClient({
             <iframe
               key={previewKey}
               ref={iframeRef}
-              src={`/preview?pageId=${pageId}&siteId=${siteId}`}
+              src={livePreviewUrl}
               title="Page Preview"
               className="w-full bg-white border-0"
               style={{
@@ -2001,10 +2019,7 @@ export default function PageEditorClient({
           <button
             type="button"
             onClick={() => {
-              window.open(
-                `/preview?pageId=${pageId}&siteId=${siteId}`,
-                "_blank",
-              );
+              window.open(livePreviewUrl, "_blank");
             }}
             className="text-indigo-400 hover:text-indigo-300 transition font-semibold"
           >
