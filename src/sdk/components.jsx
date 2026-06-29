@@ -6,17 +6,64 @@ import DOMPurify from "isomorphic-dompurify";
  * GlobalAnalytics Component
  * Injects Google Analytics, Microsoft Clarity, Facebook Pixel, LinkedIn Insight Tag,
  * Google Tag Manager, and custom scripts dynamically from Global Settings.
+ * Analytics and marketing scripts respect the cookie consent object saved by
+ * the Global Backend cookie banner.
  */
+function getConsentState(complianceSettings) {
+  const consentRequired = complianceSettings?.cookieConsentEnabled === true;
+
+  if (!consentRequired) {
+    return { analytics: true, marketing: true };
+  }
+
+  if (typeof window === "undefined") {
+    return { analytics: false, marketing: false };
+  }
+
+  try {
+    const stored = JSON.parse(localStorage.getItem("cookie_consent") || "null");
+    return {
+      analytics: stored?.analytics === true,
+      marketing: stored?.marketing === true,
+    };
+  } catch {
+    return { analytics: false, marketing: false };
+  }
+}
+
 export function GlobalAnalytics({ settings }) {
+  const [consent, setConsent] = useState(() =>
+    getConsentState(settings?.compliance || {}),
+  );
+
+  React.useEffect(() => {
+    const updateConsent = () => {
+      setConsent(getConsentState(settings?.compliance || {}));
+    };
+
+    updateConsent();
+    window.addEventListener("storage", updateConsent);
+    window.addEventListener("cookieConsentChanged", updateConsent);
+    return () => {
+      window.removeEventListener("storage", updateConsent);
+      window.removeEventListener("cookieConsentChanged", updateConsent);
+    };
+  }, [settings?.compliance]);
+
   if (!settings) return null;
 
   const analytics = settings.analytics || {};
   const scripts = settings.scripts || {};
+  const gaId = analytics.gaMeasurementId || analytics.googleAnalyticsId;
+  const gtmId = analytics.gtmId || analytics.googleTagManagerId;
+  const searchConsoleVerification =
+    analytics.searchConsoleVerification || analytics.searchConsoleId;
+  const linkedinId = analytics.linkedInTagId || analytics.linkedinPartnerId;
 
   return (
     <>
       {/* Raw HTML Head Scripts Injection */}
-      {scripts.head && (
+      {consent.analytics && scripts.head && (
         <span
           style={{ display: "none" }}
           dangerouslySetInnerHTML={{
@@ -26,53 +73,53 @@ export function GlobalAnalytics({ settings }) {
       )}
 
       {/* Google Search Console verification */}
-      {analytics.searchConsoleId && (
+      {searchConsoleVerification && (
         <meta
           name="google-site-verification"
-          content={analytics.searchConsoleId}
+          content={searchConsoleVerification}
         />
       )}
 
       {/* Google Tag Manager */}
-      {analytics.googleTagManagerId && (
+      {consent.analytics && gtmId && (
         <Script id="gtm-script" strategy="afterInteractive">
           {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
           new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
           j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
           'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-          })(window,document,'script','dataLayer','${analytics.googleTagManagerId}');`}
+          })(window,document,'script','dataLayer','${gtmId}');`}
         </Script>
       )}
 
       {/* Google Analytics 4 */}
-      {analytics.googleAnalyticsId && (
+      {consent.analytics && gaId && (
         <>
           <Script
             strategy="afterInteractive"
-            src={`https://www.googletagmanager.com/gtag/js?id=${analytics.googleAnalyticsId}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
           />
           <Script id="ga4-script" strategy="afterInteractive">
             {`window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${analytics.googleAnalyticsId}');`}
+            gtag('config', '${gaId}');`}
           </Script>
         </>
       )}
 
       {/* Microsoft Clarity */}
-      {analytics.clarityId && (
+      {consent.analytics && analytics.clarityId && (
         <Script id="clarity-script" strategy="afterInteractive">
           {`(function(c,l,a,r,i,t,y){
               c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/v/"+i;
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
               y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
           })(window, document, "clarity", "script", "${analytics.clarityId}");`}
         </Script>
       )}
 
       {/* Facebook Meta Pixel */}
-      {analytics.metaPixelId && (
+      {consent.marketing && analytics.metaPixelId && (
         <>
           <Script id="meta-pixel-script" strategy="afterInteractive">
             {`!function(f,b,e,v,n,t,s)
@@ -99,10 +146,10 @@ export function GlobalAnalytics({ settings }) {
       )}
 
       {/* LinkedIn Insight Tag */}
-      {analytics.linkedInTagId && (
+      {consent.marketing && linkedinId && (
         <>
           <Script id="linkedin-insight-script" strategy="afterInteractive">
-            {`_linkedin_partner_id = "${analytics.linkedInTagId}";
+            {`_linkedin_partner_id = "${linkedinId}";
             window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
             window._linkedin_data_partner_ids.push(_linkedin_partner_id);
             (function(l) {
@@ -118,7 +165,7 @@ export function GlobalAnalytics({ settings }) {
               height="1"
               width="1"
               style={{ display: "none" }}
-              src={`https://px.ads.linkedin.com/collect/?pid=${analytics.linkedInTagId}&fmt=gif`}
+              src={`https://px.ads.linkedin.com/collect/?pid=${linkedinId}&fmt=gif`}
               alt=""
             />
           </noscript>
@@ -126,7 +173,7 @@ export function GlobalAnalytics({ settings }) {
       )}
 
       {/* Raw HTML Body Scripts Injection */}
-      {scripts.body && (
+      {consent.analytics && scripts.body && (
         <span
           style={{ display: "none" }}
           dangerouslySetInnerHTML={{
@@ -135,6 +182,209 @@ export function GlobalAnalytics({ settings }) {
         />
       )}
     </>
+  );
+}
+
+export function CookieConsentBanner({ complianceSettings, siteId, baseUrl }) {
+  const [showBanner, setShowBanner] = useState(false);
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [analyticsAccepted, setAnalyticsAccepted] = useState(
+    complianceSettings?.analyticsCookiesEnabled ?? true,
+  );
+  const [marketingAccepted, setMarketingAccepted] = useState(
+    complianceSettings?.marketingCookiesEnabled ?? true,
+  );
+
+  const {
+    cookieConsentEnabled = false,
+    cookieConsentMessage = "This website uses cookies to improve your experience.",
+    bannerPosition = "bottom",
+    acceptButtonText = "Accept All",
+    declineButtonText = "Decline",
+    settingsButtonText = "Preferences",
+    analyticsCookiesEnabled = true,
+    marketingCookiesEnabled = true,
+  } = complianceSettings || {};
+
+  React.useEffect(() => {
+    if (!cookieConsentEnabled) return;
+
+    const storedConsent = localStorage.getItem("cookie_consent");
+    if (!storedConsent) {
+      const timer = window.setTimeout(() => setShowBanner(true), 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [cookieConsentEnabled]);
+
+  const logConsent = async (consentType, accepted, visitorId) => {
+    try {
+      const resolvedBaseUrl =
+        baseUrl ||
+        process.env.NEXT_PUBLIC_CMS_BASE_URL ||
+        "http://localhost:3000";
+      const resolvedSiteId =
+        siteId || process.env.NEXT_PUBLIC_SITE_ID || "layman_litigation";
+
+      await fetch(
+        `${resolvedBaseUrl.replace(/\/$/, "")}/api/compliance/consent`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            siteId: resolvedSiteId,
+            visitorId,
+            consentType,
+            accepted,
+          }),
+        },
+      );
+    } catch (err) {
+      console.error("Failed to log consent to backend:", err);
+    }
+  };
+
+  const saveConsent = async ({ analytics, marketing }) => {
+    const visitorId =
+      localStorage.getItem("visitor_id") ||
+      `visitor_${Math.random().toString(36).slice(2, 11)}`;
+    localStorage.setItem("visitor_id", visitorId);
+
+    const consentData = {
+      essential: true,
+      analytics,
+      marketing,
+      timestamp: new Date().toISOString(),
+    };
+
+    localStorage.setItem("cookie_consent", JSON.stringify(consentData));
+    setShowBanner(false);
+    setShowPreferences(false);
+
+    await Promise.all([
+      logConsent("essential", true, visitorId),
+      logConsent("analytics", analytics, visitorId),
+      logConsent("marketing", marketing, visitorId),
+    ]);
+
+    window.dispatchEvent(new Event("cookieConsentChanged"));
+  };
+
+  if (!showBanner) return null;
+
+  const bannerInlineStyle = (() => {
+    const base = {
+      position: "fixed",
+      zIndex: 9999,
+      backgroundColor: "rgba(18,18,18,0.97)",
+      border: "1px solid #2a2a2a",
+      borderRadius: "1rem",
+      padding: "20px",
+      boxShadow: "0 25px 50px rgba(0,0,0,0.6)",
+      display: "flex",
+      flexDirection: "column",
+      gap: "16px",
+      width: "360px",
+      maxWidth: "calc(100vw - 32px)",
+      color: "white",
+    };
+    if (bannerPosition === "top") {
+      return { ...base, top: "24px", right: "24px" };
+    } else if (bannerPosition === "popup") {
+      return { ...base, top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "90%", maxWidth: "380px" };
+    } else {
+      return { ...base, bottom: "24px", right: "24px" };
+    }
+  })();
+
+  return (
+    <div style={bannerInlineStyle}>
+      <div className="flex items-start gap-3">
+        {/* Cookie SVG Icon */}
+        <div className="p-2 bg-neutral-900 border border-neutral-800 rounded-lg text-[#d9b04f] shrink-0 mt-0.5">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+          </svg>
+        </div>
+        <div className="space-y-1">
+          <h4 className="text-sm font-extrabold text-white tracking-tight">Cookie Consent</h4>
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            {cookieConsentMessage}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-850 pt-3">
+        <button
+          type="button"
+          onClick={() => setShowPreferences((value) => !value)}
+          className="px-3 py-1.5 text-xs font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer"
+        >
+          {settingsButtonText}
+        </button>
+        <button
+          type="button"
+          onClick={() => saveConsent({ analytics: false, marketing: false })}
+          className="px-3 py-1.5 text-xs font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer"
+        >
+          {declineButtonText}
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            saveConsent({
+              analytics: analyticsCookiesEnabled,
+              marketing: marketingCookiesEnabled,
+            })
+          }
+          className="px-4 py-1.5 text-xs font-bold bg-[#d9b04f] hover:bg-[#c9a03f] text-black rounded-lg shadow-lg hover:scale-[1.03] active:scale-95 transition-all cursor-pointer"
+        >
+          {acceptButtonText}
+        </button>
+      </div>
+
+      {showPreferences && (
+        <div className="mt-1 flex flex-col gap-3 border-t border-neutral-850 pt-3 text-xs text-neutral-300 animate-in fade-in duration-200">
+          <label className="flex items-center justify-between gap-4 p-2 bg-neutral-900/50 border border-neutral-850 rounded-xl cursor-pointer">
+            <span className="font-medium text-neutral-200">Essential cookies</span>
+            <input type="checkbox" checked readOnly className="accent-[#d9b04f] rounded" />
+          </label>
+          {analyticsCookiesEnabled && (
+            <label className="flex items-center justify-between gap-4 p-2 bg-neutral-900/50 border border-neutral-850 rounded-xl cursor-pointer hover:bg-neutral-900 transition-colors">
+              <span className="font-medium text-neutral-200">Analytics cookies</span>
+              <input
+                type="checkbox"
+                checked={analyticsAccepted}
+                onChange={(e) => setAnalyticsAccepted(e.target.checked)}
+                className="accent-[#d9b04f] rounded"
+              />
+            </label>
+          )}
+          {marketingCookiesEnabled && (
+            <label className="flex items-center justify-between gap-4 p-2 bg-neutral-900/50 border border-neutral-850 rounded-xl cursor-pointer hover:bg-neutral-900 transition-colors">
+              <span className="font-medium text-neutral-200">Marketing cookies</span>
+              <input
+                type="checkbox"
+                checked={marketingAccepted}
+                onChange={(e) => setMarketingAccepted(e.target.checked)}
+                className="accent-[#d9b04f] rounded"
+              />
+            </label>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              saveConsent({
+                analytics: analyticsCookiesEnabled && analyticsAccepted,
+                marketing: marketingCookiesEnabled && marketingAccepted,
+              })
+            }
+            className="w-full py-2 bg-neutral-800 hover:bg-neutral-750 text-white rounded-lg font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95 text-center mt-1"
+          >
+            Save Preferences
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

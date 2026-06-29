@@ -22,12 +22,18 @@ export async function GET(req) {
 
     const settings = await prisma.globalSettings.findUnique({
       where: { siteId },
-      select: { websiteSettings: true }
+      select: { 
+        websiteSettings: true,
+        ctaConfig: true,
+        compliance: true
+      }
     });
 
     return NextResponse.json(apiSuccess({ 
       isActive: site.isActive,
-      websiteSettings: settings?.websiteSettings || null 
+      websiteSettings: settings?.websiteSettings || null,
+      ctaConfig: settings?.ctaConfig || null,
+      compliance: settings?.compliance || null
     }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });

@@ -23,6 +23,24 @@ export const metadata = {
     "Create pages, edit layouts, modify text/images, and toggle publishing statuses.",
 };
 
+function resolveFrontendUrl(value) {
+  const fallback = process.env.FRONTEND_URL || "http://localhost:3001";
+  const raw = (value || fallback).trim();
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `http://${raw}`;
+
+  try {
+    const url = new URL(withProtocol);
+
+    if (url.port === "3000") {
+      return fallback.replace(/\/+$/, "");
+    }
+
+    return url.href.replace(/\/+$/, "");
+  } catch {
+    return fallback.replace(/\/+$/, "");
+  }
+}
+
 export default async function PagesAdmin() {
   const user = await requireAuth();
   if (!user) return null;
@@ -46,10 +64,7 @@ export default async function PagesAdmin() {
     where: { siteId: site.id },
     select: { websiteSettings: true },
   });
-  const frontendUrl =
-    settings?.websiteSettings?.domain ||
-    process.env.FRONTEND_URL ||
-    "http://localhost:3001";
+  const frontendUrl = resolveFrontendUrl(settings?.websiteSettings?.domain);
 
   // Retrieve all pages under this site
   const pages = await prisma.page.findMany({

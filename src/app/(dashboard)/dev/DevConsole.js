@@ -163,10 +163,32 @@ export default function DevConsole({
   };
 
   // Copy Key Helper
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    setCopiedKey(true);
-    setTimeout(() => setCopiedKey(false), 2000);
+  const copyToClipboard = async (text) => {
+    setErrorMessage("");
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+
+      setCopiedKey(true);
+      setTimeout(() => setCopiedKey(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy key:", err);
+      setErrorMessage(
+        "Copy failed in this browser context. Select the key text and copy it manually.",
+      );
+    }
   };
 
   // Refresh System Exception Logs

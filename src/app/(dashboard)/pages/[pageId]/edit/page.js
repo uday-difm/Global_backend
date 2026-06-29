@@ -4,13 +4,29 @@ import prisma from "@/lib/prisma";
 import { headers } from "next/headers";
 
 function resolveFrontendUrlForRequest(value, requestHost) {
-  const fallback = "http://localhost:3001";
+  const fallback = process.env.FRONTEND_URL || "http://localhost:3001";
   const raw = (value || fallback).trim();
   const withProtocol = /^https?:\/\//i.test(raw) ? raw : `http://${raw}`;
 
   try {
     const url = new URL(withProtocol);
+    const fallbackUrl = new URL(
+      /^https?:\/\//i.test(fallback) ? fallback : `http://${fallback}`,
+    );
     const hostname = requestHost?.split(":")[0];
+    const backendPort = requestHost?.split(":")[1] || "3000";
+    const pointsAtBackend =
+      url.port === backendPort &&
+      (url.hostname === hostname ||
+        url.hostname === "localhost" ||
+        url.hostname === "127.0.0.1");
+
+    if (pointsAtBackend) {
+      url.protocol = fallbackUrl.protocol;
+      url.hostname = fallbackUrl.hostname;
+      url.port = fallbackUrl.port;
+    }
+
     const isLocalPreviewHost =
       url.hostname === "localhost" || url.hostname === "127.0.0.1";
     const isLanRequestHost =

@@ -4,19 +4,48 @@ import { ValidationError } from "@/core/errors";
 import { CtaConfigSchema } from "@/lib/validators/cta";
 import { EventBus } from "@/core/events";
 import { logAction } from "@/lib/audit";
+import prisma from "@/lib/prisma";
+
 async function triggerFrontendRevalidation(siteId) {
   try {
-    // You'd ideally fetch the frontend URL from your FrontendProject table,
-    // but assuming a standard setup:
-    const frontendUrl =
-      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
+    const [site, settings, frontendProject] = await Promise.all([
+      prisma.site.findUnique({
+        where: { id: siteId },
+        select: { integrationKey: true },
+      }),
+      prisma.globalSettings.findUnique({
+        where: { siteId },
+        select: { websiteSettings: true },
+      }),
+      prisma.frontendProject.findFirst({
+        where: { siteId, isActive: true },
+        orderBy: { updatedAt: "desc" },
+        select: { baseUrl: true },
+      }),
+    ]);
+
+    const frontendUrl = (
+      settings?.websiteSettings?.domain ||
+      frontendProject?.baseUrl ||
+      process.env.FRONTEND_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "http://localhost:3001"
+    ).replace(/\/+$/, "");
+
+    const secret = site?.integrationKey || process.env.CMS_INTEGRATION_KEY;
+    if (!secret) {
+      console.warn(
+        `Skipping frontend revalidation for ${siteId}: integration key is not configured.`,
+      );
+      return;
+    }
 
     await fetch(`${frontendUrl}/api/revalidate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         siteId,
-        secret: process.env.CMS_INTEGRATION_KEY, // Must match what the frontend expects
+        secret,
       }),
     });
   } catch (error) {

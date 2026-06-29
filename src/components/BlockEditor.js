@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import JoditEditor from "jodit-react";
 //---------------------------------------------------------------------------
 // Block-JSON → HTML converter
@@ -99,12 +99,14 @@ function resolveInitialHtml(initialContent, fallbackHtml) {
 // ---------------------------------------------------------------------------
 // Jodit toolbar config
 // ---------------------------------------------------------------------------
-function useJoditConfig() {
+function useJoditConfig({ isDark, placeholder }) {
   return useMemo(
     () => ({
       readonly: false,
       height: 560,
       minHeight: 300,
+      theme: isDark ? "dark" : "default",
+      placeholder: placeholder || "Start typing...",
       toolbarAdaptive: false,
       toolbarSticky: true,
       showCharsCounter: true,
@@ -118,47 +120,66 @@ function useJoditConfig() {
         removeEmptyElements: false,
         fillEmptyParagraph: true,
       },
+      askBeforePasteHTML: false,
+      askBeforePasteFromWord: false,
+      defaultActionOnPaste: "insert_clear_html",
       buttons: [
+        "source",
+        "|",
         "bold",
         "italic",
         "underline",
         "strikethrough",
         "|",
+        "superscript",
+        "subscript",
+        "|",
         "ul",
         "ol",
         "|",
+        "outdent",
+        "indent",
+        "|",
         "font",
         "fontsize",
+        "brush",
         "paragraph",
         "|",
         "image",
-        "link",
+        "video",
         "table",
+        "link",
         "|",
         "align",
-        "indent",
-        "outdent",
-        "|",
-        "hr",
-        "quote",
-        "|",
         "undo",
         "redo",
         "|",
+        "hr",
+        "symbol",
         "eraser",
         "copyformat",
         "|",
-        "source",
+        "selectall",
+        "print",
+        "find",
+        "|",
         "fullsize",
       ],
-      style: {
-        fontFamily: "Inter, system-ui, sans-serif",
-        fontSize: "15px",
-      },
+      style: isDark
+        ? {
+            fontFamily: "Inter, system-ui, sans-serif",
+            fontSize: "15px",
+            background: "#0f172a",
+            color: "#f8fafc",
+          }
+        : {
+            fontFamily: "Inter, system-ui, sans-serif",
+            fontSize: "15px",
+          },
       enter: "P",
       defaultMode: 1, // WYSIWYG
     }),
-    []
+    [isDark, placeholder]
   );
 }
 
@@ -175,9 +196,30 @@ export default function BlockEditor({
   fallbackHtml,
   onChangeHtml,
   onChangeJson,
+  placeholder,
 }) {
   const editorRef = useRef(null);
-  const config = useJoditConfig();
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    // Detect dark mode class on mount
+    setIsDark(document.documentElement.classList.contains("dark"));
+
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const config = useJoditConfig({ isDark, placeholder });
 
   const initialHtml = useMemo(
     () => resolveInitialHtml(initialContent, fallbackHtml),
@@ -194,6 +236,7 @@ export default function BlockEditor({
   return (
     <div className="jodit-wrapper rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
       <JoditEditor
+        key={isDark ? "dark" : "light"}
         ref={editorRef}
         value={initialHtml}
         config={config}
