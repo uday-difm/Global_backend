@@ -15,19 +15,26 @@ export default async function SecurityPage() {
   const site = await getSiteForUser(sessionUser);
   const siteId = site ? site.id : null;
 
+  if (
+    sessionUser.globalRole !== "SUPERADMIN" &&
+    sessionUser.globalRole !== "ADMIN"
+  ) {
+    redirect("/dashboard");
+  }
+
   return (
     <div className="w-full">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">Security Center</h1>
+        <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">
+          Security Center
+        </h1>
         <p className="text-sm text-gray-500 mt-1">
-          Manage your account credentials, configure two-factor authentication, and monitor security access.
+          Manage your account credentials, configure two-factor authentication,
+          and monitor security access.
         </p>
       </div>
 
-      <SecurityConsole
-        siteId={siteId}
-        user={sessionUser}
-      />
+      <SecurityConsole siteId={siteId} user={sessionUser} />
     </div>
   );
 }

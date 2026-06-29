@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteIdForUser } from "@/lib/getSiteForUser";
+import { redirect } from "next/navigation";
 import ContactDetailsEditor from "./ContactDetailsEditor";
 
 export const metadata = {
@@ -11,6 +12,7 @@ export const metadata = {
 export default async function ContactPage() {
   const user = await requireAuth();
   if (!user) return null;
+  if (user.globalRole === "VIEWER") redirect("/dashboard");
 
   const siteId = await getSiteIdForUser(user);
 

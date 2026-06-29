@@ -34,6 +34,7 @@ import {
   Terminal,
   ChevronDown,
   ChevronRight,
+  Globe,
 } from "lucide-react";
 
 const ROLE_LEVEL = {
@@ -45,6 +46,17 @@ const ROLE_LEVEL = {
 };
 
 const sections = [
+  {
+    title: "Management",
+    links: [
+      {
+        href: "/sites",
+        label: "Sites",
+        icon: Globe,
+        minRole: "ADMIN",
+      },
+    ],
+  },
   {
     title: "Overview",
     links: [
@@ -233,7 +245,11 @@ function SidebarLink({ href, label, icon: Icon, pathname }) {
     >
       <Icon
         size={14}
-        className={isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"}
+        className={
+          isActive
+            ? "text-indigo-600 dark:text-indigo-400"
+            : "text-slate-400 dark:text-slate-500"
+        }
       />
       <span className="truncate">{label}</span>
     </Link>

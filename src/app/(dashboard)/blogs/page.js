@@ -3,6 +3,7 @@ import Link from "next/link";
 import prisma from "@/lib/prisma";
 import DeletePostButton from "./DeletePostButton";
 import CategoryManager from "./CategoryManager";
+import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
 import {
@@ -24,6 +25,7 @@ export const metadata = {
 export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
   const user = await requireAuth();
   if (!user) return null;
+  if (user.globalRole === "VIEWER") redirect("/dashboard");
 
   const site = await getSiteForUser(user);
   if (!site) {

@@ -1,10 +1,12 @@
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
+import { redirect } from "next/navigation";
 import FaqManager from "./FaqManager";
 
 export default async function FaqPage() {
   const user = await requireAuth();
+  if (user.globalRole === "VIEWER") redirect("/dashboard");
   const site = await getSiteForUser(user);
 
   if (!site) {

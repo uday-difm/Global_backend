@@ -3,6 +3,7 @@ import React from "react";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import DeleteServiceButton from "./DeleteServiceButton";
+import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
 import { Briefcase, CheckCircle, FileText, Plus, DollarSign, ListOrdered } from "lucide-react";
@@ -15,6 +16,7 @@ export const metadata = {
 export default async function ServicesAdmin() {
   const user = await requireAuth();
   if (!user) return null;
+  if (user.globalRole === "VIEWER") redirect("/dashboard");
 
   // Retrieve site config securely
   const site = await getSiteForUser(user);

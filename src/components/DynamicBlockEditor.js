@@ -3,7 +3,8 @@
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 
-// Dynamically import the BlockEditor with SSR disabled
+// Dynamically import the Jodit-based editor with SSR disabled
+// (Jodit accesses window/document and cannot run server-side)
 const Editor = dynamic(() => import("./BlockEditor"), {
   ssr: false,
   loading: () => (

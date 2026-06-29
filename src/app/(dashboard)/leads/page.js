@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
+import { redirect } from "next/navigation";
 import LeadsManager from "./LeadsManager";
 
 export const metadata = {
@@ -11,6 +12,7 @@ export const metadata = {
 export default async function LeadsPage() {
   const user = await requireAuth();
   if (!user) return null;
+  if (user.globalRole === "VIEWER") redirect("/dashboard");
 
   const site = await getSiteForUser(user);
 

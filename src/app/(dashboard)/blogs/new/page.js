@@ -29,12 +29,30 @@ export default async function NewPostPage() {
     orderBy: { name: "asc" },
   });
 
-  // Authors scoped to this site via SiteUser memberships
+  // Authors scoped to this site via SiteUser memberships + global admins
   const siteUsers = await prisma.siteUser.findMany({
     where: { siteId: site.id, deletedAt: null },
     include: { user: { select: { id: true, email: true } } },
   });
-  const authors = siteUsers.map((su) => su.user);
+
+  const globalAdmins = await prisma.user.findMany({
+    where: {
+      globalRole: { in: ["SUPERADMIN", "ADMIN"] },
+      isActive: true,
+      deletedAt: null,
+    },
+    select: { id: true, email: true },
+  });
+
+  const authorMap = new Map();
+  siteUsers.forEach((su) => {
+    if (su.user) authorMap.set(su.user.id, su.user);
+  });
+  globalAdmins.forEach((admin) => {
+    authorMap.set(admin.id, admin);
+  });
+
+  const authors = Array.from(authorMap.values());
 
   return (
     <div className="space-y-6">

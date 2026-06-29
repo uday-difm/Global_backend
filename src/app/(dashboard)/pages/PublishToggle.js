@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 /*
  PublishToggle client component
@@ -27,13 +28,14 @@ export default function PublishToggle({ pageId, initialStatus, siteId }) {
       });
       const json = await res.json();
       if (!res.ok) {
-        alert(json.error || "Failed to update page status");
+        toast.error(json.error || "Failed to update page status");
       } else {
         setStatus(json.page?.status ?? newStatus);
+        toast.success(`Page status updated to ${newStatus}`);
       }
     } catch (err) {
       console.error("Toggle publish error", err);
-      alert("Network error");
+      toast.error("Network error");
     } finally {
       setLoading(false);
     }

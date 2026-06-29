@@ -2,6 +2,10 @@ import { EventBus } from "./events";
 import { emailService } from "@/services/email.service";
 import { notificationService } from "@/services/notification.service";
 import { webhookService } from "@/services/webhook.service";
+import prisma from "@/lib/prisma";
+
+// Clear all previously registered event listeners to prevent duplicate triggers on Next.js dev server hot-reloads
+EventBus.removeAllListeners();
 
 console.log("🔔 Application event listeners initialized!");
 
@@ -16,22 +20,40 @@ EventBus.on("auth.password_reset_requested", async ({ email, token }) => {
   }
 });
 
-// ---------------------------------------------------------------------------
-// FORM / LEAD EVENTS
-// ---------------------------------------------------------------------------
 EventBus.on("contact_form.submitted", async ({ submission, lead, site }) => {
+  console.log("🔥 [EventBus] contact_form.submitted received for site:", submission.siteId);
   try {
     await emailService.sendContactFormAlerts(submission, lead, site);
+    console.log("✅ [EventBus] Contact form email alerts sent.");
   } catch (err) {
-    console.error("Failed to send contact form alerts via listener:", err);
+    console.error("❌ [EventBus] Failed to send contact form alerts via listener:", err);
+  }
+
+  if (!lead) {
+    try {
+      console.log("🔥 [EventBus] Generic submission - writing NotificationAlert to DB...");
+      const alert = await prisma.notificationAlert.create({
+        data: {
+          siteId: submission.siteId,
+          title: "New Contact Message",
+          message: `From: ${submission.name} (${submission.email}). Message: ${submission.message.substring(0, 100)}${submission.message.length > 100 ? "..." : ""}`,
+          type: "NEW_LEAD",
+        },
+      });
+      console.log("✅ [EventBus] NotificationAlert created in DB:", alert.id);
+    } catch (err) {
+      console.error("❌ [EventBus] Failed to log generic contact submission dashboard alert:", err);
+    }
   }
 });
 
 EventBus.on("lead.created", async ({ siteId, data }) => {
+  console.log("🔥 [EventBus] lead.created received for site:", siteId);
   try {
     await notificationService.notifyNewLead(siteId, data);
+    console.log("✅ [EventBus] notifyNewLead completed.");
   } catch (err) {
-    console.error("Failed to notify new lead:", err);
+    console.error("❌ [EventBus] Failed to notify new lead:", err);
   }
 });
 

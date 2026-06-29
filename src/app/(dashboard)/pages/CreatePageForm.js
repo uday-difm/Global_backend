@@ -3,6 +3,8 @@
 
 import { useState } from "react";
 import { Plus, X, FilePlus, Globe, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function CreatePageForm({ siteId }) {
   const [show, setShow] = useState(false);
@@ -10,6 +12,7 @@ export default function CreatePageForm({ siteId }) {
   const [slug, setSlug] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const router = useRouter();
 
   const resetForm = () => {
     setTitle("");
@@ -46,10 +49,12 @@ export default function CreatePageForm({ siteId }) {
         throw new Error(json.error || "Failed to create page");
       }
 
-      // Success: reload the page to display the new record
-      window.location.reload();
+      toast.success("Page created successfully!");
+      router.refresh();
+      setShow(false);
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || "Failed to create page");
     } finally {
       setSaving(false);
     }

@@ -7,4 +7,11 @@ class ApplicationEventBus extends EventEmitter {
   }
 }
 
-export const EventBus = new ApplicationEventBus();
+const globalForEventBus = globalThis;
+
+export const EventBus =
+  globalForEventBus.eventBus || new ApplicationEventBus();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForEventBus.eventBus = EventBus;
+}

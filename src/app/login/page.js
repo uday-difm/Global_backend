@@ -33,9 +33,25 @@ function LoginAndProjectLanding() {
   const [twoFaRequired, setTwoFaRequired] = useState(false);
   const [twoFaCode, setTwoFaCode] = useState("");
 
-  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+  const [recaptchaSiteKey, setRecaptchaSiteKey] = useState(null);
   const recaptchaContainerRef = useRef(null);
   const widgetIdRef = useRef(null);
+
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    const isIpAddress = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(hostname);
+    const isNgrok = hostname.endsWith(".ngrok.io") ||
+      hostname.endsWith(".ngrok-free.dev");
+
+    // Use test key on IPs and ngrok domains, but custom key on localhost
+    const useTestKey = isIpAddress || isNgrok;
+    const activeKey = useTestKey
+      ? "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+      : process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+    
+    console.log("[reCAPTCHA Debug] Host:", hostname, "Using test key:", useTestKey, "Site Key:", activeKey);
+    setRecaptchaSiteKey(activeKey);
+  }, []);
 
   // Render the reCAPTCHA widget into the container ref.
   // Handles both first-load (inject script) and return-visit (script already present) cases.
@@ -169,7 +185,7 @@ function LoginAndProjectLanding() {
               } else {
                 window.grecaptcha.reset();
               }
-            } catch (_) {}
+            } catch (_) { }
           }
           setLoading(false);
           return;
@@ -186,7 +202,7 @@ function LoginAndProjectLanding() {
             } else {
               window.grecaptcha.reset();
             }
-          } catch (_) {}
+          } catch (_) { }
         }
         setLoading(false);
       }
@@ -274,7 +290,7 @@ function LoginAndProjectLanding() {
             } else {
               window.grecaptcha.reset();
             }
-          } catch (_) {}
+          } catch (_) { }
         }
         setLoading(false);
         return;
@@ -291,7 +307,7 @@ function LoginAndProjectLanding() {
           } else {
             window.grecaptcha.reset();
           }
-        } catch (_) {}
+        } catch (_) { }
       }
       setLoading(false);
     }
@@ -343,12 +359,7 @@ function LoginAndProjectLanding() {
             >
               Architecture
             </a>
-            <a
-              href="#features"
-              className="hover:text-indigo-400 flex items-center gap-1.5 transition"
-            >
-              <BookOpen size={14} /> Docs
-            </a>
+
           </nav>
 
           <div>

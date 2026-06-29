@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
+import { redirect } from "next/navigation";
 import DevConsole from "./DevConsole";
 
 export const metadata = {
@@ -24,6 +25,10 @@ export default async function DevPage() {
         </p>
       </div>
     );
+  }
+
+  if (user.globalRole !== "SUPERADMIN" && user.globalRole !== "ADMIN") {
+    redirect("/dashboard");
   }
 
   // Pre-load API keys, integration key, errors log, webhook subscriptions, and deployment notes

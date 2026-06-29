@@ -41,6 +41,8 @@
     "cloudinary": "^2.10.0",
     "dns": "^0.2.2",
     "isomorphic-dompurify": "^3.18.0",
+    "jodit": "^4.12.32",
+    "jodit-react": "^5.3.21",
     "lucide-react": "^1.20.0",
     "multer": "^2.2.0",
     "next": "16.2.9",
@@ -55,6 +57,7 @@
     "react-google-recaptcha-v3": "^1.11.0",
     "resend": "^6.14.0",
     "sharp": "^0.35.1",
+    "sonner": "^2.0.7",
     "speakeasy": "^2.0.0",
     "zod": "^4.4.3"
   },

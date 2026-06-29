@@ -1,10 +1,12 @@
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
+import { redirect } from "next/navigation";
 import TestimonialsList from "./TestimonialsList";
 
 export default async function TestimonialsPage() {
   const user = await requireAuth();
+  if (user.globalRole === "VIEWER") redirect("/dashboard");
   const site = await getSiteForUser(user);
 
   if (!site) {

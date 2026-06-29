@@ -6,6 +6,7 @@ import AnalyticsScripts from "@/components/utils/AnalyticsScripts";
 import ClientScripts from "@/components/utils/ClientScripts";
 import { ThemeProvider } from "next-themes";
 import SessionTimeoutHandler from "@/components/utils/SessionTimeoutHandler";
+import { Toaster } from "sonner";
 
 // Initialize event listeners for emails, notifications, and webhooks
 import "@/core/listeners";
@@ -77,6 +78,7 @@ export default async function RootLayout({ children }) {
           <AuthProvider>
             <SessionTimeoutHandler timeoutMinutes={timeoutMinutes} />
             {children}
+            <Toaster richColors position="top-right" closeButton />
           </AuthProvider>
         </ThemeProvider>
       </body>

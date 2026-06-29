@@ -10,7 +10,92 @@ import {
   Quote,
   AlertCircle,
   Play,
+  UserPlus,
+  Database,
+  ShieldCheck,
+  PanelTop,
+  Bell,
+  PlusCircle,
+  Briefcase,
+  Layers,
+  HelpCircle,
+  FolderOpen,
+  BarChart2,
+  Activity,
 } from "lucide-react";
+
+const allActions = [
+  {
+    label: "Database Backup",
+    desc: "Run database/media backups",
+    href: "/backup",
+    icon: Database,
+    roles: ["SUPERADMIN", "ADMIN"],
+  },
+  {
+    label: "Security Console",
+    desc: "View audit logs & access history",
+    href: "/security",
+    icon: ShieldCheck,
+    roles: ["SUPERADMIN", "ADMIN"],
+  },
+  {
+    label: "Leads CRM",
+    desc: "Manage customer form inquiries",
+    href: "/leads",
+    icon: Inbox,
+    roles: ["EDITOR"],
+  },
+  {
+    label: "Manage Menus",
+    desc: "Modify navigation structures",
+    href: "/navigation",
+    icon: Layers,
+    roles: ["EDITOR"],
+  },
+  {
+    label: "New Blog Post",
+    desc: "Compose a new draft article",
+    href: "/blogs/new",
+    icon: Newspaper,
+    roles: ["AUTHOR"],
+  },
+  {
+    label: "Upload Media",
+    desc: "Manage images and assets",
+    href: "/media",
+    icon: FolderOpen,
+    roles: ["AUTHOR"],
+  },
+  {
+    label: "System Status",
+    desc: "Monitor platform performance",
+    href: "/performance",
+    icon: Activity,
+    roles: ["VIEWER"],
+  },
+  {
+    label: "Manage Pages",
+    desc: "Edit layouts & build pages",
+    href: "/pages",
+    icon: PlusCircle,
+    roles: ["SUPERADMIN", "ADMIN", "EDITOR"],
+  },
+  {
+    label: "Edit Blogs",
+    desc: "Update resources & articles",
+    href: "/blogs",
+    icon: FileText,
+    roles: ["SUPERADMIN", "ADMIN", "EDITOR", "AUTHOR"],
+  },
+  {
+    label: "Visitor Analytics",
+    desc: "Track traffic & audience logs",
+    href: "/visitors",
+    icon: BarChart2,
+    roles: ["SUPERADMIN", "ADMIN", "EDITOR", "AUTHOR", "VIEWER"],
+  },
+];
 
 export default async function DashboardPage() {
   // Fetch active site context
@@ -57,6 +142,11 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const globalRole = user.globalRole || "VIEWER";
+  const filteredActions = allActions.filter((action) =>
+    action.roles.includes(globalRole)
+  );
+
   return (
     <div className="space-y-8 w-full">
       {/* Header */}
@@ -69,6 +159,54 @@ export default async function DashboardPage() {
           <span className="font-semibold text-gray-800">{site.name}</span> (
           {site.domain || site.id})
         </p>
+      </div>
+
+      {/* Quick Actions Block */}
+      <div className="bg-gradient-to-r from-slate-50 to-indigo-50/30 dark:from-slate-800/40 dark:to-indigo-950/10 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 shadow-xs transition-colors duration-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              Quick Actions
+            </h2>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+              Available tools and controls based on your <span className="font-semibold text-slate-650 dark:text-slate-400">{globalRole}</span> role
+            </p>
+          </div>
+          <span className="shrink-0 inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/40 w-fit">
+            {globalRole}
+          </span>
+        </div>
+        
+        {filteredActions.length === 0 ? (
+          <p className="text-xs text-slate-400 italic">No actions available for your role.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {filteredActions.map((action, idx) => {
+              const Icon = action.icon;
+              return (
+                <Link
+                  key={idx}
+                  href={action.href}
+                  className="group flex flex-col justify-between p-3.5 bg-white dark:bg-slate-800/90 border border-slate-100 dark:border-slate-700/60 rounded-xl hover:border-indigo-300 dark:hover:border-indigo-800 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <div className="space-y-3">
+                    <div className="inline-flex p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900 transition-colors">
+                      <Icon size={16} />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        {action.label}
+                      </h3>
+                      <p className="text-[10px] text-slate-450 dark:text-slate-400 mt-1 leading-normal line-clamp-2">
+                        {action.desc}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Stats Grid */}

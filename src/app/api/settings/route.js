@@ -11,12 +11,24 @@ export async function GET(req) {
       return NextResponse.json({ error: "siteId is required" }, { status: 400 });
     }
 
+    const site = await prisma.site.findUnique({
+      where: { id: siteId },
+      select: { isActive: true, deletedAt: true }
+    });
+
+    if (!site || site.deletedAt) {
+      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    }
+
     const settings = await prisma.globalSettings.findUnique({
       where: { siteId },
       select: { websiteSettings: true }
     });
 
-    return NextResponse.json(apiSuccess({ websiteSettings: settings?.websiteSettings || null }));
+    return NextResponse.json(apiSuccess({ 
+      isActive: site.isActive,
+      websiteSettings: settings?.websiteSettings || null 
+    }));
   } catch (err) {
     return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
   }

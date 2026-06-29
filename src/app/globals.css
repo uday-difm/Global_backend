@@ -141,3 +141,51 @@ body {
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   display: block;
 }
+
+/* ─── Jodit Editor Integration Styles ─── */
+.jodit-wrapper .jodit-container {
+  border: none !important;
+  border-radius: 0 !important;
+  font-family: Inter, system-ui, sans-serif !important;
+}
+
+.jodit-wrapper .jodit-toolbar__box {
+  border-radius: 0 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  background: #f9fafb !important;
+}
+
+.jodit-wrapper .jodit-workplace {
+  min-height: 300px !important;
+}
+
+.jodit-wrapper .jodit-wysiwyg {
+  font-family: Inter, system-ui, sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+  color: #111827 !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+/* Dark mode overrides */
+.dark .jodit-wrapper .jodit-toolbar__box {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+.dark .jodit-wrapper .jodit-toolbar-button__button,
+.dark .jodit-wrapper .jodit-toolbar-button svg {
+  color: #cbd5e1 !important;
+  fill: #cbd5e1 !important;
+}
+
+.dark .jodit-wrapper .jodit-wysiwyg {
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
+}
+
+.dark .jodit-wrapper .jodit-status-bar {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-top-color: #334155 !important;
+}

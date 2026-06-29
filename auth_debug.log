@@ -1,0 +1,115 @@
+[2026-06-29T05:55:26.490Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T05:55:26.491Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T05:55:26.491Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T05:55:26.492Z] [Auth] Sending request to google siteverify...
+[2026-06-29T05:55:26.626Z] [Auth] reCAPTCHA verifyJson: {"success":false,"error-codes":["invalid-input-response"]}
+[2026-06-29T05:55:26.627Z] [Auth] Failed: reCAPTCHA verifyJson success is false
+[2026-06-29T05:55:26.628Z] [Auth] reCAPTCHA exception: reCAPTCHA verification failed
+[2026-06-29T05:56:42.274Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T05:56:42.274Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T05:56:42.275Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T05:56:42.275Z] [Auth] Sending request to google siteverify...
+[2026-06-29T05:56:42.410Z] [Auth] reCAPTCHA verifyJson: {"success":false,"error-codes":["invalid-input-response"]}
+[2026-06-29T05:56:42.411Z] [Auth] Failed: reCAPTCHA verifyJson success is false
+[2026-06-29T05:56:42.412Z] [Auth] reCAPTCHA exception: reCAPTCHA verification failed
+[2026-06-29T05:58:20.361Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T05:58:20.362Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T05:58:20.362Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T05:58:20.363Z] [Auth] Token received (length: 1657): 0cAFcWeA4mVx4d3ltk-SHMgArQF3vX...
+[2026-06-29T05:58:20.363Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T05:58:20.490Z] [Auth] reCAPTCHA verifyJson: {"success":false,"error-codes":["invalid-input-response"]}
+[2026-06-29T05:58:20.490Z] [Auth] Failed: reCAPTCHA verifyJson success is false
+[2026-06-29T05:58:20.491Z] [Auth] reCAPTCHA exception: reCAPTCHA verification failed
+[2026-06-29T05:59:57.949Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T05:59:57.949Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T05:59:57.950Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T05:59:57.950Z] [Auth] Token received (length: 1721): 0cAFcWeA6-GoucdWmYsjpTb3GnzBsD...
+[2026-06-29T05:59:57.950Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T05:59:58.086Z] [Auth] reCAPTCHA verifyJson: {"success":false,"error-codes":["invalid-input-response"]}
+[2026-06-29T05:59:58.086Z] [Auth] Failed: reCAPTCHA verifyJson success is false
+[2026-06-29T05:59:58.087Z] [Auth] reCAPTCHA exception: reCAPTCHA verification failed
+[2026-06-29T06:02:19.807Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T06:02:19.808Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T06:02:19.808Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T06:02:19.808Z] [Auth] Token received (length: 1700): 0cAFcWeA4a37i_ORb5rviEZ_wBQy3x...
+[2026-06-29T06:02:19.809Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T06:02:19.949Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-29T06:02:19Z","hostname":"testkey.google.com"}
+[2026-06-29T06:02:19.963Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-29T06:02:20.574Z] [Auth] Authentication successful for: admin@example.com. User ID: cmqvre6lt000144uhpuovr3xk
+[2026-06-29T06:12:10.059Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T06:12:10.060Z] [Auth] Request Host: 192.168.29.15:3000
+[2026-06-29T06:12:10.061Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T06:12:10.061Z] [Auth] Token received (length: 1614): 0cAFcWeA4AnWkRanmDhW-IvE3q1apM...
+[2026-06-29T06:12:10.061Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T06:12:10.199Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-29T06:12:09Z","hostname":"testkey.google.com"}
+[2026-06-29T06:12:10.205Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-29T06:12:10.565Z] [Auth] Authentication successful for: admin@example.com. User ID: cmqvre6lt000144uhpuovr3xk
+[2026-06-29T06:20:25.143Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T06:20:25.144Z] [Auth] Request Host: 192.168.29.15:3000
+[2026-06-29T06:20:25.144Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T06:20:25.144Z] [Auth] Token received (length: 1657): 0cAFcWeA4gaBmolK5ohr3q85ZJxd_q...
+[2026-06-29T06:20:25.145Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T06:20:25.299Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-29T06:20:24Z","hostname":"testkey.google.com"}
+[2026-06-29T06:20:25.306Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-29T06:20:25.615Z] [Auth] Authentication successful for: admin@example.com. User ID: cmqvre6lt000144uhpuovr3xk
+[2026-06-29T06:34:56.313Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T06:34:56.314Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T06:34:56.315Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T06:34:56.315Z] [Auth] Token received (length: 1678): 0cAFcWeA6erGELYe2zrD4bqD9kQelw...
+[2026-06-29T06:34:56.315Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T06:34:56.455Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-29T06:34:56Z","hostname":"testkey.google.com"}
+[2026-06-29T06:34:56.467Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-29T06:34:56.789Z] [Auth] Authentication successful for: admin@example.com. User ID: cmqvre6lt000144uhpuovr3xk
+[2026-06-29T06:37:57.969Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T06:37:57.971Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T06:37:57.972Z] [Auth] Token received (length: 1657): 0cAFcWeA6KwyAzcQ7Q4exsGcmuevfo...
+[2026-06-29T06:37:57.973Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T06:37:58.173Z] [Auth] reCAPTCHA verifyJson: {"success":false,"error-codes":["invalid-keys"]}
+[2026-06-29T06:37:58.173Z] [Auth] Failed: reCAPTCHA verifyJson success is false
+[2026-06-29T06:37:58.174Z] [Auth] reCAPTCHA exception: reCAPTCHA verification failed
+[2026-06-29T06:38:03.223Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T06:38:03.223Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T06:38:03.224Z] [Auth] Token received (length: 1657): 0cAFcWeA5sePATBcKbywLtQLHqQhUs...
+[2026-06-29T06:38:03.224Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T06:38:03.399Z] [Auth] reCAPTCHA verifyJson: {"success":false,"error-codes":["invalid-keys"]}
+[2026-06-29T06:38:03.399Z] [Auth] Failed: reCAPTCHA verifyJson success is false
+[2026-06-29T06:38:03.400Z] [Auth] reCAPTCHA exception: reCAPTCHA verification failed
+[2026-06-29T06:38:18.510Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T06:38:18.510Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T06:38:18.510Z] [Auth] Token received (length: 1657): 0cAFcWeA7ibccFLaIFEH_VVO1daUxo...
+[2026-06-29T06:38:18.511Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T06:38:18.671Z] [Auth] reCAPTCHA verifyJson: {"success":false,"error-codes":["invalid-keys"]}
+[2026-06-29T06:38:18.672Z] [Auth] Failed: reCAPTCHA verifyJson success is false
+[2026-06-29T06:38:18.672Z] [Auth] reCAPTCHA exception: reCAPTCHA verification failed
+[2026-06-29T06:40:02.086Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T06:40:02.087Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T06:40:02.088Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T06:40:02.088Z] [Auth] Token received (length: 1657): 0cAFcWeA5CDsKsXqWvVg4YOpklKKUm...
+[2026-06-29T06:40:02.088Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T06:40:02.227Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-29T06:40:01Z","hostname":"testkey.google.com"}
+[2026-06-29T06:40:02.233Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-29T06:40:02.555Z] [Auth] Authentication successful for: admin@example.com. User ID: cmqvre6lt000144uhpuovr3xk
+[2026-06-29T06:45:03.275Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T06:45:03.275Z] [Auth] Request Host: dyslexia-recital-area.ngrok-free.dev
+[2026-06-29T06:45:03.275Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T06:45:03.276Z] [Auth] Token received (length: 1636): 0cAFcWeA7lW_KU8p52WkDaldC42td4...
+[2026-06-29T06:45:03.276Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T06:45:03.433Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-29T06:45:03Z","hostname":"testkey.google.com"}
+[2026-06-29T06:45:03.434Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-29T06:45:03.685Z] [Auth] Authentication successful for: admin@example.com. User ID: cmqvre6lt000144uhpuovr3xk
+[2026-06-29T07:02:24.294Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T07:02:24.295Z] [Auth] Request Host: 192.168.29.15:3000
+[2026-06-29T07:02:24.296Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T07:02:24.296Z] [Auth] Token received (length: 1636): 0cAFcWeA6iwInvHDdZDLpFAiXwLEF4...
+[2026-06-29T07:02:24.297Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T07:02:24.460Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-29T07:02:24Z","hostname":"testkey.google.com"}
+[2026-06-29T07:02:24.466Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-29T07:02:24.784Z] [Auth] Authentication successful for: admin@example.com. User ID: cmqvre6lt000144uhpuovr3xk
+[2026-06-29T07:36:15.820Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-29T07:36:15.821Z] [Auth] Request Host: 192.168.29.15:3000
+[2026-06-29T07:36:15.821Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-29T07:36:15.822Z] [Auth] Token received (length: 1614): 0cAFcWeA61g5qvaoZ0qUxlBW5USdG_...
+[2026-06-29T07:36:15.822Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-29T07:36:15.982Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-29T07:36:15Z","hostname":"testkey.google.com"}
+[2026-06-29T07:36:15.993Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-29T07:36:16.316Z] [Auth] Authentication successful for: admin@example.com. User ID: cmqvre6lt000144uhpuovr3xk

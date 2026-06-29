@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
+import { redirect } from "next/navigation";
 import FooterEditor from "./FooterEditor";
 
 export default async function FooterPage() {
@@ -14,6 +15,10 @@ export default async function FooterPage() {
         <p className="mt-4 text-sm text-red-600">No active site found. Please configure a site in the database.</p>
       </div>
     );
+  }
+
+  if (user.globalRole !== "SUPERADMIN" && user.globalRole !== "ADMIN") {
+    redirect("/dashboard");
   }
 
   // Retrieve current footer configuration and navigation menus

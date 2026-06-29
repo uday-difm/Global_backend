@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
+import { redirect } from "next/navigation";
 import SettingsEditor from "./SettingsEditor";
 
 export default async function SettingsPage() {
@@ -14,6 +15,10 @@ export default async function SettingsPage() {
         <p className="mt-4 text-sm text-red-600">No active site found.</p>
       </div>
     );
+  }
+
+  if (user.globalRole !== "SUPERADMIN" && user.globalRole !== "ADMIN") {
+    redirect("/dashboard");
   }
 
   // Fetch the existing settings for this site, if they exist

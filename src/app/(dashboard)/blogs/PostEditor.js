@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import MediaPickerModal from "@/components/media/MediaPickerModal";
 import DynamicBlockEditor from "@/components/DynamicBlockEditor";
 import {
@@ -358,10 +359,12 @@ export default function PostEditor({
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to save post");
+      toast.success(isEditMode ? "Blog post updated successfully!" : "Blog post created successfully!");
       router.push("/blogs");
       router.refresh();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || "Failed to save post");
     } finally {
       setIsSubmitting(false);
     }
@@ -514,6 +517,7 @@ export default function PostEditor({
               </div>
               <DynamicBlockEditor
                 initialContent={post?.contentJson}
+                fallbackHtml={post?.content}
                 onChangeHtml={(html) => setContent(html)}
                 onChangeJson={(json) => setContentJson(json)}
               />

@@ -1,4 +1,6 @@
 import Credentials from "next-auth/providers/credentials";
+import fs from "fs";
+import path from "path";
 
 import bcrypt from "bcryptjs";
 
@@ -34,14 +36,42 @@ export const authOptions = {
       },
 
       async authorize(credentials, req) {
+        const logFile = path.join(process.cwd(), "auth_debug.log");
+        const writeLog = (msg) => {
+          try {
+            fs.appendFileSync(logFile, `[${new Date().toISOString()}] ${msg}\n`);
+          } catch (e) {
+            console.error("Failed to write log to file:", e);
+          }
+        };
+
+        writeLog(`[Auth] Attempt started. Email: ${credentials?.email}`);
+
         if (!credentials?.email || !credentials?.password) {
+          writeLog("[Auth] Failed: Email or password missing");
           throw new Error("Email and password required");
         }
 
-        const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+        let secretKey = process.env.RECAPTCHA_SECRET_KEY;
+        const host = req.headers?.host || "";
+        writeLog(`[Auth] Request Host: ${host}`);
+
+        if (secretKey) {
+          const isIpOrNgrok = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}/.test(host) || 
+                              host.includes(".ngrok.io") || 
+                              host.includes(".ngrok-free.dev");
+          
+          if (isIpOrNgrok) {
+            writeLog("[Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.");
+            secretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
+          }
+        }
+
         if (secretKey) {
           const recaptchaToken = credentials?.recaptchaToken;
+          writeLog(`[Auth] Token received (length: ${recaptchaToken?.length}): ${recaptchaToken ? recaptchaToken.substring(0, 30) : "empty"}...`);
           if (!recaptchaToken) {
+            writeLog("[Auth] Failed: reCAPTCHA token missing");
             throw new Error("reCAPTCHA verification is required");
           }
 
@@ -52,29 +82,43 @@ export const authOptions = {
               response: recaptchaToken,
             });
 
-            const verifyRes = await fetch(`${verifyUrl}?${queryParams.toString()}`, {
+            writeLog("[Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...");
+            const verifyRes = await fetch(verifyUrl, {
               method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: queryParams.toString(),
             });
 
             const verifyJson = await verifyRes.json();
+            writeLog(`[Auth] reCAPTCHA verifyJson: ${JSON.stringify(verifyJson)}`);
+
             if (!verifyJson.success) {
+              writeLog("[Auth] Failed: reCAPTCHA verifyJson success is false");
               throw new Error("reCAPTCHA verification failed");
             }
           } catch (captchaErr) {
+            writeLog(`[Auth] reCAPTCHA exception: ${captchaErr.message || captchaErr}`);
             throw new Error(captchaErr.message || "reCAPTCHA verification failed");
           }
+        } else {
+          writeLog("[Auth] Skipping reCAPTCHA verification (no secret key configured).");
         }
 
         try {
           const { authService } = await import("@/services/auth.service");
+          writeLog(`[Auth] Authenticating against authService for: ${credentials.email}`);
           const user = await authService.authenticate(
             credentials.email,
             credentials.password,
             credentials.twoFACode,
             req.headers || {}
           );
+          writeLog(`[Auth] Authentication successful for: ${credentials.email}. User ID: ${user?.id}`);
           return user;
         } catch (err) {
+          writeLog(`[Auth] Authentication failed with error: ${err.message || err}`);
           throw new Error(err.message || "Invalid credentials");
         }
       },

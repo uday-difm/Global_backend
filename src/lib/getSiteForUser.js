@@ -28,7 +28,8 @@ export async function getSiteForUser(user) {
       const site = await prisma.site.findUnique({
         where: { id: selectedSiteId },
       });
-      if (site && site.isActive && !site.deletedAt) {
+      // Allow dashboard access to a deactivated site if it's explicitly selected
+      if (site && !site.deletedAt) {
         return site;
       }
     }
@@ -36,11 +37,14 @@ export async function getSiteForUser(user) {
 
   // Fallback to default site selection (oldest site or first membership)
   if (user.globalRole === "SUPERADMIN" || user.globalRole === "ADMIN") {
-    return prisma.site.findFirst({ where: { isActive: true, deletedAt: null }, orderBy: { createdAt: "asc" } });
+    // Fallback can be any site for admins if none are active
+    const activeSite = await prisma.site.findFirst({ where: { isActive: true, deletedAt: null }, orderBy: { createdAt: "asc" } });
+    if (activeSite) return activeSite;
+    return prisma.site.findFirst({ where: { deletedAt: null }, orderBy: { createdAt: "asc" } });
   }
 
   const defaultMembership = await prisma.siteUser.findFirst({
-    where: { userId: user.id, site: { isActive: true, deletedAt: null } },
+    where: { userId: user.id, site: { deletedAt: null } },
     orderBy: { createdAt: "asc" },
     include: { site: true },
   });

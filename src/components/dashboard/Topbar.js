@@ -18,6 +18,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
+import { toast } from "sonner";
 
 export default function Topbar({ siteId, sites = [], onMenuClick }) {
   const [showSearch, setShowSearch] = useState(false);
@@ -181,9 +182,9 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
     <>
       {/* Top Bar */}
       <header className="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex h-16 items-center justify-between px-4 md:px-6">
+        <div className="flex h-16 items-center justify-between px-3 sm:px-4 md:px-6">
           {/* Left */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Mobile Menu Button */}
             <button
               onClick={onMenuClick}
@@ -191,18 +192,18 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
             >
               <Menu size={20} />
             </button>
-
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900 md:text-xl">
+ 
+            <div className="hidden xl:block">
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-white md:text-xl">
                 Admin Panel
               </h1>
-              <p className="hidden text-sm text-gray-500 sm:block">
+              <p className="hidden text-sm text-gray-500 dark:text-slate-400 xl:block">
                 Manage your website content
               </p>
             </div>
-
+ 
             {sites.length > 1 && (
-              <div className="relative ml-2">
+              <div className="relative ml-1 sm:ml-2">
                 <select
                   value={siteId || ""}
                   onChange={async (e) => {
@@ -218,13 +219,13 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
                         window.location.reload();
                       } else {
                         const err = await res.json();
-                        alert(err.error || "Failed to switch site");
+                        toast.error(err.error || "Failed to switch site");
                       }
                     } catch (err) {
                       console.error(err);
                     }
                   }}
-                  className="bg-gray-50 border border-gray-200 text-gray-900 text-[11px] font-bold rounded-lg focus:ring-black focus:border-black block p-1.5 px-2.5 outline-none cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-900 dark:text-slate-100 text-[11px] font-bold rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-1.5 px-2.5 outline-none cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors max-w-[120px] xs:max-w-[160px] sm:max-w-xs truncate"
                 >
                   {sites.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -235,9 +236,9 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
               </div>
             )}
           </div>
-
+ 
           {/* Right */}
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 md:gap-4">
             {/* Desktop Search */}
             <div ref={searchRef} className="relative hidden md:block">
               <Search
@@ -399,7 +400,7 @@ export default function Topbar({ siteId, sites = [], onMenuClick }) {
               <button
                 id="user-menu-btn"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-slate-700 px-2 py-2 transition hover:bg-gray-50 dark:hover:bg-slate-700 sm:px-3"
+                className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-gray-200 dark:border-slate-700 p-1.5 sm:px-3 sm:py-2 transition hover:bg-gray-50 dark:hover:bg-slate-700"
               >
                 <UserCircle size={22} className="text-gray-600 dark:text-slate-400 shrink-0" />
 

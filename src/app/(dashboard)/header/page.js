@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import HeaderEditor from "./HeaderEditor";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Header Builder | CMS Admin",
@@ -21,6 +22,10 @@ export default async function HeaderPage() {
         <p className="mt-4 text-sm text-red-600">No active site found. Please configure a site first.</p>
       </div>
     );
+  }
+
+  if (user.globalRole !== "SUPERADMIN" && user.globalRole !== "ADMIN") {
+    redirect("/dashboard");
   }
 
   // Retrieve current header configuration and navigation menus

@@ -221,7 +221,19 @@ export default function SettingsEditor({ siteId, initialSettings }) {
   const handleWebsiteChange = (e) => {
     const { name, value, type, checked } = e.target;
     const val = type === "checkbox" ? checked : value;
-    setWebsiteSettings((prev) => ({ ...prev, [name]: val }));
+    // Handle nested custom404 fields
+    if (name.startsWith("custom404.")) {
+      const key = name.split(".")[1];
+      setWebsiteSettings((prev) => ({
+        ...prev,
+        custom404: {
+          ...(prev.custom404 || {}),
+          [key]: val,
+        },
+      }));
+    } else {
+      setWebsiteSettings((prev) => ({ ...prev, [name]: val }));
+    }
   };
 
   const handleHeaderChange = (e) => {
@@ -621,6 +633,149 @@ export default function SettingsEditor({ siteId, initialSettings }) {
                       placeholder="We are currently undergoing scheduled system updates. Please visit us back shortly."
                       className="w-full px-3 py-2 bg-white border border-amber-200 rounded-lg text-xs text-amber-900 focus:outline-none focus:ring-1 focus:ring-amber-400 placeholder-amber-400"
                     />
+                  </div>
+                )}
+              </div>
+
+              {/* Custom 404 Page Sub-card */}
+              <div className="bg-purple-50/50 border border-purple-200/70 p-5 rounded-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-purple-600" />
+                    <div>
+                      <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider">
+                        Custom 404 Page
+                      </h4>
+                      <p className="text-[10px] text-purple-700">
+                        Customize the page visitors see when a URL is not found.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="custom404.enabled"
+                      checked={websiteSettings.custom404?.enabled !== false}
+                      onChange={handleWebsiteChange}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                  </label>
+                </div>
+
+                {websiteSettings.custom404?.enabled !== false && (
+                  <div className="animate-in fade-in duration-150 space-y-3 pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-purple-800 uppercase tracking-wider mb-1">
+                          Page Title
+                        </label>
+                        <input
+                          type="text"
+                          name="custom404.title"
+                          value={websiteSettings.custom404?.title || ""}
+                          onChange={handleWebsiteChange}
+                          placeholder="Page Not Found"
+                          className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-purple-800 uppercase tracking-wider mb-1">
+                          Button Text
+                        </label>
+                        <input
+                          type="text"
+                          name="custom404.buttonText"
+                          value={websiteSettings.custom404?.buttonText || ""}
+                          onChange={handleWebsiteChange}
+                          placeholder="Go Home"
+                          className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-purple-800 uppercase tracking-wider mb-1">
+                        Description
+                      </label>
+                      <textarea
+                        name="custom404.description"
+                        value={websiteSettings.custom404?.description || ""}
+                        onChange={handleWebsiteChange}
+                        rows={2}
+                        placeholder="Oops! The page you are looking for does not exist."
+                        className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-purple-800 uppercase tracking-wider mb-1">
+                        Button Link
+                      </label>
+                      <input
+                        type="text"
+                        name="custom404.buttonLink"
+                        value={websiteSettings.custom404?.buttonLink || ""}
+                        onChange={handleWebsiteChange}
+                        placeholder="/"
+                        className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-xs font-mono"
+                      />
+                    </div>
+
+                    {/* Auto-redirect section */}
+                    <div className="bg-white border border-purple-100 rounded-lg p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+                          Auto-Redirect
+                        </label>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            name="custom404.redirectOn404"
+                            checked={!!websiteSettings.custom404?.redirectOn404}
+                            onChange={handleWebsiteChange}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                      </div>
+
+                      {websiteSettings.custom404?.redirectOn404 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-in fade-in duration-150">
+                          <div>
+                            <label className="block text-[10px] font-bold text-purple-800 uppercase tracking-wider mb-1">
+                              Redirect URL
+                            </label>
+                            <input
+                              type="text"
+                              name="custom404.redirectUrl"
+                              value={
+                                websiteSettings.custom404?.redirectUrl || ""
+                              }
+                              onChange={handleWebsiteChange}
+                              placeholder="/"
+                              className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-xs font-mono"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-purple-800 uppercase tracking-wider mb-1">
+                              Delay (seconds)
+                            </label>
+                            <input
+                              type="number"
+                              name="custom404.redirectDelay"
+                              value={
+                                websiteSettings.custom404?.redirectDelay ?? 5
+                              }
+                              onChange={handleWebsiteChange}
+                              min={0}
+                              max={30}
+                              className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-xs"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

@@ -249,11 +249,21 @@ export async function POST(req) {
       );
     }
 
-    const [submission, lead] = await prisma.$transaction([
-      prisma.contactFormSubmission.create({
-        data: { siteId, name, email, phone, message, status: "new" },
-      }),
-      prisma.lead.create({
+    const submission = await prisma.contactFormSubmission.create({
+      data: { siteId, name, email, phone, message, status: "new" },
+    });
+
+    let lead = null;
+    // Only create a Lead record when the submission explicitly indicates interest
+    // in a specific service (e.g. "Free Consultation", "Case Evaluation").
+    // Generic contact form messages go only to submissions.
+    const isLeadIntent =
+      message?.toLowerCase().includes("consultation") ||
+      message?.toLowerCase().includes("case evaluation") ||
+      message?.toLowerCase().includes("quote") ||
+      message?.toLowerCase().includes("estimate");
+    if (isLeadIntent) {
+      lead = await prisma.lead.create({
         data: {
           siteId,
           name,
@@ -264,8 +274,8 @@ export async function POST(req) {
           status: "new",
           notes: `Form Message: ${message}`,
         },
-      }),
-    ]);
+      });
+    }
 
     // Sync newsletter subscribers when submission is a newsletter signup
     const isNewsletter =
@@ -294,18 +304,20 @@ export async function POST(req) {
     // ── Emit events for asynchronous processing (emails & dashboard notifications) ──
     try {
       EventBus.emit("contact_form.submitted", { submission, lead, site });
-      EventBus.emit("lead.created", { siteId, data: lead });
+      if (lead) {
+        EventBus.emit("lead.created", { siteId, data: lead });
+      }
     } catch (err) {
       console.error("Failed to emit submission events:", err);
     }
 
-    return NextResponse.json(
-      apiSuccess({
-        message: "Form submitted successfully",
-        submissionId: submission.id,
-        leadId: lead.id,
-      }),
-    );
+    const resPayload = {
+      message: "Form submitted successfully",
+      submissionId: submission.id,
+    };
+    if (lead) resPayload.leadId = lead.id;
+
+    return NextResponse.json(apiSuccess(resPayload));
   } catch (err) {
     console.error("POST /api/forms/submit error:", err);
     return NextResponse.json(
