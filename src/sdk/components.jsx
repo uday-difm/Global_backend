@@ -275,17 +275,17 @@ export function CookieConsentBanner({ complianceSettings, siteId, baseUrl }) {
     const base = {
       position: "fixed",
       zIndex: 9999,
-      backgroundColor: "rgba(18,18,18,0.97)",
-      border: "1px solid #2a2a2a",
+      backgroundColor: "var(--ll-cream)",
+      border: "1px solid var(--ll-stone)",
       borderRadius: "1rem",
       padding: "20px",
-      boxShadow: "0 25px 50px rgba(0,0,0,0.6)",
+      boxShadow: "var(--ll-shadow-lift)",
       display: "flex",
       flexDirection: "column",
       gap: "16px",
       width: "360px",
       maxWidth: "calc(100vw - 32px)",
-      color: "white",
+      color: "var(--ll-ink)",
     };
     if (bannerPosition === "top") {
       return { ...base, top: "24px", right: "24px" };
@@ -300,31 +300,31 @@ export function CookieConsentBanner({ complianceSettings, siteId, baseUrl }) {
     <div style={bannerInlineStyle}>
       <div className="flex items-start gap-3">
         {/* Cookie SVG Icon */}
-        <div className="p-2 bg-neutral-900 border border-neutral-800 rounded-lg text-[#d9b04f] shrink-0 mt-0.5">
+        <div className="p-2 bg-[var(--ll-gold-light)] border border-[var(--ll-gold)]/20 rounded-lg text-[var(--ll-gold-dark)] shrink-0 mt-0.5">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-11.314l.707.707m11.314 11.314l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
           </svg>
         </div>
         <div className="space-y-1">
-          <h4 className="text-sm font-extrabold text-white tracking-tight">Cookie Consent</h4>
-          <p className="text-xs text-neutral-400 leading-relaxed">
+          <h4 className="text-sm font-extrabold text-[var(--ll-ink)] tracking-tight">Cookie Consent</h4>
+          <p className="text-sm text-[var(--ll-slate-text)] max-w-4xl leading-relaxed">
             {cookieConsentMessage}
           </p>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-850 pt-3">
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-[var(--ll-stone)] pt-3">
         <button
           type="button"
           onClick={() => setShowPreferences((value) => !value)}
-          className="px-3 py-1.5 text-xs font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer"
+          className="px-4 py-2.5 rounded-[var(--ll-radius-sm)] bg-transparent text-[var(--ll-slate-text)] hover:text-[var(--ll-ink)] font-semibold text-sm hover:bg-[var(--ll-stone)] transition-all cursor-pointer"
         >
           {settingsButtonText}
         </button>
         <button
           type="button"
           onClick={() => saveConsent({ analytics: false, marketing: false })}
-          className="px-3 py-1.5 text-xs font-semibold text-neutral-400 hover:text-white transition-colors cursor-pointer"
+          className="px-4 py-2.5 rounded-[var(--ll-radius-sm)] bg-transparent text-[var(--ll-slate-text)] hover:text-[var(--ll-ink)] font-semibold text-sm hover:bg-[var(--ll-stone)] transition-all cursor-pointer"
         >
           {declineButtonText}
         </button>
@@ -336,37 +336,37 @@ export function CookieConsentBanner({ complianceSettings, siteId, baseUrl }) {
               marketing: marketingCookiesEnabled,
             })
           }
-          className="px-4 py-1.5 text-xs font-bold bg-[#d9b04f] hover:bg-[#c9a03f] text-black rounded-lg shadow-lg hover:scale-[1.03] active:scale-95 transition-all cursor-pointer"
+          className="px-7 py-3.5 rounded-[var(--ll-radius-sm)] bg-[var(--ll-gold)] hover:bg-[var(--ll-gold-dark)] text-[var(--ll-ink)] font-bold text-sm tracking-wide shadow-sm transition-all duration-200 hover:-translate-y-px active:translate-y-0 cursor-pointer"
         >
           {acceptButtonText}
         </button>
       </div>
 
       {showPreferences && (
-        <div className="mt-1 flex flex-col gap-3 border-t border-neutral-850 pt-3 text-xs text-neutral-300 animate-in fade-in duration-200">
-          <label className="flex items-center justify-between gap-4 p-2 bg-neutral-900/50 border border-neutral-850 rounded-xl cursor-pointer">
-            <span className="font-medium text-neutral-200">Essential cookies</span>
-            <input type="checkbox" checked readOnly className="accent-[#d9b04f] rounded" />
+        <div className="mt-1 flex flex-col gap-3 border-t border-[var(--ll-stone)] pt-3 text-xs text-neutral-300 animate-in fade-in duration-200">
+          <label className="flex items-center justify-between gap-4 p-2 bg-[var(--ll-mist)] border border-[var(--ll-stone)] rounded-xl cursor-pointer">
+            <span className="font-medium text-[var(--ll-ink)]">Essential cookies</span>
+            <input type="checkbox" checked readOnly className="accent-[var(--ll-gold)] rounded" />
           </label>
           {analyticsCookiesEnabled && (
-            <label className="flex items-center justify-between gap-4 p-2 bg-neutral-900/50 border border-neutral-850 rounded-xl cursor-pointer hover:bg-neutral-900 transition-colors">
-              <span className="font-medium text-neutral-200">Analytics cookies</span>
+            <label className="flex items-center justify-between gap-4 p-2 bg-[var(--ll-mist)] border border-[var(--ll-stone)] rounded-xl cursor-pointer hover:bg-[var(--ll-stone)]/50 transition-colors">
+              <span className="font-medium text-[var(--ll-ink)]">Analytics cookies</span>
               <input
                 type="checkbox"
                 checked={analyticsAccepted}
                 onChange={(e) => setAnalyticsAccepted(e.target.checked)}
-                className="accent-[#d9b04f] rounded"
+                className="accent-[var(--ll-gold)] rounded"
               />
             </label>
           )}
           {marketingCookiesEnabled && (
-            <label className="flex items-center justify-between gap-4 p-2 bg-neutral-900/50 border border-neutral-850 rounded-xl cursor-pointer hover:bg-neutral-900 transition-colors">
-              <span className="font-medium text-neutral-200">Marketing cookies</span>
+            <label className="flex items-center justify-between gap-4 p-2 bg-[var(--ll-mist)] border border-[var(--ll-stone)] rounded-xl cursor-pointer hover:bg-[var(--ll-stone)]/50 transition-colors">
+              <span className="font-medium text-[var(--ll-ink)]">Marketing cookies</span>
               <input
                 type="checkbox"
                 checked={marketingAccepted}
                 onChange={(e) => setMarketingAccepted(e.target.checked)}
-                className="accent-[#d9b04f] rounded"
+                className="accent-[var(--ll-gold)] rounded"
               />
             </label>
           )}
@@ -378,7 +378,7 @@ export function CookieConsentBanner({ complianceSettings, siteId, baseUrl }) {
                 marketing: marketingCookiesEnabled && marketingAccepted,
               })
             }
-            className="w-full py-2 bg-neutral-800 hover:bg-neutral-750 text-white rounded-lg font-bold text-xs shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-95 text-center mt-1"
+            className="w-full py-2.5 bg-[var(--ll-gold)] hover:bg-[var(--ll-gold-dark)] text-[var(--ll-ink)] rounded-[var(--ll-radius-sm)] font-bold text-xs shadow-md transition-all cursor-pointer hover:-translate-y-px text-center mt-1"
           >
             Save Preferences
           </button>
