@@ -4,6 +4,8 @@ import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import { requireAuth } from "@/lib/requireAuth";
 import { getSiteForUser } from "@/lib/getSiteForUser";
 
+export const dynamic = "force-dynamic";
+
 export default async function Layout({ children }) {
   const user = await requireAuth();
 
