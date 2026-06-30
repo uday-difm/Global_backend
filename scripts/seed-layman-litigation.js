@@ -821,7 +821,7 @@ async function seed() {
 
   // Create or update the home page
   let homePage = await prisma.page.findFirst({
-    where: { siteId: SITE_ID, slug: "home" },
+    where: { siteId: SITE_ID, slug: "" },
     include: { sections: true },
   });
 
