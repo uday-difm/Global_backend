@@ -32,22 +32,28 @@ export class NotificationService extends BaseService {
     
     // 1. Email Channel
     if (config.newLead?.email) {
-      const settings = await prisma.globalSettings.findUnique({
-        where: { siteId },
-        select: { emailSettings: true }
-      });
-      const adminEmail = settings?.emailSettings?.recipientOverride || settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
-      if (adminEmail) {
-        try {
-          const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
-          await transporter.sendMail({
-            from: fromEmail,
-            to: adminEmail,
-            subject: `[Lead Alert] New Lead Captured: ${lead.name}`,
-            text: `A new lead has been recorded on the system:\n\nName: ${lead.name}\nEmail: ${lead.email}\nPhone: ${lead.phone || "N/A"}\nInterest: ${lead.serviceInterest || "N/A"}\n\nView in Lead CRM dashboard.`
-          });
-        } catch (e) {
-          console.error("Failed to send new lead email alert:", e);
+      if (process.env.NODE_ENV === "development") {
+        console.log("ℹ️ [NotificationService] Skipped new lead email notification in development mode.");
+      } else {
+        const settings = await prisma.globalSettings.findUnique({
+          where: { siteId },
+          select: { emailSettings: true }
+        });
+        const adminEmail = settings?.emailSettings?.recipientOverride || settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
+        if (adminEmail && !adminEmail.includes("resend.dev") && !adminEmail.includes("example.com")) {
+          try {
+            const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
+            await transporter.sendMail({
+              from: fromEmail,
+              to: adminEmail,
+              subject: `[Lead Alert] New Lead Captured: ${lead.name}`,
+              text: `A new lead has been recorded on the system:\n\nName: ${lead.name}\nEmail: ${lead.email}\nPhone: ${lead.phone || "N/A"}\nInterest: ${lead.serviceInterest || "N/A"}\n\nView in Lead CRM dashboard.`
+            });
+          } catch (e) {
+            console.error("Failed to send new lead email alert:", e);
+          }
+        } else {
+          console.log(`ℹ️ [NotificationService] Skipped new lead email to placeholder address: ${adminEmail}`);
         }
       }
     }
@@ -74,22 +80,28 @@ export class NotificationService extends BaseService {
     
     // 1. Email Channel
     if (config.failedForm?.email) {
-      const settings = await prisma.globalSettings.findUnique({
-        where: { siteId },
-        select: { emailSettings: true }
-      });
-      const adminEmail = settings?.emailSettings?.recipientOverride || settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
-      if (adminEmail) {
-        try {
-          const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
-          await transporter.sendMail({
-            from: fromEmail,
-            to: adminEmail,
-            subject: `[System Alert] Contact Form Submission Failure`,
-            text: `A contact form submission failed on your site.\n\nError: ${errorDetails.message}\nPayload: ${JSON.stringify(errorDetails.payload)}\n\nPlease check system logs.`
-          });
-        } catch (e) {
-          console.error("Failed to send failed form email alert:", e);
+      if (process.env.NODE_ENV === "development") {
+        console.log("ℹ️ [NotificationService] Skipped failed form email notification in development mode.");
+      } else {
+        const settings = await prisma.globalSettings.findUnique({
+          where: { siteId },
+          select: { emailSettings: true }
+        });
+        const adminEmail = settings?.emailSettings?.recipientOverride || settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
+        if (adminEmail && !adminEmail.includes("resend.dev") && !adminEmail.includes("example.com")) {
+          try {
+            const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
+            await transporter.sendMail({
+              from: fromEmail,
+              to: adminEmail,
+              subject: `[System Alert] Contact Form Submission Failure`,
+              text: `A contact form submission failed on your site.\n\nError: ${errorDetails.message}\nPayload: ${JSON.stringify(errorDetails.payload)}\n\nPlease check system logs.`
+            });
+          } catch (e) {
+            console.error("Failed to send failed form email alert:", e);
+          }
+        } else {
+          console.log(`ℹ️ [NotificationService] Skipped failed form email to placeholder address: ${adminEmail}`);
         }
       }
     }
@@ -116,22 +128,28 @@ export class NotificationService extends BaseService {
     
     // 1. Email Channel
     if (config.blogAlert?.email) {
-      const settings = await prisma.globalSettings.findUnique({
-        where: { siteId },
-        select: { emailSettings: true }
-      });
-      const adminEmail = settings?.emailSettings?.recipientOverride || settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
-      if (adminEmail) {
-        try {
-          const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
-          await transporter.sendMail({
-            from: fromEmail,
-            to: adminEmail,
-            subject: `[Blog Alert] New Post Published: ${post.title}`,
-            text: `A new blog post has been published:\n\nTitle: ${post.title}\nSlug: ${post.slug}\n\nCheck out the live post.`
-          });
-        } catch (e) {
-          console.error("Failed to send blog email alert:", e);
+      if (process.env.NODE_ENV === "development") {
+        console.log("ℹ️ [NotificationService] Skipped blog email notification in development mode.");
+      } else {
+        const settings = await prisma.globalSettings.findUnique({
+          where: { siteId },
+          select: { emailSettings: true }
+        });
+        const adminEmail = settings?.emailSettings?.recipientOverride || settings?.emailSettings?.adminAlerts?.email || settings?.emailSettings?.username;
+        if (adminEmail && !adminEmail.includes("resend.dev") && !adminEmail.includes("example.com")) {
+          try {
+            const { transporter, fromEmail } = await emailService.getTransporterForSite(siteId);
+            await transporter.sendMail({
+              from: fromEmail,
+              to: adminEmail,
+              subject: `[Blog Alert] New Post Published: ${post.title}`,
+              text: `A new blog post has been published:\n\nTitle: ${post.title}\nSlug: ${post.slug}\n\nCheck out the live post.`
+            });
+          } catch (e) {
+            console.error("Failed to send blog email alert:", e);
+          }
+        } else {
+          console.log(`ℹ️ [NotificationService] Skipped blog email to placeholder address: ${adminEmail}`);
         }
       }
     }
