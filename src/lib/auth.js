@@ -58,11 +58,13 @@ export const authOptions = {
 
         if (secretKey) {
           const isIpOrNgrok = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}/.test(host) || 
+                              host.includes("localhost") ||
+                              host.includes("127.0.0.1") ||
                               host.includes(".ngrok.io") || 
                               host.includes(".ngrok-free.dev");
           
           if (isIpOrNgrok) {
-            writeLog("[Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.");
+            writeLog("[Auth] Detected local, IP, or Ngrok host. Swapping secretKey to Google test key.");
             secretKey = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe";
           }
         }
@@ -181,5 +183,6 @@ export const authOptions = {
     error: "/login",
   },
 
+  useSecureCookies: false,
   secret: process.env.NEXTAUTH_SECRET,
 };

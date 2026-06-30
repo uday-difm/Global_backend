@@ -48,7 +48,7 @@ function LoginAndProjectLanding() {
     const activeKey = useTestKey
       ? "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
       : process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-    
+
     console.log("[reCAPTCHA Debug] Host:", hostname, "Using test key:", useTestKey, "Site Key:", activeKey);
     setRecaptchaSiteKey(activeKey);
   }, []);

@@ -85,8 +85,9 @@ export default async function BlogsAdmin({ searchParams: rawSearchParams }) {
     (p) => p.publishedAt && new Date(p.publishedAt) > now,
   ).length;
 
-  // Categories scoped to this site (fetch all, but count posts for this site)
+  // Categories scoped to this site
   const categories = await prisma.category.findMany({
+    where: { siteId: site.id },
     orderBy: { name: "asc" },
     include: {
       _count: {

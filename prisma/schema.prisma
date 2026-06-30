@@ -40,6 +40,8 @@ model Site {
   webhookEvents        WebhookEvent[]
   webhookSubscriptions WebhookSubscription[]
   posts                Post[]
+  categories           Category[]
+  tags                 Tag[]
   services             Service[]
   testimonials         Testimonial[]
   faqs                 Faq[]
@@ -414,25 +416,37 @@ enum PostStatus {
 }
 
 model Category {
-  id    String @id @default(cuid())
-  name  String @unique
-  slug  String @unique
-  posts Post[]
+  id     String @id @default(cuid())
+  siteId String
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name   String
+  slug   String
+  posts  Post[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  @@unique([siteId, name])
+  @@unique([siteId, slug])
+  @@index([siteId])
 }
 
 model Tag {
-  id    String @id @default(cuid())
-  name  String @unique
-  slug  String @unique
-  posts Post[]
+  id     String @id @default(cuid())
+  siteId String
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name   String
+  slug   String
+  posts  Post[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  @@unique([siteId, name])
+  @@unique([siteId, slug])
+  @@index([siteId])
 }
 
 model Post {

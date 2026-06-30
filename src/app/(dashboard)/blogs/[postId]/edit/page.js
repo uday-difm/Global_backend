@@ -6,7 +6,8 @@ import prisma from "@/lib/prisma";
 
 export const metadata = {
   title: "Edit Post | CMS Admin",
-  description: "Edit an existing blog post, update content, categories, featured image, author, schedule and SEO fields.",
+  description:
+    "Edit an existing blog post, update content, categories, featured image, author, schedule and SEO fields.",
 };
 
 export default async function EditPostPage({ params: rawParams }) {
@@ -18,7 +19,9 @@ export default async function EditPostPage({ params: rawParams }) {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-slate-900">Edit Post</h1>
-        <p className="text-sm text-rose-600">No active site configured for your profile.</p>
+        <p className="text-sm text-rose-600">
+          No active site configured for your profile.
+        </p>
       </div>
     );
   }
@@ -38,14 +41,16 @@ export default async function EditPostPage({ params: rawParams }) {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-slate-900">Error</h1>
-        <p className="text-sm text-rose-600">Post not found or you do not have access to it.</p>
+        <p className="text-sm text-rose-600">
+          Post not found or you do not have access to it.
+        </p>
       </div>
     );
   }
 
-  // Categories for all available options
+  // Categories scoped to this site
   const categories = await prisma.category.findMany({
-    where: { deletedAt: null },
+    where: { siteId: site.id, deletedAt: null },
     orderBy: { name: "asc" },
   });
 
@@ -77,14 +82,23 @@ export default async function EditPostPage({ params: rawParams }) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">Edit Post</h1>
+        <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
+          Edit Post
+        </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Editing: <span className="font-semibold text-slate-700">{post.title}</span>
+          Editing:{" "}
+          <span className="font-semibold text-slate-700">{post.title}</span>
           {" — "}
-          Site: <span className="font-semibold text-slate-700">{site.name}</span>
+          Site:{" "}
+          <span className="font-semibold text-slate-700">{site.name}</span>
         </p>
       </div>
-      <PostEditor siteId={site.id} post={post} categories={categories} authors={authors} />
+      <PostEditor
+        siteId={site.id}
+        post={post}
+        categories={categories}
+        authors={authors}
+      />
     </div>
   );
 }

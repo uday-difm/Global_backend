@@ -1,15 +1,27 @@
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { PrismaPg } = require("@prisma/adapter-pg");
+const { Pool } = require("pg");
+
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const sites = await prisma.site.findMany();
-  console.log("SITES in DB:", JSON.stringify(sites, null, 2));
-
-  const pages = await prisma.page.findMany();
-  console.log("PAGES in DB:", JSON.stringify(pages, null, 2));
-  
-  const users = await prisma.user.findMany();
-  console.log("USERS in DB:", JSON.stringify(users.map(u => ({ id: u.id, email: u.email, globalRole: u.globalRole })), null, 2));
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      email: true,
+      globalRole: true,
+    }
+  });
+  console.log("Users in Database:");
+  console.log(users);
 }
 
-main().catch(console.error).finally(() => prisma.$disconnect());
+main()
+  .catch(console.error)
+  .finally(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  });

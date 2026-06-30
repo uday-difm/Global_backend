@@ -8,19 +8,29 @@ export class BackupService extends BaseService {
   }
 
   async createBackup(siteId) {
-    const pages = await prisma.page.findMany({ where: { siteId }, include: { sections: true } });
-    const posts = await prisma.post.findMany({ where: { siteId }, include: { categories: true, tags: true } });
+    const pages = await prisma.page.findMany({
+      where: { siteId },
+      include: { sections: true },
+    });
+    const posts = await prisma.post.findMany({
+      where: { siteId },
+      include: { categories: true, tags: true },
+    });
     const services = await prisma.service.findMany({ where: { siteId } });
-    const testimonials = await prisma.testimonial.findMany({ where: { siteId } });
+    const testimonials = await prisma.testimonial.findMany({
+      where: { siteId },
+    });
     const faqs = await prisma.faq.findMany({ where: { siteId } });
     const teamMembers = await prisma.teamMember.findMany({ where: { siteId } });
     const legalPages = await prisma.legalPage.findMany({ where: { siteId } });
     const redirects = await prisma.redirect.findMany({ where: { siteId } });
-    const submissions = await prisma.contactFormSubmission.findMany({ where: { siteId } });
+    const submissions = await prisma.contactFormSubmission.findMany({
+      where: { siteId },
+    });
     const leads = await prisma.lead.findMany({ where: { siteId } });
-    
-    const categories = await prisma.category.findMany();
-    const tags = await prisma.tag.findMany();
+
+    const categories = await prisma.category.findMany({ where: { siteId } });
+    const tags = await prisma.tag.findMany({ where: { siteId } });
 
     const backupData = {
       version: "1.1",
@@ -38,8 +48,8 @@ export class BackupService extends BaseService {
         submissions,
         leads,
         categories,
-        tags
-      }
+        tags,
+      },
     };
 
     return backupData;
@@ -62,7 +72,7 @@ export class BackupService extends BaseService {
       submissions,
       leads,
       categories,
-      tags
+      tags,
     } = backup.data;
 
     await prisma.$transaction(async (tx) => {
@@ -80,9 +90,9 @@ export class BackupService extends BaseService {
       if (categories && Array.isArray(categories)) {
         for (const cat of categories) {
           await tx.category.upsert({
-            where: { slug: cat.slug },
+            where: { siteId_slug: { siteId, slug: cat.slug } },
             update: {},
-            create: { name: cat.name, slug: cat.slug }
+            create: { siteId, name: cat.name, slug: cat.slug },
           });
         }
       }
@@ -90,9 +100,9 @@ export class BackupService extends BaseService {
       if (tags && Array.isArray(tags)) {
         for (const tag of tags) {
           await tx.tag.upsert({
-            where: { slug: tag.slug },
+            where: { siteId_slug: { siteId, slug: tag.slug } },
             update: {},
-            create: { name: tag.name, slug: tag.slug }
+            create: { siteId, name: tag.name, slug: tag.slug },
           });
         }
       }
@@ -104,8 +114,8 @@ export class BackupService extends BaseService {
             data: {
               id,
               ...pageProps,
-              siteId
-            }
+              siteId,
+            },
           });
           if (sections && Array.isArray(sections)) {
             for (const sec of sections) {
@@ -114,8 +124,8 @@ export class BackupService extends BaseService {
                 data: {
                   id: secId,
                   ...secProps,
-                  pageId: id
-                }
+                  pageId: id,
+                },
               });
             }
           }
@@ -124,29 +134,38 @@ export class BackupService extends BaseService {
 
       if (posts && Array.isArray(posts)) {
         for (const p of posts) {
-          const { id, categories: postCats, tags: postTags, author, featuredImage, ...postProps } = p;
+          const {
+            id,
+            categories: postCats,
+            tags: postTags,
+            author,
+            featuredImage,
+            ...postProps
+          } = p;
           await tx.post.create({
             data: {
               id,
               ...postProps,
-              siteId
-            }
+              siteId,
+            },
           });
-          
+
           if (postCats && postCats.length > 0) {
             await tx.post.update({
               where: { id },
               data: {
-                categories: { connect: postCats.map(c => ({ slug: c.slug })) }
-              }
+                categories: {
+                  connect: postCats.map((c) => ({ slug: c.slug })),
+                },
+              },
             });
           }
           if (postTags && postTags.length > 0) {
             await tx.post.update({
               where: { id },
               data: {
-                tags: { connect: postTags.map(t => ({ slug: t.slug })) }
-              }
+                tags: { connect: postTags.map((t) => ({ slug: t.slug })) },
+              },
             });
           }
         }
@@ -159,8 +178,8 @@ export class BackupService extends BaseService {
             data: {
               id,
               ...serviceProps,
-              siteId
-            }
+              siteId,
+            },
           });
         }
       }
@@ -172,8 +191,8 @@ export class BackupService extends BaseService {
             data: {
               id,
               ...testProps,
-              siteId
-            }
+              siteId,
+            },
           });
         }
       }
@@ -185,8 +204,8 @@ export class BackupService extends BaseService {
             data: {
               id,
               ...faqProps,
-              siteId
-            }
+              siteId,
+            },
           });
         }
       }
@@ -198,8 +217,8 @@ export class BackupService extends BaseService {
             data: {
               id,
               ...tmProps,
-              siteId
-            }
+              siteId,
+            },
           });
         }
       }
@@ -211,8 +230,8 @@ export class BackupService extends BaseService {
             data: {
               id,
               ...lpProps,
-              siteId
-            }
+              siteId,
+            },
           });
         }
       }
@@ -224,8 +243,8 @@ export class BackupService extends BaseService {
             data: {
               id,
               ...rProps,
-              siteId
-            }
+              siteId,
+            },
           });
         }
       }
@@ -237,8 +256,8 @@ export class BackupService extends BaseService {
             data: {
               id,
               ...subProps,
-              siteId
-            }
+              siteId,
+            },
           });
         }
       }
@@ -250,8 +269,8 @@ export class BackupService extends BaseService {
             data: {
               id,
               ...leadProps,
-              siteId
-            }
+              siteId,
+            },
           });
         }
       }
@@ -263,12 +282,12 @@ export class BackupService extends BaseService {
   async createMediaBackup(siteId) {
     const media = await prisma.media.findMany({
       where: { siteId },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
     });
 
     const folders = await prisma.mediaFolder.findMany({
       where: { siteId },
-      orderBy: { createdAt: "asc" }
+      orderBy: { createdAt: "asc" },
     });
 
     return {
@@ -276,13 +295,19 @@ export class BackupService extends BaseService {
       siteId,
       timestamp: new Date().toISOString(),
       media,
-      folders
+      folders,
     };
   }
 
   async restoreMediaBackup(siteId, backup) {
-    if (!backup || backup.siteId !== siteId || (!backup.media && !backup.folders)) {
-      throw new ValidationError("Invalid media backup payload or siteId mismatch");
+    if (
+      !backup ||
+      backup.siteId !== siteId ||
+      (!backup.media && !backup.folders)
+    ) {
+      throw new ValidationError(
+        "Invalid media backup payload or siteId mismatch",
+      );
     }
 
     const { media, folders } = backup;
@@ -293,13 +318,19 @@ export class BackupService extends BaseService {
 
       if (folders && Array.isArray(folders)) {
         for (const folder of folders) {
-          const { id, siteId: _, children, media: folderMedia, ...folderProps } = folder;
+          const {
+            id,
+            siteId: _,
+            children,
+            media: folderMedia,
+            ...folderProps
+          } = folder;
           await tx.mediaFolder.create({
             data: {
               id,
               ...folderProps,
-              siteId
-            }
+              siteId,
+            },
           });
         }
       }
@@ -311,8 +342,8 @@ export class BackupService extends BaseService {
             data: {
               id,
               ...mediaProps,
-              siteId
-            }
+              siteId,
+            },
           });
         }
       }
@@ -324,7 +355,7 @@ export class BackupService extends BaseService {
   async getBackupHistory(siteId) {
     const settings = await prisma.globalSettings.findUnique({
       where: { siteId },
-      select: { devTools: true }
+      select: { devTools: true },
     });
 
     const devTools = settings?.devTools || {};
@@ -334,18 +365,19 @@ export class BackupService extends BaseService {
   async logBackupHistory(siteId, type, size) {
     const settings = await prisma.globalSettings.findUnique({
       where: { siteId },
-      select: { devTools: true }
+      select: { devTools: true },
     });
 
     const devTools = settings?.devTools || {};
     const backupHistory = devTools.backupHistory || [];
-    
-    const backupId = type === "media" ? `bkup_media_${Date.now()}` : `bkup_${Date.now()}`;
+
+    const backupId =
+      type === "media" ? `bkup_media_${Date.now()}` : `bkup_${Date.now()}`;
     backupHistory.unshift({
       id: backupId,
       type,
       timestamp: new Date().toISOString(),
-      size
+      size,
     });
 
     await prisma.globalSettings.update({
@@ -353,9 +385,9 @@ export class BackupService extends BaseService {
       data: {
         devTools: {
           ...devTools,
-          backupHistory
-        }
-      }
+          backupHistory,
+        },
+      },
     });
 
     return backupId;

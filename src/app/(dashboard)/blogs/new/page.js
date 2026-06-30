@@ -6,7 +6,8 @@ import prisma from "@/lib/prisma";
 
 export const metadata = {
   title: "Create New Post | CMS Admin",
-  description: "Write and publish a new blog post with categories, featured image, author assignment, scheduling and SEO fields.",
+  description:
+    "Write and publish a new blog post with categories, featured image, author assignment, scheduling and SEO fields.",
 };
 
 export default async function NewPostPage() {
@@ -18,14 +19,16 @@ export default async function NewPostPage() {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-slate-900">Create New Post</h1>
-        <p className="text-sm text-rose-600">No active site configured for your profile.</p>
+        <p className="text-sm text-rose-600">
+          No active site configured for your profile.
+        </p>
       </div>
     );
   }
 
   // Categories scoped to this site
   const categories = await prisma.category.findMany({
-    where: { deletedAt: null },
+    where: { siteId: site.id, deletedAt: null },
     orderBy: { name: "asc" },
   });
 
@@ -57,9 +60,12 @@ export default async function NewPostPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">Create New Post</h1>
+        <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
+          Create New Post
+        </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Site: <span className="font-semibold text-slate-700">{site.name}</span>
+          Site:{" "}
+          <span className="font-semibold text-slate-700">{site.name}</span>
         </p>
       </div>
       <PostEditor siteId={site.id} categories={categories} authors={authors} />

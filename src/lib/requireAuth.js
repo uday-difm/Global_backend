@@ -4,6 +4,7 @@ import prisma from "./prisma";
 
 export async function requireAuth() {
   const session = await getServerSession(authOptions);
+  console.log("[requireAuth Debug] Session:", JSON.stringify(session));
 
   if (!session?.user?.id) {
     return null;

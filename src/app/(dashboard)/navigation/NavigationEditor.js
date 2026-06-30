@@ -1,22 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  Save, 
-  Plus, 
-  Trash2, 
-  ArrowUp, 
-  ArrowDown, 
-  Edit2, 
-  CheckCircle2, 
-  AlertCircle, 
-  HelpCircle
+import {
+  Save,
+  Plus,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  Edit2,
+  CheckCircle2,
+  AlertCircle,
+  HelpCircle,
 } from "lucide-react";
 
-export default function NavigationEditor({ siteId, initialNavigation, availablePages }) {
+export default function NavigationEditor({
+  siteId,
+  initialNavigation,
+  availablePages,
+}) {
   const [activeTab, setActiveTab] = useState("main");
   const [navigation, setNavigation] = useState(initialNavigation || {});
-  
+
   // Active items list based on current active tab
   const items = navigation[activeTab] || [];
 
@@ -35,9 +39,9 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
   const saveNavigation = async (updatedItems) => {
     const newNav = {
       ...navigation,
-      [activeTab]: updatedItems
+      [activeTab]: updatedItems,
     };
-    
+
     // Optimistically update local state
     setNavigation(newNav);
   };
@@ -51,9 +55,9 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "x-site-id": siteId
+          "x-site-id": siteId,
         },
-        body: JSON.stringify(items)
+        body: JSON.stringify(items),
       });
 
       const data = await res.json();
@@ -62,7 +66,10 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
         throw new Error(data.error || "Failed to save navigation menus");
       }
 
-      setMessage({ type: "success", text: `${activeTab === "main" ? "Main Menu" : "Footer Menu"} configuration saved successfully!` });
+      setMessage({
+        type: "success",
+        text: `${activeTab === "main" ? "Main Menu" : "Footer Menu"} configuration saved successfully!`,
+      });
       setTimeout(() => setMessage(null), 3500);
     } catch (err) {
       setMessage({ type: "error", text: err.message });
@@ -76,7 +83,7 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
       label: "New Navigation Link",
       url: "/",
       type: "internal",
-      children: []
+      children: [],
     };
     const updated = [...items, newItem];
     saveNavigation(updated);
@@ -93,7 +100,7 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
     const newSubItem = {
       label: "New Sub-item",
       url: "/",
-      type: "internal"
+      type: "internal",
     };
     parent.children.push(newSubItem);
     saveNavigation(updated);
@@ -160,13 +167,13 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
         label: formLabel,
         type: formLinkType,
         url: formUrl,
-        children: isDropdown ? (currentItem.children || []) : []
+        children: isDropdown ? currentItem.children || [] : [],
       };
     } else {
       updated[editingIndex].children[editingSubIndex] = {
         label: formLabel,
         type: formLinkType,
-        url: formUrl
+        url: formUrl,
       };
     }
 
@@ -186,14 +193,22 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
     <div className="space-y-6">
       {/* Messages */}
       {message && (
-        <div className={`p-4 border-l-4 rounded-lg flex items-start gap-3 shadow-sm ${
-          message.type === "success" 
-            ? "bg-emerald-50 border-emerald-500 text-emerald-800" 
-            : "bg-red-50 border-red-500 text-red-800"
-        }`}>
-          {message.type === "success" ? <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />}
+        <div
+          className={`p-4 border-l-4 rounded-lg flex items-start gap-3 shadow-sm ${
+            message.type === "success"
+              ? "bg-emerald-50 border-emerald-500 text-emerald-800"
+              : "bg-red-50 border-red-500 text-red-800"
+          }`}
+        >
+          {message.type === "success" ? (
+            <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+          ) : (
+            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          )}
           <div>
-            <p className="font-semibold text-xs uppercase tracking-wider">{message.type === "success" ? "Success" : "Error"}</p>
+            <p className="font-semibold text-xs uppercase tracking-wider">
+              {message.type === "success" ? "Success" : "Error"}
+            </p>
             <p className="text-xs">{message.text}</p>
           </div>
         </div>
@@ -201,7 +216,6 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
 
       {/* Editor Main Card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-[500px] flex flex-col md:flex-row">
-        
         {/* Left Side: Navigation Items Tree */}
         <div className="w-full md:w-3/5 p-6 border-r border-gray-250/80 space-y-4 flex flex-col justify-between">
           <div className="space-y-4">
@@ -212,7 +226,9 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                   type="button"
                   onClick={() => handleTabChange("main")}
                   className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                    activeTab === "main" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-950"
+                    activeTab === "main"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-950"
                   }`}
                 >
                   Main Header Menu
@@ -221,7 +237,9 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                   type="button"
                   onClick={() => handleTabChange("footer")}
                   className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                    activeTab === "footer" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-950"
+                    activeTab === "footer"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-950"
                   }`}
                 >
                   Footer Menu
@@ -243,13 +261,14 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
             <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
               {items.map((item, parentIdx) => (
                 <div key={parentIdx} className="space-y-2">
-                  
                   {/* Parent Menu Item Block */}
-                  <div className={`flex items-center justify-between p-3 border rounded-xl transition ${
-                    editingIndex === parentIdx && editingSubIndex === null
-                      ? "bg-blue-50/50 border-blue-400"
-                      : "bg-gray-50/40 border-gray-200"
-                  }`}>
+                  <div
+                    className={`flex items-center justify-between p-3 border rounded-xl transition ${
+                      editingIndex === parentIdx && editingSubIndex === null
+                        ? "bg-blue-50/50 border-blue-400"
+                        : "bg-gray-50/40 border-gray-200"
+                    }`}
+                  >
                     <div className="flex items-center gap-2">
                       {/* Reorder Buttons */}
                       <div className="flex flex-col gap-0.5">
@@ -274,14 +293,22 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                       {/* Details */}
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-gray-800">{item.label}</span>
-                          <span className={`text-[8px] px-1.5 py-0.2 rounded-full border ${
-                            item.type === "external" ? "bg-amber-50 text-amber-600 border-amber-200" : "bg-blue-50 text-blue-600 border-blue-200"
-                          }`}>
+                          <span className="font-bold text-xs text-gray-800">
+                            {item.label}
+                          </span>
+                          <span
+                            className={`text-[8px] px-1.5 py-0.2 rounded-full border ${
+                              item.type === "external"
+                                ? "bg-amber-50 text-amber-600 border-amber-200"
+                                : "bg-blue-50 text-blue-600 border-blue-200"
+                            }`}
+                          >
                             {item.type === "external" ? "External" : "Internal"}
                           </span>
                         </div>
-                        <p className="text-[10px] text-gray-400 font-mono mt-0.5 truncate max-w-[200px]">{item.url || "/"}</p>
+                        <p className="text-[10px] text-gray-400 font-mono mt-0.5 truncate max-w-[200px]">
+                          {item.url || "/"}
+                        </p>
                       </div>
                     </div>
 
@@ -314,10 +341,11 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
 
                   {/* Children Sub-items blocks */}
                   {(item.children || []).map((subItem, childIdx) => (
-                    <div 
-                      key={childIdx} 
+                    <div
+                      key={childIdx}
                       className={`flex items-center justify-between p-2.5 border rounded-xl ml-8 transition ${
-                        editingIndex === parentIdx && editingSubIndex === childIdx
+                        editingIndex === parentIdx &&
+                        editingSubIndex === childIdx
                           ? "bg-blue-50/30 border-blue-300"
                           : "bg-white border-gray-150"
                       }`}
@@ -328,7 +356,9 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                           <button
                             type="button"
                             disabled={childIdx === 0}
-                            onClick={() => handleReorder(parentIdx, "up", childIdx)}
+                            onClick={() =>
+                              handleReorder(parentIdx, "up", childIdx)
+                            }
                             className="text-gray-400 hover:text-gray-700 disabled:opacity-30"
                           >
                             <ArrowUp size={10} />
@@ -336,7 +366,9 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                           <button
                             type="button"
                             disabled={childIdx === item.children.length - 1}
-                            onClick={() => handleReorder(parentIdx, "down", childIdx)}
+                            onClick={() =>
+                              handleReorder(parentIdx, "down", childIdx)
+                            }
                             className="text-gray-400 hover:text-gray-700 disabled:opacity-30"
                           >
                             <ArrowDown size={10} />
@@ -346,10 +378,16 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                         {/* Details */}
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className="font-semibold text-xs text-gray-700">{subItem.label}</span>
-                            <span className="text-[7px] text-gray-400 uppercase tracking-wider font-semibold">• Sub-item</span>
+                            <span className="font-semibold text-xs text-gray-700">
+                              {subItem.label}
+                            </span>
+                            <span className="text-[7px] text-gray-400 uppercase tracking-wider font-semibold">
+                              • Sub-item
+                            </span>
                           </div>
-                          <p className="text-[9px] text-gray-400 font-mono truncate max-w-[180px]">{subItem.url}</p>
+                          <p className="text-[9px] text-gray-400 font-mono truncate max-w-[180px]">
+                            {subItem.url}
+                          </p>
                         </div>
                       </div>
 
@@ -357,7 +395,9 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          onClick={() => openEditForm(parentIdx, childIdx, subItem)}
+                          onClick={() =>
+                            openEditForm(parentIdx, childIdx, subItem)
+                          }
                           className="p-1 text-gray-400 hover:text-blue-600 rounded"
                         >
                           <Edit2 size={12} />
@@ -372,13 +412,14 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                       </div>
                     </div>
                   ))}
-
                 </div>
               ))}
 
               {items.length === 0 && (
                 <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed text-gray-400 space-y-2">
-                  <p className="text-xs italic">No menu links configured. Click "Add Main Item" to start.</p>
+                  <p className="text-xs italic">
+                    No menu links configured. Click "Add Main Item" to start.
+                  </p>
                 </div>
               )}
             </div>
@@ -397,17 +438,26 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
         {/* Right Side: Edit Item Form Pane */}
         <div className="w-full md:w-2/5 p-6 bg-gray-50/40 flex flex-col justify-between min-h-[400px]">
           {editingIndex !== null ? (
-            <form onSubmit={handleFormSave} className="space-y-5 flex-1 flex flex-col justify-between">
+            <form
+              onSubmit={handleFormSave}
+              className="space-y-5 flex-1 flex flex-col justify-between"
+            >
               <div className="space-y-4">
                 <div className="border-b pb-2">
                   <h4 className="font-bold text-xs text-gray-800 uppercase tracking-wider">
-                    Edit Menu Item {editingSubIndex !== null ? `(Dropdown Link)` : `(Root Link)`}
+                    Edit Menu Item{" "}
+                    {editingSubIndex !== null
+                      ? `(Dropdown Link)`
+                      : `(Root Link)`}
                   </h4>
                 </div>
 
                 {/* Label */}
                 <div>
-                  <label htmlFor="form_label" className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="form_label"
+                    className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5"
+                  >
                     Link Label Text
                   </label>
                   <input
@@ -429,18 +479,28 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                   <div className="grid grid-cols-2 gap-2 bg-gray-100 p-0.5 rounded-lg border">
                     <button
                       type="button"
-                      onClick={() => { setFormLinkType("internal"); setFormUrl("/"); }}
+                      onClick={() => {
+                        setFormLinkType("internal");
+                        setFormUrl("/");
+                      }}
                       className={`py-1.5 rounded-md text-[10px] font-bold transition-all ${
-                        formLinkType === "internal" ? "bg-white text-gray-900 shadow-xs" : "text-gray-500"
+                        formLinkType === "internal"
+                          ? "bg-white text-gray-900 shadow-xs"
+                          : "text-gray-500"
                       }`}
                     >
                       Internal Page
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setFormLinkType("external"); setFormUrl("https://"); }}
+                      onClick={() => {
+                        setFormLinkType("external");
+                        setFormUrl("https://");
+                      }}
                       className={`py-1.5 rounded-md text-[10px] font-bold transition-all ${
-                        formLinkType === "external" ? "bg-white text-gray-900 shadow-xs" : "text-gray-500"
+                        formLinkType === "external"
+                          ? "bg-white text-gray-900 shadow-xs"
+                          : "text-gray-500"
                       }`}
                     >
                       External URL / Anchor
@@ -450,29 +510,50 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
 
                 {/* Destination Link field */}
                 <div>
-                  <label htmlFor="form_url" className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
+                  <label
+                    htmlFor="form_url"
+                    className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5"
+                  >
                     Destination Link
                   </label>
                   {formLinkType === "internal" ? (
-                    <select
-                      id="form_url"
-                      value={formUrl}
-                      onChange={(e) => setFormUrl(e.target.value)}
-                      className="w-full rounded-xl border border-gray-255 bg-white px-3 py-2.5 outline-none focus:border-blue-500 text-xs text-gray-800 font-semibold"
-                    >
-                      <option value="/">Home Page (/)</option>
-                      <option value="/blogs">Blogs Feed (/blogs)</option>
-                      <option value="/services">Services Page (/services)</option>
-                      <option value="/testimonials">Testimonials Page (/testimonials)</option>
-                      <option value="/faq">FAQs Page (/faq)</option>
-                      <option value="/team">Team Members Page (/team)</option>
-                      <option value="/contact">Contact Page (/contact)</option>
-                      {availablePages.map((p) => (
-                        <option key={p.slug} value={p.slug.startsWith("/") ? p.slug : `/${p.slug}`}>
-                          {p.title} ({p.slug})
+                    <div className="relative">
+                      <input
+                        type="text"
+                        id="form_url"
+                        required
+                        value={formUrl}
+                        onChange={(e) => setFormUrl(e.target.value)}
+                        placeholder="/category/skills"
+                        className="w-full rounded-xl border border-gray-250 bg-white px-3.5 py-2.5 outline-none focus:border-blue-500 text-xs text-gray-800 font-semibold"
+                        list="internal-pages"
+                      />
+                      <datalist id="internal-pages">
+                        <option value="/">Home Page (/)</option>
+                        <option value="/blogs">Blogs Feed (/blogs)</option>
+                        <option value="/services">
+                          Services Page (/services)
                         </option>
-                      ))}
-                    </select>
+                        <option value="/testimonials">
+                          Testimonials Page (/testimonials)
+                        </option>
+                        <option value="/faq">FAQs Page (/faq)</option>
+                        <option value="/team">Team Members Page (/team)</option>
+                        <option value="/contact">
+                          Contact Page (/contact)
+                        </option>
+                        {availablePages.map((p) => (
+                          <option
+                            key={p.slug}
+                            value={
+                              p.slug.startsWith("/") ? p.slug : `/${p.slug}`
+                            }
+                          >
+                            {p.title} ({p.slug})
+                          </option>
+                        ))}
+                      </datalist>
+                    </div>
                   ) : (
                     <input
                       type="text"
@@ -496,7 +577,10 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                       onChange={(e) => setIsDropdown(e.target.checked)}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                     />
-                    <label htmlFor="isDropdown" className="text-xs text-gray-600 font-medium">
+                    <label
+                      htmlFor="isDropdown"
+                      className="text-xs text-gray-600 font-medium"
+                    >
                       Enable dropdown list container for sub-links
                     </label>
                   </div>
@@ -513,7 +597,10 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setEditingIndex(null); setEditingSubIndex(null); }}
+                  onClick={() => {
+                    setEditingIndex(null);
+                    setEditingSubIndex(null);
+                  }}
                   className="w-full py-2 bg-white border hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-bold transition"
                 >
                   Cancel
@@ -526,15 +613,17 @@ export default function NavigationEditor({ siteId, initialNavigation, availableP
                 <HelpCircle size={20} />
               </div>
               <div>
-                <h5 className="font-bold text-xs text-gray-700 uppercase tracking-wide">Select an Item to Edit</h5>
+                <h5 className="font-bold text-xs text-gray-700 uppercase tracking-wide">
+                  Select an Item to Edit
+                </h5>
                 <p className="text-[11px] text-gray-400 mt-1">
-                  Click the edit pencil button next to any link or sub-link to customize its target path, destination type, or labels.
+                  Click the edit pencil button next to any link or sub-link to
+                  customize its target path, destination type, or labels.
                 </p>
               </div>
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

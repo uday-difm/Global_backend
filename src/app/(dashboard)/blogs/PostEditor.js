@@ -276,7 +276,10 @@ export default function PostEditor({
     try {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-site-id": siteId,
+        },
         body: JSON.stringify({ name: newCatName }),
       });
       const data = await res.json();
@@ -359,7 +362,11 @@ export default function PostEditor({
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to save post");
-      toast.success(isEditMode ? "Blog post updated successfully!" : "Blog post created successfully!");
+      toast.success(
+        isEditMode
+          ? "Blog post updated successfully!"
+          : "Blog post created successfully!",
+      );
       router.push("/blogs");
       router.refresh();
     } catch (err) {

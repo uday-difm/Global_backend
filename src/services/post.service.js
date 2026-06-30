@@ -10,13 +10,14 @@ export class PostService extends BaseService {
   }
 
   /**
-   * Find or create a global "Others" category for uncategorized posts.
+   * Find or create a site-level "Others" category for uncategorized posts.
    */
-  async getOrCreateOthersCategory() {
+  async getOrCreateOthersCategory(siteId) {
     return prisma.category.upsert({
-      where: { name: "Others" },
+      where: { siteId_name: { siteId, name: "Others" } },
       update: {},
       create: {
+        siteId,
         name: "Others",
         slug: "others",
       },
@@ -76,7 +77,7 @@ export class PostService extends BaseService {
     // Default to "Others" category if none selected
     let effectiveCategoryIds = categoryIds;
     if (!effectiveCategoryIds || effectiveCategoryIds.length === 0) {
-      const others = await this.getOrCreateOthersCategory();
+      const others = await this.getOrCreateOthersCategory(siteId);
       effectiveCategoryIds = [others.id];
     }
 
@@ -115,7 +116,7 @@ export class PostService extends BaseService {
     let effectiveCategoryIds = categoryIds;
     if (effectiveCategoryIds !== undefined) {
       if (!effectiveCategoryIds || effectiveCategoryIds.length === 0) {
-        const others = await this.getOrCreateOthersCategory();
+        const others = await this.getOrCreateOthersCategory(siteId);
         effectiveCategoryIds = [others.id];
       }
     }

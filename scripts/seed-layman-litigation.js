@@ -385,12 +385,14 @@ async function seed() {
   const createdCategories = [];
   for (const cat of categories) {
     const existing = await prisma.category.findUnique({
-      where: { slug: cat.slug },
+      where: { siteId_slug: { siteId: SITE_ID, slug: cat.slug } },
     });
     if (existing) {
       createdCategories.push(existing);
     } else {
-      const created = await prisma.category.create({ data: cat });
+      const created = await prisma.category.create({
+        data: { siteId: SITE_ID, ...cat },
+      });
       createdCategories.push(created);
     }
   }

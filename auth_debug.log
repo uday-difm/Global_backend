@@ -153,3 +153,48 @@
 [2026-06-29T09:54:05.760Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-29T09:54:05Z","hostname":"testkey.google.com"}
 [2026-06-29T09:54:05.760Z] [Auth] Authenticating against authService for: admin@example.com
 [2026-06-29T09:54:06.094Z] [Auth] Authentication successful for: admin@example.com. User ID: cmqvre6lt000144uhpuovr3xk
+[2026-06-30T02:50:11.757Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-30T02:50:11.759Z] [Auth] Request Host: 192.168.29.15:3000
+[2026-06-30T02:50:11.759Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-30T02:50:11.759Z] [Auth] Token received (length: 1636): 0cAFcWeA7hDFc72AVSLTl_ElTHQZ4H...
+[2026-06-30T02:50:11.759Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-30T02:50:11.916Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-30T02:50:12Z","hostname":"testkey.google.com"}
+[2026-06-30T02:50:11.923Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-30T02:50:12.374Z] [Auth] Authentication successful for: admin@example.com. User ID: cmqvre6lt000144uhpuovr3xk
+[2026-06-30T03:58:00.955Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-30T03:58:00.956Z] [Auth] Request Host: 192.168.29.15:3000
+[2026-06-30T03:58:00.956Z] [Auth] Detected IP or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-30T03:58:00.957Z] [Auth] Token received (length: 1678): 0cAFcWeA4n31Pxt1OWuvYxyUQoCkzQ...
+[2026-06-30T03:58:00.957Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-30T03:58:01.101Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-30T03:58:01Z","hostname":"testkey.google.com"}
+[2026-06-30T03:58:01.113Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-30T03:58:01.629Z] [Auth] Authentication successful for: admin@example.com. User ID: cmr043zy10001nwuhdbrcki6l
+[2026-06-30T10:14:53.058Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-30T10:14:53.058Z] [Auth] Request Host: localhost:3000
+[2026-06-30T10:14:53.059Z] [Auth] Token received (length: 2148): 0cAFcWeA7WGfIfN1xlido3f8nv6L1r...
+[2026-06-30T10:14:53.060Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-30T10:14:53.243Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-30T10:14:43Z","hostname":"localhost"}
+[2026-06-30T10:14:53.249Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-30T10:14:53.716Z] [Auth] Authentication successful for: admin@example.com. User ID: cmr043zy10001nwuhdbrcki6l
+[2026-06-30T10:58:01.953Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-30T10:58:01.954Z] [Auth] Request Host: localhost:3000
+[2026-06-30T10:58:01.954Z] [Auth] Token received (length: 1657): 0cAFcWeA5ADg7cLxAyTRtpTO-RWgkZ...
+[2026-06-30T10:58:01.955Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-30T10:58:02.132Z] [Auth] reCAPTCHA verifyJson: {"success":false,"error-codes":["invalid-keys"]}
+[2026-06-30T10:58:02.132Z] [Auth] Failed: reCAPTCHA verifyJson success is false
+[2026-06-30T10:58:02.133Z] [Auth] reCAPTCHA exception: reCAPTCHA verification failed
+[2026-06-30T10:58:10.967Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-30T10:58:10.967Z] [Auth] Request Host: localhost:3000
+[2026-06-30T10:58:10.968Z] [Auth] Token received (length: 1657): 0cAFcWeA5z_6U_MnD2XPO1_cwqXaAk...
+[2026-06-30T10:58:10.968Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-30T10:58:11.124Z] [Auth] reCAPTCHA verifyJson: {"success":false,"error-codes":["invalid-keys"]}
+[2026-06-30T10:58:11.126Z] [Auth] Failed: reCAPTCHA verifyJson success is false
+[2026-06-30T10:58:11.127Z] [Auth] reCAPTCHA exception: reCAPTCHA verification failed
+[2026-06-30T11:00:26.521Z] [Auth] Attempt started. Email: admin@example.com
+[2026-06-30T11:00:26.522Z] [Auth] Request Host: localhost:3000
+[2026-06-30T11:00:26.523Z] [Auth] Detected local, IP, or Ngrok host. Swapping secretKey to Google test key.
+[2026-06-30T11:00:26.523Z] [Auth] Token received (length: 2169): 0cAFcWeA7rXsvMvZnox86tWOPsSVG4...
+[2026-06-30T11:00:26.523Z] [Auth] Sending request to google siteverify (x-www-form-urlencoded POST body)...
+[2026-06-30T11:00:26.672Z] [Auth] reCAPTCHA verifyJson: {"success":true,"challenge_ts":"2026-06-30T11:00:28Z","hostname":"testkey.google.com"}
+[2026-06-30T11:00:26.682Z] [Auth] Authenticating against authService for: admin@example.com
+[2026-06-30T11:00:27.158Z] [Auth] Authentication successful for: admin@example.com. User ID: cmr0ilz150001x0uhtgm7cvxu
