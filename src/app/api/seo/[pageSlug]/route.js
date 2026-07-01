@@ -13,7 +13,10 @@ export async function GET(req, context) {
       return NextResponse.json({ error: "siteId and pageSlug are required" }, { status: 400 });
     }
 
-    const decodedSlug = decodeURIComponent(pageSlug);
+    let decodedSlug = decodeURIComponent(pageSlug);
+    if (decodedSlug === "home" || decodedSlug === "root") {
+      decodedSlug = "/";
+    }
     // Standardize slug format (prefixed with /)
     const formattedSlug = decodedSlug.startsWith("/") ? decodedSlug : `/${decodedSlug}`;
 
@@ -41,7 +44,45 @@ export async function GET(req, context) {
         } }));
     }
 
-    // 2. Try to find a blog Post (without leading / for blog slugs in some databases, so let's check both formats)
+    // 2. Try to find a Legal Page
+    if (formattedSlug.startsWith("/legal/")) {
+      const legalType = formattedSlug.split("/")[2];
+      const mapping = {
+        "privacy": "privacy",
+        "privacy-policy": "privacy",
+        "terms": "terms",
+        "terms-of-service": "terms",
+        "terms-of-use": "terms",
+        "cookies": "cookies",
+        "cookie-policy": "cookies",
+        "disclaimer": "disclaimer",
+        "refund": "refund",
+        "refund-policy": "refund"
+      };
+      const dbType = mapping[legalType] || legalType;
+
+      const legalPage = await prisma.legalPage.findFirst({
+        where: {
+          siteId,
+          type: dbType,
+          published: true
+        },
+        select: { title: true, content: true }
+      });
+
+      if (legalPage) {
+        return NextResponse.json(apiSuccess({
+          type: "legal",
+          seo: {
+            title: `${legalPage.title} - The Infinium`,
+            description: legalPage.content ? `${legalPage.content.replace(/<[^>]*>/g, "").substring(0, 155)}...` : null,
+            canonical: `${process.env.NEXT_PUBLIC_APP_URL || ""}${formattedSlug}`
+          }
+        }));
+      }
+    }
+
+    // 3. Try to find a blog Post (without leading / for blog slugs in some databases, so let's check both formats)
     const postSlug = formattedSlug.startsWith("/") ? formattedSlug.substring(1) : formattedSlug;
     let targetPostSlug = postSlug;
     if (postSlug.startsWith("blog/")) {
@@ -67,7 +108,7 @@ export async function GET(req, context) {
         seo: {
           title: post.seoTitle || post.title,
           description: post.seoDescription || post.excerpt || null,
-          canonical: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/blogs/${targetPostSlug}`
+          canonical: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001"}/posts/${targetPostSlug}`
         } }));
     }
 

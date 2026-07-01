@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { seoService } from "@/services/seo.service";
 import { getSiteId } from "@/lib/siteGuard";
-import { handleApiError } from "@/core/errors";
+import { handleApiError, apiSuccess } from "@/core/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -10,9 +10,17 @@ export async function GET(request) {
     const siteId = getSiteId(request);
     const items = await seoService.getSitemapItems(siteId);
 
-    // Build valid XML sitemap
     const { searchParams } = new URL(request.url);
     const domain = searchParams.get("domain") || `http://localhost:3000`;
+    const format = searchParams.get("format");
+    const contentType = request.headers.get("content-type") || "";
+    const hasSiteHeaders = !!(request.headers.get("x-site-id") || request.headers.get("x-api-key"));
+
+    if (format === "json" || contentType.includes("application/json") || hasSiteHeaders) {
+      if (format !== "xml") {
+        return NextResponse.json(apiSuccess(items));
+      }
+    }
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
     xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;

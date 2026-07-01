@@ -97,6 +97,7 @@ export class PostService extends BaseService {
       slug,
       publishedAt: publishedAtVal,
       authorId: data.authorId || userId,
+      contentJson: typeof data.content === "string" ? data.content : data.content ? JSON.stringify(data.content) : null,
     });
 
     if (
@@ -146,6 +147,7 @@ export class PostService extends BaseService {
     const updated = await this.repository.update(siteId, postId, {
       ...data,
       ...relations,
+      contentJson: typeof data.content === "string" ? data.content : data.content ? JSON.stringify(data.content) : undefined,
     });
 
     if (

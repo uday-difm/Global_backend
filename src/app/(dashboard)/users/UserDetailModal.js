@@ -29,6 +29,8 @@ export default function UserDetailModal({ userId }) {
   const [role, setRole] = useState("EDITOR");
   const [isActive, setIsActive] = useState(true);
   const [twoFaEnabled, setTwoFaEnabled] = useState(false);
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
 
   // Password reset states
   const [newPassword, setNewPassword] = useState("");
@@ -54,6 +56,8 @@ export default function UserDetailModal({ userId }) {
           setRole(json.user?.globalRole || "EDITOR");
           setIsActive(Boolean(json.user?.isActive));
           setTwoFaEnabled(Boolean(json.user?.twoFAEnabled));
+          setName(json.user?.name || "");
+          setBio(json.user?.bio || "");
         }
       })
       .catch((e) => {
@@ -80,7 +84,7 @@ export default function UserDetailModal({ userId }) {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ globalRole: role, isActive }),
+        body: JSON.stringify({ globalRole: role, isActive, name, bio }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -309,6 +313,34 @@ export default function UserDetailModal({ userId }) {
                             <option value="VIEWER">VIEWER</option>
                           </select>
                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                            Full Name
+                          </label>
+                          <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full rounded-lg border border-gray-200 bg-white p-2.5 text-xs font-semibold text-gray-800 outline-none focus:border-blue-600"
+                            placeholder="e.g. Altaf Raza"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="border-t pt-4">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                          Author Bio
+                        </label>
+                        <textarea
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                          rows={3}
+                          className="w-full rounded-lg border border-gray-200 bg-white p-2.5 text-xs font-semibold text-gray-800 outline-none focus:border-blue-600"
+                          placeholder="Write a brief professional bio..."
+                        />
                       </div>
 
                       <div className="border-t pt-4">

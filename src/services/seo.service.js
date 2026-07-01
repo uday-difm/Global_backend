@@ -33,6 +33,8 @@ export class SeoService extends BaseService {
 
     // Universal: exclude Next.js dynamic route patterns like [slug], [...catchall], [[optional]]
     const DYNAMIC_SEGMENT = /\[.*?\]/;
+    const isInfinium = siteId === "infinium";
+    const postPrefix = isInfinium ? "/posts" : "/blogs";
 
     const items = [
       ...pages
@@ -42,15 +44,23 @@ export class SeoService extends BaseService {
           lastModified: p.updatedAt.toISOString(),
         })),
       ...posts.map((p) => ({
-        url: `/blogs/${p.slug}`,
+        url: `${postPrefix}/${p.slug}`,
         lastModified: p.updatedAt.toISOString(),
       })),
       ...legalPages
         .filter((lp) => !DYNAMIC_SEGMENT.test(lp.type))
-        .map((lp) => ({
-          url: `/legal/${lp.type}`,
-          lastModified: lp.updatedAt.toISOString(),
-        })),
+        .map((lp) => {
+          let typeSlug = lp.type;
+          if (isInfinium) {
+            if (lp.type === "privacy") typeSlug = "privacy-policy";
+            else if (lp.type === "terms") typeSlug = "terms-of-use";
+            else if (lp.type === "cookies") typeSlug = "cookie-policy";
+          }
+          return {
+            url: `/legal/${typeSlug}`,
+            lastModified: lp.updatedAt.toISOString(),
+          };
+        }),
     ];
 
     return items;

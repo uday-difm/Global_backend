@@ -67,6 +67,8 @@ model User {
   id String @id @default(cuid())
 
   email                String                @unique
+  name                 String?
+  bio                  String?
   passwordHash         String
   webhookSubscriptions WebhookSubscription[]
   globalRole           GlobalRole            @default(VIEWER)

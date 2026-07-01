@@ -7,16 +7,42 @@ export class LegalPageService extends BaseService {
     super(legalPageRepository, LegalPageValidationSchema);
   }
 
-  async getPageByType(siteId, type) {
+  async getPageByType(siteId, rawType) {
+    const mapping = {
+      "privacy": "privacy",
+      "privacy-policy": "privacy",
+      "terms": "terms",
+      "terms-of-service": "terms",
+      "terms-of-use": "terms",
+      "cookies": "cookies",
+      "cookie-policy": "cookies",
+      "disclaimer": "disclaimer",
+      "refund": "refund",
+      "refund-policy": "refund"
+    };
+    const type = mapping[rawType] || rawType;
     if (!["privacy", "terms", "cookies", "disclaimer", "refund"].includes(type)) {
-      throw new Error(`Invalid legal page type: ${type}`);
+      throw new Error(`Invalid legal page type: ${rawType}`);
     }
     return this.repository.findByType(siteId, type);
   }
 
-  async getPublishedPageByType(siteId, type) {
+  async getPublishedPageByType(siteId, rawType) {
+    const mapping = {
+      "privacy": "privacy",
+      "privacy-policy": "privacy",
+      "terms": "terms",
+      "terms-of-service": "terms",
+      "terms-of-use": "terms",
+      "cookies": "cookies",
+      "cookie-policy": "cookies",
+      "disclaimer": "disclaimer",
+      "refund": "refund",
+      "refund-policy": "refund"
+    };
+    const type = mapping[rawType] || rawType;
     if (!["privacy", "terms", "cookies", "disclaimer", "refund"].includes(type)) {
-      throw new Error(`Invalid legal page type: ${type}`);
+      throw new Error(`Invalid legal page type: ${rawType}`);
     }
     return this.repository.findPublishedByType(siteId, type);
   }

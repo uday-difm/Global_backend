@@ -108,6 +108,8 @@ export async function PATCH(req, { params }) {
     const updateData = {};
     if (body.globalRole !== undefined) updateData.globalRole = body.globalRole;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.bio !== undefined) updateData.bio = body.bio;
 
     let twoFaResetOccurred = false;
     if (body.twoFAEnabled === false) {
